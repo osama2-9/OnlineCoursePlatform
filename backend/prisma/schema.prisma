@@ -1,0 +1,271 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  user_id                    Int       @id @default(autoincrement())
+  full_name                  String
+  password_hash              String
+  email                      String    @unique
+  role                       Role      @default(learner)
+  created_at                 DateTime  @default(now())
+  updated_at                 DateTime  @updatedAt
+  lastLogin                  DateTime?
+  is_active                  Boolean   @default(true)
+  resetPasswordToken         String?   @unique
+  resetPasswordTokenExpiresAt DateTime?
+  activeEmailToken           String?   @unique
+  activeEmailTokenExpiresAt  DateTime?
+  isEmailVerified            Boolean   @default(false)
+
+  courses       Courses[]
+  enrollments   Enrollments[]
+  payments      Payments[]
+  reviews       Reviews[]
+  subscriptions Subscriptions[]
+  attempts      Attempt[]
+  userProgress  UserProgress[]
+
+  @@map("users")
+}
+
+model Courses {
+  course_id         Int            @id @default(autoincrement())
+  instructor_id     Int
+  title             String
+  description       String?
+  course_img        String
+  category          String?
+  price             Float          @default(0.00)
+  is_published      Boolean        @default(false)
+  course_type       CourseType?
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+  learning_outcomes String[]
+  instructor        Users          @relation(fields: [instructor_id], references: [user_id])
+  lessons           Lessons[]
+  enrollments       Enrollments[]
+  reviews           Reviews[]
+  quizzes           Quizzes[]
+  payments          Payments[]
+  userProgress      UserProgress[]
+
+  @@map("courses")
+}
+
+enum CourseType {
+  free
+  paid
+}
+
+enum Role {
+  learner
+  admin
+  instructor
+}
+
+model Lessons {
+  lesson_id    Int      @id @default(autoincrement())
+  course_id    Int
+  title        String
+  content      String
+  description  String
+  video_url    String
+  attachment   String?
+  is_free      Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  lesson_order Int
+
+  course       Courses        @relation(fields: [course_id], references: [course_id])
+  userProgress UserProgress[]
+
+  @@map("lessons")
+}
+
+model UserProgress {
+  progress_id   Int      @id @default(autoincrement())
+  user_id       Int
+  course_id     Int
+  lesson_id     Int?
+  progress      Float    @default(0.0)
+  is_completed  Boolean  @default(false)
+  last_accessed DateTime @default(now())
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  user   Users    @relation(fields: [user_id], references: [user_id])
+  course Courses  @relation(fields: [course_id], references: [course_id])
+  lesson Lessons? @relation(fields: [lesson_id], references: [lesson_id])
+
+  @@map("user_progress")
+}
+
+model Payments {
+  payment_id               Int           @id @default(autoincrement())
+  user_id                  Int
+  amount                   Float
+  sessionId                String        @default("")
+  stripe_payment_intent_id String?       @unique
+  payment_status           PaymentStatus @default(pending)
+  payment_method           PaymentMethod @default(card)
+  created_at               DateTime      @default(now())
+  updated_at               DateTime      @updatedAt
+  course_id                Int?
+
+  user   Users    @relation(fields: [user_id], references: [user_id])
+  course Courses? @relation(fields: [course_id], references: [course_id])
+
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  pending
+  succeeded
+  failed
+}
+
+enum PaymentMethod {
+  card
+  bank_transfer
+}
+
+model Enrollments {
+  enrollment_id   Int              @id @default(autoincrement())
+  user_id         Int
+  course_id       Int
+  enrollment_date DateTime         @default(now())
+  status          EnrollmentStatus @default(active)
+  access_granted  Boolean          @default(false)
+  access_token    String?
+
+  user   Users   @relation(fields: [user_id], references: [user_id])
+  course Courses @relation(fields: [course_id], references: [course_id])
+
+  @@map("enrollments")
+}
+
+enum EnrollmentStatus {
+  active
+  completed
+  dropped
+}
+
+model Subscriptions {
+  subscription_id        Int                @id @default(autoincrement())
+  user_id                Int
+  stripe_subscription_id String
+  status                 SubscriptionStatus @default(active)
+  start_date             DateTime           @default(now())
+  next_billing_date      DateTime
+  amount                 Float
+
+  user Users @relation(fields: [user_id], references: [user_id])
+
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  active
+  inactive
+  canceled
+}
+
+model Reviews {
+  review_id   Int      @id @default(autoincrement())
+  user_id     Int
+  course_id   Int
+  rating      Int
+  review_text String?
+  created_at  DateTime @default(now())
+
+  user   Users   @relation(fields: [user_id], references: [user_id])
+  course Courses @relation(fields: [course_id], references: [course_id])
+
+  @@map("reviews")
+}
+model Quizzes {
+  quiz_id      Int            @id @default(autoincrement())
+  course_id    Int
+  title        String
+  description  String?
+  duration     Int            @default(60) // Duration in minutes
+  max_attempts Int            @default(1) // Max attempts allowed
+  is_published Boolean        @default(false)
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+
+  course       Courses        @relation(fields: [course_id], references: [course_id])
+  questions    Question[]     // Relation to questions
+
+  @@map("quizzes")
+  Attempt Attempt[]
+}
+
+model Question {
+  question_id   Int            @id @default(autoincrement())
+  quiz_id       Int
+  question_text String
+  question_type QuestionType
+  marks         Int            @default(1)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  quiz          Quizzes        @relation(fields: [quiz_id], references: [quiz_id])
+  choices       Choice[]       // Relation to choices
+
+  @@map("questions")
+  Answer Answer[]
+}
+
+enum QuestionType {
+  mcq        
+  truefalse  
+  text       
+}
+
+model Choice {
+  choice_id    Int      @id @default(autoincrement())
+  question_id  Int
+  choice_text  String
+  is_correct   Boolean  @default(false)
+
+  question     Question @relation(fields: [question_id], references: [question_id])
+
+  @@map("choices")
+  Answer Answer[]
+}
+
+model Attempt {
+  attempt_id   Int           @id @default(autoincrement())
+  user_id      Int
+  quiz_id      Int
+  start_time   DateTime      @default(now())
+  end_time     DateTime?
+  score        Float         @default(0)
+  user         Users         @relation(fields: [user_id], references: [user_id])
+  quiz         Quizzes       @relation(fields: [quiz_id], references: [quiz_id])
+  answers      Answer[]      // Relation to answers
+
+  @@map("quiz_attempts")
+}
+
+model Answer {
+  answer_id    Int      @id @default(autoincrement())
+  attempt_id   Int
+  question_id  Int
+  answer_text  String?
+  answer_id_choice Int?
+
+  attempt      Attempt @relation(fields: [attempt_id], references: [attempt_id])
+  question     Question    @relation(fields: [question_id], references: [question_id])
+  choice       Choice?     @relation(fields: [answer_id_choice], references: [choice_id])
+
+  @@map("answers")
+}
+
