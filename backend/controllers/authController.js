@@ -10,7 +10,7 @@ dotenv.config();
 
 export const isAuthenticated = async (req, res) => {
   const token = req.cookies.auth;
-  
+
   if (!token) {
     return res.status(401).json({
       success: false,
@@ -254,11 +254,11 @@ export const resetPasswordRequest = async (req, res) => {
       },
       data: {
         resetPasswordToken: token,
-        resetPasswordTokenExpirsAt: tokenExpiresAt,
+        resetPasswordTokenExpiresAt: tokenExpiresAt,
       },
     });
 
-    const resetPasswordUrl = `${process.env.BASE_URL}/reset-password/${token}`;
+    const resetPasswordUrl = `${process.env.BASE_URL}/set-new-password?token=${token}`;
     if (!updateResetPasswordTokens) {
       return res.status(400).json({
         error: "error while try to reset password",
@@ -301,7 +301,7 @@ export const setNewPassword = async (req, res) => {
         resetPasswordToken: token,
       },
     });
-    if (Date.now() > userByToken.resetPasswordTokenExpirsAt) {
+    if (Date.now() > userByToken.resetPasswordTokenExpiresAt) {
       return res.status(400).json({
         error: "Invalid token please request a new reset",
       });
@@ -314,7 +314,7 @@ export const setNewPassword = async (req, res) => {
       data: {
         password_hash: newHashedPassword,
         resetPasswordToken: null,
-        resetPasswordTokenExpirsAt: null,
+        resetPasswordTokenExpiresAt: null,
       },
     });
     if (!updatePassword) {
