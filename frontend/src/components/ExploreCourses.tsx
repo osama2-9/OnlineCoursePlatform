@@ -149,7 +149,7 @@ const ExploreCourses = () => {
               </select>
 
               <div className="flex gap-2">
-                {["all", "free", "paid"].map((filterOption) => (
+                {["all", "free", "paid"]?.map((filterOption) => (
                   <button
                     key={filterOption}
                     className={`px-6 py-3 rounded-lg text-sm font-medium transition-colors ${
@@ -171,13 +171,13 @@ const ExploreCourses = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-gray-600">
-            Showing {filteredCourses.length}{" "}
-            {filteredCourses.length === 1 ? "course" : "courses"}
+            Showing {filteredCourses?.length}{" "}
+            {filteredCourses?.length === 1 ? "course" : "courses"}
           </p>
         </div>
 
         {/* Course Grid */}
-        {filteredCourses.length === 0 ? (
+        {filteredCourses?.length === 0 ? (
           <div className="bg-white rounded-lg p-8 text-center">
             <FaFilter className="mx-auto text-4xl text-gray-400 mb-4" />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
@@ -189,7 +189,7 @@ const ExploreCourses = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCourses.map((course) => (
+            {filteredCourses?.map((course) => (
               <CourseCard key={course.course_id} {...course} />
             ))}
           </div>

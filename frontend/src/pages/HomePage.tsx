@@ -74,7 +74,7 @@ export const HomePage = () => {
       <div className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
+            {stats?.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="inline-block p-4 bg-gray-50 rounded-full mb-4">
                   <stat.icon className="w-6 h-6 text-gray-700" />
@@ -147,7 +147,7 @@ export const HomePage = () => {
                 description:
                   "Study at your own pace with lifetime access to course materials",
               },
-            ].map((feature, index) => (
+            ]?.map((feature, index) => (
               <div key={index} className="p-6 bg-gray-50 rounded-lg">
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   {feature.title}

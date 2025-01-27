@@ -18,7 +18,7 @@ const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET);
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://uplearn-website.vercel.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
