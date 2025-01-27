@@ -134,16 +134,7 @@ export const ShowCourses = () => {
     }
   };
 
-  const handlePageSizeChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const newPageSize = parseInt(event.target.value, 10);
-    setPagination((prev) => ({
-      ...prev,
-      pageSize: newPageSize,
-      currentPage: 1,
-    }));
-  };
+ 
 
   const handleAddLesson = (courseId: number, instructorId: number) => {
     navigate(

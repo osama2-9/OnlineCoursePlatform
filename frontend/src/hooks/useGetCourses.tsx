@@ -40,6 +40,7 @@ export const useGetCourses = () => {
       const data = res.data;
       if (data) {
         setCourses(data.courses);
+        setPagination(data.pagination)
       }
     } catch (error: any) {
       console.log(error);

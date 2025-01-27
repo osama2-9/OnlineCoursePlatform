@@ -83,6 +83,7 @@ const CoursePracticePage = () => {
             progressMap[lesson.lesson_id] = true;
           }
         });
+
         setProgress(progressMap);
       }
     } catch (error: any) {
@@ -184,6 +185,7 @@ const CoursePracticePage = () => {
         (Object.values(progress).filter(Boolean).length / lessons.length) * 100
       )
     : 0;
+  console.log(completedLessons);
 
   return (
     <>

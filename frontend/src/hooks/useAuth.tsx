@@ -18,6 +18,8 @@ export const useAuth = () => {
         },
         withCredentials: true,
       });
+      const data = res.data;
+      if (data) return true;
     } catch (error: any) {
       console.log(error);
       if (error.response.status === 401) {
