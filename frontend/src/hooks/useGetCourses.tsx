@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { API } from "../API/ApiBaseUrl";
 interface Course {
   course_id: number;
   title: string;
@@ -31,16 +32,19 @@ export const useGetCourses = () => {
     try {
       setLoading(true);
 
-      const res = await axios.get<CoursesResponse>(`/api/course/get-courses`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true,
-      });
+      const res = await axios.get<CoursesResponse>(
+        `${API}/course/get-courses`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
       const data = res.data;
       if (data) {
         setCourses(data.courses);
-        setPagination(data.pagination)
+        setPagination(data.pagination);
       }
     } catch (error: any) {
       console.log(error);

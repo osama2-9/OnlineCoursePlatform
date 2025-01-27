@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API } from "../API/ApiBaseUrl";
 
 const ResetPasswordRequest = () => {
   const [email, setEmail] = useState("");
@@ -14,7 +15,7 @@ const ResetPasswordRequest = () => {
     setMessage({ text: "", type: "" });
 
     try {
-      await axios.post("/api/auth/reset-password-request", { email });
+      await axios.post(`${API}/auth/reset-password-request`, { email });
       setMessage({
         text: "Password reset link has been sent to your email.",
         type: "success",

@@ -50,7 +50,7 @@ export const CoursePage = () => {
     try {
       setIsCourseLoading(true);
       const res = await axios.get<CourseResponse>(
-        `/api/course/course-details/${course_id}`,
+        `${API}/course/course-details/${course_id}`,
         {
           headers: {
             "Content-Type": "application/json",
