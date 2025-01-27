@@ -113,7 +113,7 @@ const ExploreCourses = () => {
     new Set(courses?.map((course) => course.category))
   );
 
-  const filteredCourses = courses.filter((course) => {
+  const filteredCourses = courses?.filter((course) => {
     // First apply price filter
     const price = Number(course.price);
     const priceFilter =
@@ -133,7 +133,7 @@ const ExploreCourses = () => {
 
     // Add category filter
     const categoryMatch =
-      categoryFilter === "all" || course.category === categoryFilter;
+      categoryFilter === "all" || course?.category === categoryFilter;
 
     return priceFilter && searchFilter && categoryMatch;
   });
