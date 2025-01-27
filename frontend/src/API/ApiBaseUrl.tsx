@@ -1,4 +1,1 @@
-export const API = `${
-  
-    "https://ocp-api.vercel.app"
-}`;
+export const API = `${"https://ocp-api.vercel.app/api"}`;
