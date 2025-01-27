@@ -104,14 +104,38 @@ const CourseCard = ({
 
 const ExploreCourses = () => {
   const [filter, setFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { courses, loading } = useGetCourses();
 
+  // Get unique categories
+  const categories = Array.from(
+    new Set(courses.map((course) => course.category))
+  );
+
   const filteredCourses = courses.filter((course) => {
+    // First apply price filter
     const price = Number(course.price);
-    if (filter === "all") return true;
-    if (filter === "free") return price === 0;
-    if (filter === "paid") return price > 0;
-    return true;
+    const priceFilter =
+      filter === "all"
+        ? true
+        : filter === "free"
+        ? price === 0
+        : filter === "paid"
+        ? price > 0
+        : true;
+
+    // Then apply search filter
+    const searchFilter = searchQuery
+      ? course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.description.toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
+
+    // Add category filter
+    const categoryMatch =
+      categoryFilter === "all" || course.category === categoryFilter;
+
+    return priceFilter && searchFilter && categoryMatch;
   });
 
   if (loading) return <Loading />;
@@ -138,14 +162,24 @@ const ExploreCourses = () => {
               <input
                 type="text"
                 placeholder="Search for courses..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
               />
             </div>
 
             <div className="flex gap-4">
-              <select className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white min-w-[160px]">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white min-w-[160px]"
+              >
                 <option value="all">All Categories</option>
-                {/* Add category options here */}
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
               </select>
 
               <div className="flex gap-2">
