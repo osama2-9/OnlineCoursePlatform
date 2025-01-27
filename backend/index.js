@@ -45,4 +45,5 @@ app.listen(process.env.PORT, () => {
   console.log("server work");
 });
 
+export default app;
 export { stripe };
