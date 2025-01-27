@@ -109,8 +109,8 @@ const ExploreCourses = () => {
   const { courses, loading } = useGetCourses();
 
   // Get unique categories
-  const categories = Array.from(
-    new Set(courses.map((course) => course.category))
+  const categories = Array?.from(
+    new Set(courses?.map((course) => course.category))
   );
 
   const filteredCourses = courses.filter((course) => {
@@ -139,6 +139,8 @@ const ExploreCourses = () => {
   });
 
   if (loading) return <Loading />;
+
+  if(!filter || !categoryFilter) return null
 
   return (
     <div className="bg-gray-50 py-12">
