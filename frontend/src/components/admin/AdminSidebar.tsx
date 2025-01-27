@@ -262,7 +262,7 @@ export const AdminSidebar = () => {
               {isReviewsOpen && (
                 <div className="ml-8 space-y-2 mt-2">
                   <NavLink
-                    to="/admin/reviews/show"
+                    to="/admin/reviews"
                     className={({ isActive }) =>
                       `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                         isActive

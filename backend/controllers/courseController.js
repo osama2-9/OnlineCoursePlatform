@@ -88,16 +88,81 @@ export const createCourse = async (req, res) => {
     });
   }
 };
+
 export const getCourses = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 8;
+    const search = req.query.search || '';
+    const category = req.query.category || '';
+    const priceRange = req.query.priceRange || '';
+    const sortField = req.query.sortField || '';
+    const sortDirection = req.query.sortDirection || 'asc';
     const skip = (page - 1) * pageSize;
+
+    // Build where clause for filtering
+    let whereClause = {};
+    
+    // Search filter
+    if (search) {
+      whereClause = {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+          { category: { contains: search, mode: 'insensitive' } },
+          { instructor: { full_name: { contains: search, mode: 'insensitive' } } }
+        ]
+      };
+    }
+
+    // Category filter
+    if (category) {
+      whereClause = {
+        ...whereClause,
+        category: category
+      };
+    }
+
+    // Price range filter
+    if (priceRange) {
+      switch (priceRange) {
+        case 'free':
+          whereClause = { ...whereClause, price: 0 };
+          break;
+        case '0-50':
+          whereClause = { ...whereClause, price: { gte: 0, lte: 50 } };
+          break;
+        case '51-100':
+          whereClause = { ...whereClause, price: { gte: 51, lte: 100 } };
+          break;
+        case '101+':
+          whereClause = { ...whereClause, price: { gte: 101 } };
+          break;
+      }
+    }
+
+    // Build orderBy clause for sorting
+    let orderBy = {};
+    if (sortField) {
+      if (sortField === 'instructor.full_name') {
+        orderBy = {
+          instructor: {
+            full_name: sortDirection
+          }
+        };
+      } else {
+        orderBy = {
+          [sortField]: sortDirection
+        };
+      }
+    }
 
     const [courses, totalCourses] = await Promise.all([
       prisma.courses.findMany({
+        where: whereClause,
         skip: skip,
         take: pageSize,
+        orderBy: orderBy,
         select: {
           course_id: true,
           title: true,
@@ -117,7 +182,9 @@ export const getCourses = async (req, res) => {
           },
         },
       }),
-      prisma.courses.count(),
+      prisma.courses.count({
+        where: whereClause
+      })
     ]);
 
     if (courses.length === 0) {
@@ -160,21 +227,6 @@ export const updateCourse = async (req, res) => {
     } = req.body;
 
     let { course_img } = req.body;
-    if (
-      !course_id ||
-      !title ||
-      !description ||
-      price === undefined ||
-      !category ||
-      !courseType ||
-      !learning_outcomes ||
-      !is_published ||
-      !instructor
-    ) {
-      return res.status(400).json({
-        error: "Please fill all fields",
-      });
-    }
 
     const isCourseAvailable = await prisma.courses.findUnique({
       where: {
@@ -188,37 +240,55 @@ export const updateCourse = async (req, res) => {
       });
     }
 
-    if (course_img) {
-      const existingImageUrl = isCourseAvailable.course_img;
-      if (existingImageUrl) {
-        const publicId = existingImageUrl.split("/").pop().split(".")[0];
-        await cloudinary.uploader.destroy(publicId);
-      }
-      const uploadResponse = await cloudinary.uploader.upload(course_img);
-      if (!uploadResponse || !uploadResponse.secure_url) {
+  
+    if (course_img && course_img !== isCourseAvailable.course_img) {
+      try {
+        if (isCourseAvailable.course_img?.includes("cloudinary")) {
+          const publicId = isCourseAvailable.course_img
+            .split("/")
+            .pop()
+            .split(".")[0];
+          try {
+            await cloudinary.uploader.destroy(publicId);
+          } catch (deleteError) {
+            console.log("Error deleting old image:", deleteError);
+          }
+        }
+
+        const uploadResponse = await cloudinary.uploader.upload(course_img);
+        if (!uploadResponse || !uploadResponse.secure_url) {
+          return res.status(400).json({
+            error: "Error uploading image",
+          });
+        }
+        course_img = uploadResponse.secure_url;
+      } catch (uploadError) {
+        console.log("Error handling image:", uploadError);
         return res.status(400).json({
-          error: "Error uploading image",
+          error: "Error processing image upload",
         });
       }
-      course_img = uploadResponse.secure_url;
     } else {
       course_img = isCourseAvailable.course_img;
     }
 
+    const updateData = {
+      ...(title && { title }),
+      ...(description && { description }),
+      ...(price !== undefined && { price }),
+      ...(category && { category }),
+      ...(courseType && { course_type: courseType }),
+      ...(learning_outcomes && { learning_outcomes }),
+      ...(is_published !== undefined && { is_published }),
+      ...(course_img && { course_img }),
+      ...(instructor?.user_id && {
+        instructor_id: parseInt(instructor.user_id),
+      }),
+    };
+
     const update = await prisma.courses.update({
       where: { course_id: course_id },
-      data: {
-        title: title || isCourseAvailable.title,
-        description: description || isCourseAvailable.description,
-        price: price || isCourseAvailable?.price,
-        category: category || isCourseAvailable.category,
-        course_type: courseType || isCourseAvailable.course_type,
-        learning_outcomes:
-          learning_outcomes || isCourseAvailable.learning_outcomes,
-        is_published: isCourseAvailable.is_published,
-        course_img: course_img || isCourseAvailable.course_img,
-        instructor_id: parseInt(instructor.user_id),
-      },
+      data: updateData,
     });
 
     if (!update) {

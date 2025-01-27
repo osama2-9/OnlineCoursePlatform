@@ -8,6 +8,7 @@ import {
   getAnalystics,
   getInstructors,
   getQuizzes,
+  getReviews,
   getTopEnrolledCourses,
   getUsers,
   searchAboutUser,
@@ -28,8 +29,13 @@ adminRoute.get(
 );
 adminRoute.get("/get-instructors", checkRole("admin"), getInstructors);
 adminRoute.get("/search", checkRole("admin"), searchAboutUser);
-adminRoute.get("/top-enrolled-courses", checkRole("admin"), getTopEnrolledCourses);
-adminRoute.get('/get-quizzes/:userId' ,checkRole("admin") ,getQuizzes)
-adminRoute.get('/analystics/:userId' ,checkRole('admin') ,getAnalystics)
+adminRoute.get(
+  "/top-enrolled-courses",
+  checkRole("admin"),
+  getTopEnrolledCourses
+);
+adminRoute.get("/get-quizzes/:userId", checkRole("admin"), getQuizzes);
+adminRoute.get("/analystics/:userId", checkRole("admin"), getAnalystics);
+adminRoute.get("/reviews/:userId", checkRole("admin"), getReviews);
 
 export default adminRoute;

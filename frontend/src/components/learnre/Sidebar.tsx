@@ -1,4 +1,4 @@
-import { FaHome, FaBook, FaChartLine, FaBell } from "react-icons/fa"; // Import icons from react-icons
+import { FaHome, FaBook, FaChartLine, FaBell, FaStar } from "react-icons/fa"; // Import icons from react-icons
 import { NavLink } from "react-router-dom"; // For active link highlighting
 
 export const Sidebar = () => {
@@ -54,6 +54,21 @@ export const Sidebar = () => {
             >
               <FaChartLine className="w-5 h-5" />
               <span>Progress</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/learner/course/review"
+              className={({ isActive }) =>
+                `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-orange-50 text-orange-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              <FaStar className="w-5 h-5" />
+              <span>Review</span>
             </NavLink>
           </li>
           <li>

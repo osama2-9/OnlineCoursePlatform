@@ -399,8 +399,6 @@ export const getAvliableQuizzes = async (req, res) => {
           in: courseIds,
         },
         is_published: true,
-        
-        
       },
       include: {
         course: {
@@ -409,11 +407,10 @@ export const getAvliableQuizzes = async (req, res) => {
           },
         },
         Attempt: {
-          where:{
-            user_id:parseInt(userId)
+          where: {
+            user_id: parseInt(userId),
           },
           select: {
-            
             score: true,
           },
         },
@@ -706,6 +703,124 @@ export const submitQuizAnswers = async (req, res) => {
 
     return res.status(200).json({
       message: "Quiz answers submitted successfully!",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const getCourseReviews = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const userIdInt = parseInt(userId);
+    if (!userIdInt) {
+      return res.status(400).json({
+        error: "User Id required",
+      });
+    }
+    const usersEnrolledCourses = await prisma.enrollments.findMany({
+      where: {
+        user_id: userIdInt,
+        access_granted: true,
+        status: "completed",
+      },
+      select: {
+        course_id: true,
+      },
+    });
+    if (!usersEnrolledCourses) {
+      return res.status(404).json({
+        error: "No Courses Found",
+      });
+    }
+    const courseIds = usersEnrolledCourses.map((enroll) => enroll.course_id);
+
+    const courses = await prisma.courses.findMany({
+      where: {
+        course_id: { in: courseIds },
+      },
+      select: {
+        course_id: true,
+        title: true,
+        course_img: true,
+        category: true,
+        instructor: {
+          select: {
+            full_name: true,
+          },
+        },
+      },
+    });
+
+    const reviewedCourses = await prisma.reviews.findMany({
+      where: {
+        course_id: { in: courseIds },
+        user_id: userIdInt,
+      },
+      select: {
+        course_id: true,
+      },
+    });
+
+    const reviewedCourseIds = reviewedCourses.map((review) => review.course_id);
+    const coursesToReview = courses.filter(
+      (course) => !reviewedCourseIds.includes(course.course_id)
+    );
+
+    if (!coursesToReview.length) {
+      return res.status(400).json({
+        error: "No courses available for review",
+      });
+    }
+    return res.status(200).json(coursesToReview);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const submitReview = async (req, res) => {
+  try {
+    const { userId, courseId, rating, comment } = req.body;
+    if (!userId || !courseId || !rating || !comment) {
+      return res.status(400).json({
+        error: "Missing required data",
+      });
+    }
+
+    const isUserEnrolled = await prisma.enrollments.findFirst({
+      where: {
+        user_id: userId,
+        course_id: courseId,
+      },
+    });
+
+    if (!isUserEnrolled) {
+      return res.status(404).json({
+        error: "You are not enrolled on this course",
+      });
+    }
+
+    const newReview = await prisma.reviews.create({
+      data: {
+        user_id: userId,
+        course_id: courseId,
+        rating: rating,
+        review_text: comment,
+      },
+    });
+    if (!newReview) {
+      return res.status(400).json({
+        error: "Error while try to submit your review",
+      });
+    }
+    return res.status(201).json({
+      message: "Review Submited, Thank You !",
     });
   } catch (error) {
     console.log(error);

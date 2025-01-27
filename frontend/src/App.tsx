@@ -43,6 +43,8 @@ import { ShowCourseLessons } from "./pages/instructor/ShowCourseLessons";
 import { AddLessonToCourse } from "./pages/instructor/AddLessonToCourse";
 import ResetPasswordRequest from "./pages/ResetPasswordRequest";
 import SetNewPassword from "./SetNewPassword";
+import { CourseReview } from "./pages/learner/CourseReview";
+import { Reviews } from "./pages/admin/Reviews";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -74,6 +76,10 @@ function App() {
         <Route
           path="/learner/payments"
           element={<ProtectLearnerRoute element={<MyPayments />} />}
+        />
+        <Route
+          path="/learner/course/review"
+          element={<ProtectLearnerRoute element={<CourseReview />} />}
         />
         <Route
           path="/quiz/:quizId/course/:courseId/a/:attemptId/e/:enrollmentId"
@@ -184,6 +190,10 @@ function App() {
         <Route
           path="/admin/analystics"
           element={<ProtectAdminRoute element={<AdminAnalystic />} />}
+        />
+        <Route
+          path="/admin/reviews"
+          element={<ProtectAdminRoute element={<Reviews />} />}
         />
         <Route path="/course-page/:course_id" element={<CoursePage />} />
         <Route path="/payment/success" element={<SuccessPayment />} />

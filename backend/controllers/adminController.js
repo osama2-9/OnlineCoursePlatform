@@ -502,6 +502,7 @@ export const getAnalystics = async (req, res) => {
       revenueTrend,
       enrollmentTrend,
       coursesByCategory,
+      topCourses,
     ] = await Promise.all([
       prisma.payments.aggregate({
         where: {
@@ -542,7 +543,6 @@ export const getAnalystics = async (req, res) => {
           created_at: "asc",
         },
       }),
-      // New query for enrollment trend
       prisma.enrollments.groupBy({
         by: ["enrollment_date"],
         where: {
@@ -556,11 +556,38 @@ export const getAnalystics = async (req, res) => {
         },
       }),
       prisma.courses.groupBy({
-        by: ['category'],
+        by: ["category"],
         _count: {
-          course_id: true
-        }
-      })
+          course_id: true,
+        },
+      }),
+      prisma.courses.findMany({
+        select: {
+          course_id: true,
+          title: true,
+          enrollments: {
+            select: {
+              enrollment_id: true,
+            },
+            where: {
+              status: { not: "dropped" },
+            },
+          },
+          reviews: {
+            select: {
+              rating: true,
+            },
+          },
+        },
+        orderBy: [
+          {
+            enrollments: {
+              _count: "desc",
+            },
+          },
+        ],
+        take: 5,
+      }),
     ]);
 
     const monthlyRevenue = revenueTrend.reduce((acc, curr) => {
@@ -626,40 +653,50 @@ export const getAnalystics = async (req, res) => {
         : "0.00"
     );
 
-    // Define all possible categories matching the frontend
     const allCategories = [
-      'programming',
-      'web-development',
-      'data-science',
-      'design',
-      'marketing',
-      'business',
-      'finance',
-      'artificial-intelligence',
-      'cloud-computing',
-      'cybersecurity',
-      'project-management'
+      "programming",
+      "web-development",
+      "data-science",
+      "design",
+      "marketing",
+      "business",
+      "finance",
+      "artificial-intelligence",
+      "cloud-computing",
+      "cybersecurity",
+      "project-management",
     ];
 
-    // Create a map of existing category counts
     const categoryCountMap = coursesByCategory.reduce((acc, cat) => {
-      acc[cat.category || 'uncategorized'] = cat._count.course_id;
+      acc[cat.category || "uncategorized"] = cat._count.course_id;
       return acc;
     }, {});
 
-    // Create final array including all categories
-    const completeCoursesByCategory = allCategories.map(category => ({
+    const completeCoursesByCategory = allCategories.map((category) => ({
       category,
-      count: categoryCountMap[category] || 0
+      count: categoryCountMap[category] || 0,
     }));
 
-    // Add uncategorized if it exists in the data
-    if (categoryCountMap['uncategorized']) {
+    if (categoryCountMap["uncategorized"]) {
       completeCoursesByCategory.push({
-        category: 'uncategorized',
-        count: categoryCountMap['uncategorized']
+        category: "uncategorized",
+        count: categoryCountMap["uncategorized"],
       });
     }
+
+    const processedTopCourses = topCourses.map((course) => ({
+      title: course.title,
+      enrollments: course.enrollments.length,
+      rating:
+        course.reviews.length > 0
+          ? parseFloat(
+              (
+                course.reviews.reduce((acc, rev) => acc + rev.rating, 0) /
+                course.reviews.length
+              ).toFixed(1)
+            )
+          : 0,
+    }));
 
     return res.status(200).json({
       totalSuccessedPayments: payments._sum.amount || 0,
@@ -668,10 +705,71 @@ export const getAnalystics = async (req, res) => {
       totalCompletionPercentage,
       revenueTrend: monthlyRevenue,
       enrollmentTrend: monthlyEnrollments,
-      coursesByCategory: completeCoursesByCategory
+      coursesByCategory: completeCoursesByCategory,
+      topPerformingCourses: processedTopCourses,
     });
   } catch (error) {
     console.error("Analytics error:", error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+export const getReviews = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({
+        error: "Missing required data",
+      });
+    }
+
+    const isAdmin = await prisma.users.findUnique({
+      where: {
+        user_id: parseInt(userId),
+      },
+      select: {
+        role: true,
+      },
+    });
+
+    if (!isAdmin) {
+      return res.status(401).json({
+        error: "Can't access this page",
+      });
+    }
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+    const reviews = await prisma.reviews.findMany({
+      select: {
+        review_id: true,
+        user: {
+          select: {
+            full_name: true,
+          },
+        },
+        course: {
+          select: {
+            title: true,
+            course_img: true,
+          },
+        },
+        rating: true,
+        review_text: true,
+        created_at: true,
+      },
+      skip: parseInt(skip),
+      take: parseInt(limit),
+    });
+    const totalReviews = await prisma.reviews.count();
+    return res.status(200).json({
+      reviews,
+      totalReviews,
+      totalPages: Math.ceil(totalReviews / limit),
+      currentPage: parseInt(page),
+    });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({
       error: "Internal server error",
     });

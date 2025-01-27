@@ -48,6 +48,11 @@ interface Response {
     category: string;
     count: number;
   }[];
+  topPerformingCourses: {
+    title: string;
+    enrollments: number;
+    rating: number;
+  }[];
 }
 
 export const AdminAnalystic = () => {
@@ -109,6 +114,10 @@ export const AdminAnalystic = () => {
     return category.count;
   });
 
+  const [topCourses, setTopCourses] = useState<
+    Response["topPerformingCourses"]
+  >([]);
+
   const getAnalaytics = async () => {
     try {
       setLoading(true);
@@ -132,6 +141,7 @@ export const AdminAnalystic = () => {
         setRevenueTrend(data.revenueTrend);
         setEnrollmentTrend(data.enrollmentTrend);
         setCoursesByCategory(data.coursesByCategory);
+        setTopCourses(data.topPerformingCourses);
       }
     } catch (error: any) {
       console.log(error);
@@ -233,7 +243,9 @@ export const AdminAnalystic = () => {
 
               {/* Course Enrollments */}
               <div className="bg-white p-4 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Monthly Enrollments</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  Monthly Enrollments
+                </h3>
                 <Bar
                   data={enrollmentData}
                   options={{
@@ -247,7 +259,9 @@ export const AdminAnalystic = () => {
 
               {/* Course Categories */}
               <div className="bg-white p-4 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Course Categories</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  Course Categories
+                </h3>
                 <Doughnut
                   data={categoryData}
                   options={{
@@ -265,24 +279,11 @@ export const AdminAnalystic = () => {
                   Top Performing Courses
                 </h3>
                 <div className="space-y-4">
-                  {[
-                    {
-                      title: "Web Development Bootcamp",
-                      enrollments: 450,
-                      rating: 4.8,
-                    },
-                    {
-                      title: "UI/UX Design Fundamentals",
-                      enrollments: 380,
-                      rating: 4.7,
-                    },
-                    {
-                      title: "Digital Marketing 101",
-                      enrollments: 320,
-                      rating: 4.6,
-                    },
-                  ].map((course, index) => (
-                    <div key={index} className="flex justify-between items-center">
+                  {topCourses.map((course, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center"
+                    >
                       <div>
                         <p className="font-medium">{course.title}</p>
                         <p className="text-sm text-gray-500">

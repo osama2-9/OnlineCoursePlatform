@@ -130,113 +130,179 @@ export const CoursePage = () => {
       {isCourseLoading ? (
         <Loading />
       ) : (
-        <>
-          <div className="bg-gray-50 min-h-screen p-6 flex justify-center">
-            <div className="bg-white shadow-md rounded-lg w-full  p-6">
-              <div className="border-b pb-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-800">
-                    {course?.title}
-                  </h1>
-                  <p className="text-gray-600 mt-2">{course?.description}</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Author:{" "}
-                    <span className="text-gray-800 font-medium">
+        <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen p-6 flex justify-center">
+          <div className="bg-white shadow-lg rounded-xl w-full max-w-7xl p-8">
+            {/* Header Section */}
+            <div className="border-b pb-6 mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+              <div className="space-y-3">
+                <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+                  {course?.title}
+                </h1>
+                <p className="text-gray-600 text-lg leading-relaxed">
+                  {course?.description}
+                </p>
+                <div className="flex items-center space-x-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Instructor</p>
+                    <p className="text-gray-800 font-medium">
                       {course?.instructor?.full_name}
-                    </span>
-                  </p>
-                  <div className="flex items-center mt-2">
+                    </p>
+                  </div>
+                  <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-full">
                     <span className="text-yellow-500 text-xl">★</span>
-                    <span className="text-gray-700 ml-1 text-sm font-medium">
-                      4.6
-                    </span>
-                    <span className="text-gray-500 ml-2 text-sm">
-                      (2037 reviews)
-                    </span>
+                    <span className="text-gray-700 ml-1 font-medium">4.6</span>
+                    <span className="text-gray-500 ml-2">(2037)</span>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Main Content */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Left Content */}
-                <div className="col-span-2">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                    What will you learn?
+            {/* Main Content */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Left Content */}
+              <div className="col-span-2 space-y-8">
+                {/* Learning Outcomes */}
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                    What you'll learn
                   </h2>
-                  <ul className="list-disc list-inside text-gray-600 space-y-2">
-                    {course?.learning_outcomes?.map((lo, Idx) => (
-                      <li key={Idx}>{lo}</li>
-                    ))}
-                  </ul>
-
-                  <h2 className="text-lg font-semibold text-gray-800 mt-6 mb-4">
-                    Course content
-                  </h2>
-                  <p className="text-sm text-gray-500 mb-2">
-                    {lessonsLength} lesson
-                  </p>
-                  <div className="border rounded-lg divide-y">
-                    {course?.lessons?.map((lecture, index) => (
-                      <div key={lecture.lesson_id} className="p-4">
-                        <div
-                          className="flex justify-between items-center cursor-pointer"
-                          onClick={() => handleLectureClick(index)}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {course?.learning_outcomes?.map((lo, idx) => (
+                      <div key={idx} className="flex items-start space-x-2">
+                        <svg
+                          className="w-5 h-5 text-green-500 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          <span className="text-gray-800 font-medium">
-                            {lecture?.title}
-                          </span>
-                          <span className="text-orange-500">
-                            {lecture.is_free ? "Preview" : <FaLock size={20} />}
-                          </span>
-                        </div>
-                        {selectedLecture === index && (
-                          <div className="mt-2 text-gray-600 mb-3 text-sm">
-                            <p className="mb-4">{lecture.description}</p>
-                            {lecture.is_free ? (
-                              <VideoPlayer videoUrl={`${lecture.video_url}`} />
-                            ) : (
-                              renderLockIcon()
-                            )}
-                          </div>
-                        )}
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span className="text-gray-600">{lo}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Right Content */}
-                <div className="bg-gray-100 p-6 rounded-lg shadow-inner">
+                {/* Course Content */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      Course content
+                    </h2>
+                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                      {lessonsLength} lessons
+                    </span>
+                  </div>
+                  <div className="border rounded-xl divide-y overflow-hidden">
+                    {course?.lessons?.map((lecture, index) => (
+                      <div
+                        key={lecture.lesson_id}
+                        className="hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        <div className="p-4">
+                          <div
+                            className="flex justify-between items-center cursor-pointer"
+                            onClick={() => handleLectureClick(index)}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <span className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-sm font-medium">
+                                {index + 1}
+                              </span>
+                              <span className="text-gray-800 font-medium">
+                                {lecture?.title}
+                              </span>
+                            </div>
+                            <span
+                              className={`${
+                                lecture.is_free
+                                  ? "text-green-500"
+                                  : "text-orange-500"
+                              }`}
+                            >
+                              {lecture.is_free ? (
+                                "Preview"
+                              ) : (
+                                <FaLock size={16} />
+                              )}
+                            </span>
+                          </div>
+                          {selectedLecture === index && (
+                            <div className="mt-2 text-gray-600 mb-3 text-sm">
+                              <p className="mb-4">{lecture.description}</p>
+                              {lecture.is_free ? (
+                                <VideoPlayer
+                                  videoUrl={`${lecture.video_url}`}
+                                />
+                              ) : (
+                                renderLockIcon()
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Content - Course Card */}
+              <div className="sticky top-6">
+                <div className="bg-white border rounded-xl shadow-lg overflow-hidden">
                   <img
                     src={course?.course_img}
                     alt="Course thumbnail"
-                    className="w-full h-52 mt-4 md:mt-0 rounded-lg"
+                    className="w-full h-48 object-cover"
                   />
-                  <br />
-                  <div className="mb-4">
-                    <h2 className="text-3xl font-bold text-gray-800">
-                      ${course?.price?.toFixed(2)}
-                    </h2>
+                  <div className="p-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-3xl font-bold text-gray-800">
+                        ${course?.price?.toFixed(2)}
+                      </h2>
+                    </div>
                     <button
                       onClick={handlePayment}
-                      className="bg-orange-500 text-white w-full py-3 mt-4 rounded-md hover:bg-gray-900"
+                      className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
                     >
-                      {course?.course_type === "free"
-                        ? "Enroll now"
-                        : "Buy this course"}
+                      <span>
+                        {course?.course_type === "free"
+                          ? "Enroll now"
+                          : "Buy this course"}
+                      </span>
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        />
+                      </svg>
                     </button>
-                  </div>
 
-                  <div className="mt-6">
-                    <h3 className="font-medium text-gray-800">
-                      Educating 5+ people?
-                    </h3>
+                    <div className="border-t pt-6">
+                      <h3 className="font-medium text-gray-800 mb-2">
+                        For teams & companies
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Get special pricing for teams of 5 or more people.
+                        Contact us for details.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </>
   );

@@ -3,6 +3,7 @@ import { checkRole } from "../middlewares/checkRole.js";
 import {
   getAvliableQuizzes,
   getCompletedLessons,
+  getCourseReviews,
   getCoursesProgress,
   getEnrolledCourseContent,
   getEnrolledInCourses,
@@ -11,6 +12,7 @@ import {
   markLessonsAsCompleted,
   startQuizAttempt,
   submitQuizAnswers,
+  submitReview,
 } from "../controllers/learnerController.js";
 const learnerRoute = express.Router();
 
@@ -60,5 +62,11 @@ learnerRoute.get(
   getQuizQuestions
 );
 
-learnerRoute.post('/submit-quiz' , checkRole("learner") ,submitQuizAnswers)
+learnerRoute.post("/submit-quiz", checkRole("learner"), submitQuizAnswers);
+learnerRoute.get(
+  "/get-courses-toReview/:userId",
+  checkRole("learner"),
+  getCourseReviews
+);
+learnerRoute.post('/submit-review' , checkRole("learner") ,submitReview)
 export default learnerRoute;

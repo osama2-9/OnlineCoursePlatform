@@ -10,6 +10,8 @@ import { useAuth } from "../../hooks/useAuth";
 import { UpdateCourse } from "../../components/admin/UpdateCourse";
 import { Course } from "../../types/Course";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
+import { FaSort, FaDownload } from "react-icons/fa";
+import { CSVLink } from "react-csv";
 
 interface Pagination {
   totalCourses: number;
@@ -42,13 +44,32 @@ export const ShowCourses = () => {
 
   const { user } = useAuth();
 
+  const [sortField, setSortField] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedPriceRange, setSelectedPriceRange] = useState<string>("");
+  const [categories, setCategories] = useState<string[]>([]);
+
+  // Add debounce timeout state
+  const [searchTimeout, setSearchTimeout] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
   const fetchCourses = async (page: number, pageSize: number) => {
     try {
       setIsLoading(true);
       const res = await axios.get<FetchCoursesResponse>(
         `${API}/course/get-courses`,
         {
-          params: { page, pageSize, search: searchQuery },
+          params: {
+            page,
+            pageSize,
+            search: searchQuery,
+            category: selectedCategory,
+            priceRange: selectedPriceRange,
+            sortField,
+            sortDirection,
+          },
           headers: {
             "Content-Type": "application/json",
           },
@@ -67,9 +88,45 @@ export const ShowCourses = () => {
     }
   };
 
+  // Update search handler to use debounce
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = event.target.value;
+    setSearchQuery(searchValue);
+
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set new timeout
+    const timeout = setTimeout(() => {
+      setPagination((prev) => ({ ...prev, currentPage: 1 }));
+      fetchCourses(1, pagination.pageSize);
+    }, 500);
+
+    setSearchTimeout(timeout);
+  };
+
+  // Update useEffect to include all filter dependencies
   useEffect(() => {
     fetchCourses(pagination.currentPage, pagination.pageSize);
-  }, [pagination.currentPage, pagination.pageSize, searchQuery]);
+  }, [
+    pagination.currentPage,
+    pagination.pageSize,
+    selectedCategory,
+    selectedPriceRange,
+    sortField,
+    sortDirection,
+  ]);
+
+  useEffect(() => {
+    if (courses) {
+      const uniqueCategories = [
+        ...new Set(courses.map((course) => course.category)),
+      ];
+      setCategories(uniqueCategories);
+    }
+  }, [courses]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -86,10 +143,6 @@ export const ShowCourses = () => {
       pageSize: newPageSize,
       currentPage: 1,
     }));
-  };
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
   };
 
   const handleAddLesson = (courseId: number, instructorId: number) => {
@@ -150,9 +203,21 @@ export const ShowCourses = () => {
 
   const handleUpdateCourse = async (updatedCourse: Course) => {
     try {
+      // Ensure all required fields are present in the request
+      const courseToUpdate = {
+        ...updatedCourse,
+        courseType: updatedCourse.course_type,
+        instructor: {
+          user_id: updatedCourse.instructor.user_id,
+          full_name: updatedCourse.instructor.full_name,
+        },
+        is_published: updatedCourse.is_published ?? false,
+        learning_outcomes: updatedCourse.learning_outcomes ?? [],
+      };
+
       const res = await axios.put(
         `${API}/course/update-course`,
-        updatedCourse,
+        courseToUpdate,
         {
           headers: {
             "Content-Type": "application/json",
@@ -196,45 +261,141 @@ export const ShowCourses = () => {
     }
   };
 
+  const handleSort = (field: string) => {
+    setSortField(field);
+    setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+
+    const sortedCourses = [...(courses || [])].sort((a, b) => {
+      let compareA = field.split(".").reduce((obj: any, key) => obj[key], a) as
+        | string
+        | number;
+      let compareB = field.split(".").reduce((obj: any, key) => obj[key], b) as
+        | string
+        | number;
+
+      if (typeof compareA === "string" && typeof compareB === "string") {
+        compareA = compareA.toLowerCase();
+        compareB = compareB.toLowerCase();
+      }
+
+      if (sortDirection === "asc") {
+        return compareA > compareB ? 1 : -1;
+      }
+      return compareA < compareB ? 1 : -1;
+    });
+
+    setCourses(sortedCourses);
+  };
+
+  const exportData = courses?.map((course) => ({
+    ID: course.course_id,
+    Title: course.title,
+    Instructor: course.instructor.full_name,
+    Price: course.price,
+    Category: course.category,
+    Type: course.course_type,
+    Status: course.is_published ? "Published" : "Unpublished",
+  }));
+
+  const handleCategoryFilter = (category: string) => {
+    setSelectedCategory(category);
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+  };
+
+  const handlePriceRangeFilter = (range: string) => {
+    setSelectedPriceRange(range);
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+  };
+
   return (
     <AdminLayout>
       {loading ? (
         <Loading />
       ) : (
-        <div className="mt-5">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-4">
-              <label
-                htmlFor="searchQuery"
-                className="font-semibold text-gray-700"
-              >
-                Search:
-              </label>
-              <input
-                id="searchQuery"
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 w-80"
-                placeholder="Search by title, description, or category"
-              />
+        <div className="mt-5 px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Total Courses
+              </h3>
+              <p className="text-3xl font-bold text-indigo-600">
+                {pagination.totalCourses}
+              </p>
             </div>
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Published
+              </h3>
+              <p className="text-3xl font-bold text-green-600">
+                {courses?.filter((c) => c.is_published).length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Unpublished
+              </h3>
+              <p className="text-3xl font-bold text-yellow-600">
+                {courses?.filter((c) => !c.is_published).length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Categories
+              </h3>
+              <p className="text-3xl font-bold text-purple-600">
+                {categories.length}
+              </p>
+            </div>
+          </div>
 
-            <div className="flex items-center space-x-4">
-              <label htmlFor="pageSize" className="font-semibold text-gray-700">
-                Show:
-              </label>
-              <select
-                id="pageSize"
-                value={pagination.pageSize}
-                onChange={handlePageSizeChange}
-                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value={5}>5</option>
-                <option value={8}>8</option>
-                <option value={10}>10</option>
-              </select>
-              <span className="text-gray-700">per page</span>
+          <div className="bg-white shadow-md border border-gray-200 rounded-lg p-6 mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="w-full md:w-auto">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="w-full md:w-80 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Search courses..."
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => handleCategoryFilter(e.target.value)}
+                  className="p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedPriceRange}
+                  onChange={(e) => handlePriceRangeFilter(e.target.value)}
+                  className="p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                >
+                  <option value="">All Prices</option>
+                  <option value="free">Free</option>
+                  <option value="0-50">$0 - $50</option>
+                  <option value="51-100">$51 - $100</option>
+                  <option value="101+">$101+</option>
+                </select>
+
+                {courses && courses.length > 0 && (
+                  <CSVLink
+                    data={exportData || []}
+                    filename="courses-export.csv"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <FaDownload /> Export
+                  </CSVLink>
+                )}
+              </div>
             </div>
           </div>
 
@@ -247,8 +408,13 @@ export const ShowCourses = () => {
               <table className="min-w-full table-auto border-collapse">
                 <thead>
                   <tr>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      #
+                    <th
+                      onClick={() => handleSort("course_id")}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        # <FaSort />
+                      </div>
                     </th>
                     <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
                       Title
@@ -355,25 +521,50 @@ export const ShowCourses = () => {
                 />
               </>
             )}
-            {/* Pagination Controls */}
-            <div className="flex justify-between items-center mt-6">
-              <button
-                className="px-4 py-2 bg-gray-300 text-sm rounded-md hover:bg-gray-400 focus:outline-none"
-                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                disabled={pagination.currentPage <= 1}
-              >
-                Previous
-              </button>
-              <span className="text-sm">
-                Page {pagination.currentPage} of {pagination.totalPages}
-              </span>
-              <button
-                className="px-4 py-2 bg-gray-300 text-sm rounded-md hover:bg-gray-400 focus:outline-none"
-                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                disabled={pagination.currentPage >= pagination.totalPages}
-              >
-                Next
-              </button>
+            <div className="mt-6 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <button
+                  className="px-3 py-1 bg-gray-200 rounded-md"
+                  onClick={() => handlePageChange(1)}
+                  disabled={pagination.currentPage === 1}
+                >
+                  First
+                </button>
+                <button
+                  className="px-3 py-1 bg-gray-200 rounded-md"
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                >
+                  Previous
+                </button>
+                {[...Array(pagination.totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => handlePageChange(i + 1)}
+                    className={`px-3 py-1 rounded-md ${
+                      pagination.currentPage === i + 1
+                        ? "bg-indigo-600 text-white"
+                        : "bg-gray-200"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="px-3 py-1 bg-gray-200 rounded-md"
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                >
+                  Next
+                </button>
+                <button
+                  className="px-3 py-1 bg-gray-200 rounded-md"
+                  onClick={() => handlePageChange(pagination.totalPages)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                >
+                  Last
+                </button>
+              </div>
             </div>
           </div>
         </div>
