@@ -68,12 +68,10 @@ export const QuizPage = () => {
   const navigate = useNavigate();
   const [isQuizLoad, setIsQuizLoad] = useState<boolean>(false);
 
-  // Sync questions ref with state
   useEffect(() => {
     questionsRef.current = questions;
   }, [questions]);
 
-  // Prevent right-click and text selection
   useEffect(() => {
     document.body.style.userSelect = "none";
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
@@ -84,7 +82,6 @@ export const QuizPage = () => {
     };
   }, []);
 
-  // Initial questions load
   useEffect(() => {
     getQuestions(pagination.currentPage);
   }, [quizId, courseId, user?.userId, attemptId]);
@@ -115,7 +112,6 @@ export const QuizPage = () => {
     }
   };
 
-  // Timer initialization
   useEffect(() => {
     if (isQuizLoad) return;
     const storedTimeLeft = localStorage.getItem(`quizTimeLeft_${attemptId}`);
@@ -125,7 +121,6 @@ export const QuizPage = () => {
     setTimeLeft(initialTime);
   }, [attemptId, quizDuration, isQuizLoad]);
 
-  // Timer countdown
   useEffect(() => {
     if (isQuizLoad || timeLeft === null) return;
 
@@ -146,7 +141,6 @@ export const QuizPage = () => {
     return () => clearInterval(timer);
   }, [timeLeft, isQuizLoad, attemptId]);
 
-  // Question navigation handler
   const handleQuestionNavigation = async (index: number) => {
     const page = Math.floor(index / pagination.questionsPerPage) + 1;
     await getQuestions(page);
@@ -178,7 +172,6 @@ export const QuizPage = () => {
     }));
   };
 
-  // Pagination controls
   const handleNextQuestion = async () => {
     if (pagination.currentPage < pagination.totalPages) {
       await getQuestions(pagination.currentPage + 1);
@@ -193,12 +186,10 @@ export const QuizPage = () => {
     }
   };
 
-  // Modified handleSubmitQuiz to properly format answers
   const handleSubmitQuiz = async () => {
     try {
       setLoading(true);
 
-      // Transform answers based on question type
       const userAnswers = Object.entries(selectedAnswers).map(
         ([questionId, answerData]) => {
           const question = questions.find(
@@ -208,11 +199,10 @@ export const QuizPage = () => {
           if (question?.question_type === "mcq") {
             return {
               question_id: parseInt(questionId),
-              answer_id: answerData.answer_id, // Send choice_id for MCQ
-              answer_text: null,
+              answer_id: answerData.answer_id,
+              answer_text: answerData?.answer_text,
             };
           } else if (question?.question_type === "truefalse") {
-            // Find the corresponding choice_id for true/false
             const choice = question.choices.find(
               (c) =>
                 c.choice_text.toLowerCase() ===
@@ -220,8 +210,8 @@ export const QuizPage = () => {
             );
             return {
               question_id: parseInt(questionId),
-              answer_id: choice?.choice_id, // Send choice_id for true/false
-              answer_text: null,
+              answer_id: choice?.choice_id,
+              answer_text: answerData.answer_text,
             };
           } else {
             // For text questions

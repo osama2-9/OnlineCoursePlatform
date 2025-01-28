@@ -97,9 +97,12 @@ export const InstructorDashboard = () => {
                           /5
                         </p>
                       </div>
-                      <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                      <Link
+                        to={`/instructor/courses/${course.course_id}/lessons`}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                      >
                         View Course
-                      </button>
+                      </Link>
                     </div>
                   ))}
                 </>

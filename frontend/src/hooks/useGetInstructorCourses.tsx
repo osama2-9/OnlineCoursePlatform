@@ -18,10 +18,10 @@ export interface CourseDetails {
 }
 
 interface Pagination {
-    totalCourses: number;
-    totalPages: 1;
-    currentPage: 1;
-    limit: 10;
+  totalCourses: number;
+  totalPages: 1;
+  currentPage: 1;
+  limit: 10;
 }
 export const useGetInstructorCourses = () => {
   const [courses, setCourses] = useState<CourseDetails[] | null>([]);

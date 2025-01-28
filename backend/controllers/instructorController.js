@@ -1120,6 +1120,7 @@ export const getUsersAttempts = async (req, res) => {
     });
   }
 };
+
 export const getUserAnswers = async (req, res) => {
   try {
     const { page = 1, skip, take } = req.query;
@@ -1150,10 +1151,38 @@ export const getUserAnswers = async (req, res) => {
             question_text: true,
             question_type: true,
             marks: true,
-            choices: true,
+            choices: {
+              where: {
+                is_correct: true,
+              },
+              select: {
+                is_correct: true,
+                choice_text: true,
+                question_id: true,
+                choice_id: true,
+              },
+            },
           },
           skip: skipCount,
           take: itemsPerPage,
+        },
+        Attempt: {
+          where: { attempt_id: parseInt(attemptId) },
+          select: {
+            start_time: true,
+            end_time: true,
+            attempt_id: true,
+            score: true,
+            quiz_id: true,
+            answers: {
+              select: {
+                answer_id: true,
+                answer_text: true,
+                answer_id_choice: true,
+                question_id:true
+              },
+            },
+          },
         },
       },
     });
@@ -1163,32 +1192,6 @@ export const getUserAnswers = async (req, res) => {
         error: "Quiz not found",
       });
     }
-
-    // Fetch answers for the attempt
-    const answers = await prisma.answer.findMany({
-      where: {
-        attempt_id: parseInt(attemptId),
-      },
-      skip: skipCount,
-      take: itemsPerPage,
-    });
-
-    // Combine questions and answers into a single response object
-    const questionsWithAnswers = quiz.questions.map((question) => {
-      const answer = answers.find(
-        (ans) => ans.question_id === question.question_id
-      );
-
-      return {
-        question_id: question.question_id,
-        question_text: question.question_text,
-        question_type: question.question_type,
-        marks: question.marks,
-        choices: question.choices,
-        answer_id: answer ? answer.answer_id : null,
-        answer_text: answer ? answer.answer_text : null,
-      };
-    });
 
     const totalQuestions = await prisma.question.count({
       where: {
@@ -1207,7 +1210,8 @@ export const getUserAnswers = async (req, res) => {
         quiz: {
           quiz_id: quiz.quiz_id,
           title: quiz.title,
-          questions: questionsWithAnswers, // Use the combined object
+          questions: quiz.questions,
+          attempt:quiz.Attempt 
         },
       },
       pagination: {
@@ -1232,6 +1236,7 @@ export const getUserAnswers = async (req, res) => {
     });
   }
 };
+
 export const updateAttemptScore = async (req, res) => {
   try {
     const { attemptId, scores } = req.body;

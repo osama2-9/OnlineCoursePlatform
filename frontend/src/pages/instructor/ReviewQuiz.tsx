@@ -9,7 +9,7 @@ import { InstructorLayout } from "../../layouts/InstructorLayout";
 import { FaEllipsisV } from "react-icons/fa";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
 import ReactMarkdown from "react-markdown";
-import { Loading } from "../../components/Loading";
+import { ClipLoader } from "react-spinners";
 
 export const ReviewQuiz = () => {
   const { courseId, quizId } = useParams();
@@ -121,8 +121,8 @@ export const ReviewQuiz = () => {
           </div>
 
           {loading ? (
-            <div className="flex justify-center items-center min-h-[400px]">
-              <Loading />
+            <div className="flex justify-center items-center ">
+              <ClipLoader size={20} />
             </div>
           ) : (
             <>
@@ -184,7 +184,9 @@ export const ReviewQuiz = () => {
                   </h2>
                   <button
                     onClick={() =>
-                      navigator(`/instructor/add-questions/${quizDetails.quiz.quiz_id}/quiz/${quizDetails.quiz.title}`)
+                      navigator(
+                        `/instructor/add-questions/${quizDetails.quiz.quiz_id}/quiz/${quizDetails.quiz.title}`
+                      )
                     }
                     className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
                   >
