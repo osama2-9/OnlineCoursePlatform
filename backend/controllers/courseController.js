@@ -25,6 +25,7 @@ const isHavePermession = async (course_id, instructor_id) => {
     throw new Error("You don't have permission to handle this course");
   }
 };
+
 export const createCourse = async (req, res) => {
   try {
     const {
@@ -93,66 +94,65 @@ export const getCourses = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 8;
-    const search = req.query.search || '';
-    const category = req.query.category || '';
-    const priceRange = req.query.priceRange || '';
-    const sortField = req.query.sortField || '';
-    const sortDirection = req.query.sortDirection || 'asc';
+    const search = req.query.search || "";
+    const category = req.query.category || "";
+    const priceRange = req.query.priceRange || "";
+    const sortField = req.query.sortField || "";
+    const sortDirection = req.query.sortDirection || "asc";
     const skip = (page - 1) * pageSize;
 
-    // Build where clause for filtering
     let whereClause = {};
-    
-    // Search filter
+
     if (search) {
       whereClause = {
         OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-          { category: { contains: search, mode: 'insensitive' } },
-          { instructor: { full_name: { contains: search, mode: 'insensitive' } } }
-        ]
+          { title: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
+          { category: { contains: search, mode: "insensitive" } },
+          {
+            instructor: {
+              full_name: { contains: search, mode: "insensitive" },
+            },
+          },
+        ],
       };
     }
 
-    // Category filter
     if (category) {
       whereClause = {
         ...whereClause,
-        category: category
+        category: category,
       };
     }
 
-    // Price range filter
     if (priceRange) {
       switch (priceRange) {
-        case 'free':
+        case "free":
           whereClause = { ...whereClause, price: 0 };
           break;
-        case '0-50':
+        case "0-50":
           whereClause = { ...whereClause, price: { gte: 0, lte: 50 } };
           break;
-        case '51-100':
+        case "51-100":
           whereClause = { ...whereClause, price: { gte: 51, lte: 100 } };
           break;
-        case '101+':
+        case "101+":
           whereClause = { ...whereClause, price: { gte: 101 } };
           break;
       }
     }
 
-    // Build orderBy clause for sorting
     let orderBy = {};
     if (sortField) {
-      if (sortField === 'instructor.full_name') {
+      if (sortField === "instructor.full_name") {
         orderBy = {
           instructor: {
-            full_name: sortDirection
-          }
+            full_name: sortDirection,
+          },
         };
       } else {
         orderBy = {
-          [sortField]: sortDirection
+          [sortField]: sortDirection,
         };
       }
     }
@@ -183,8 +183,8 @@ export const getCourses = async (req, res) => {
         },
       }),
       prisma.courses.count({
-        where: whereClause
-      })
+        where: whereClause,
+      }),
     ]);
 
     if (courses.length === 0) {
@@ -240,7 +240,6 @@ export const updateCourse = async (req, res) => {
       });
     }
 
-  
     if (course_img && course_img !== isCourseAvailable.course_img) {
       try {
         if (isCourseAvailable.course_img?.includes("cloudinary")) {
@@ -414,6 +413,7 @@ export const getCourseById = async (req, res) => {
     });
   }
 };
+
 export const updatePublishStatus = async (req, res) => {
   try {
     const { course_id, instructor_id } = req.body;

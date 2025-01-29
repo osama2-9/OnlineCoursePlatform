@@ -1,6 +1,7 @@
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { useEffect, useState } from "react";
 import { API } from "../API/ApiBaseUrl";
+
 interface Course {
   course_id: number;
   title: string;
@@ -8,6 +9,9 @@ interface Course {
   price: number;
   category: string;
   course_img: string;
+  instructor: {
+    full_name: string;
+  };
 }
 
 interface Pagination {
@@ -22,11 +26,15 @@ interface CoursesResponse {
   pagination: Pagination;
 }
 
-export const useGetCourses = () => {
+export const useGetCourses = (
+  currentPage: number,
+  searchQuery: string,
+  categoryFilter: string,
+  priceFilter: string
+) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const getCourses = async () => {
     try {
@@ -35,19 +43,26 @@ export const useGetCourses = () => {
       const res = await axios.get<CoursesResponse>(
         `${API}/course/get-courses`,
         {
+          params: {
+            page: currentPage,
+            search: searchQuery,
+            category: categoryFilter,
+            priceRange: priceFilter,
+          },
           headers: {
             "Content-Type": "application/json",
           },
           withCredentials: true,
         }
       );
+
       const data = res.data;
       if (data) {
         setCourses(data.courses);
         setPagination(data.pagination);
       }
-    } catch (error: any) {
-      console.log(error);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
     } finally {
       setLoading(false);
     }
@@ -55,7 +70,7 @@ export const useGetCourses = () => {
 
   useEffect(() => {
     getCourses();
-  }, [currentPage]);
+  }, [currentPage, searchQuery, categoryFilter, priceFilter]);
 
-  return { courses, loading, pagination, setCurrentPage };
+  return { courses, loading, pagination, setCourses, setPagination };
 };

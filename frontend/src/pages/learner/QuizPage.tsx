@@ -251,7 +251,6 @@ export const QuizPage = () => {
     }
   };
 
-  // Check for existing submission
   useEffect(() => {
     const quizSubmitted = localStorage.getItem(`quizSubmitted_${attemptId}`);
     if (quizSubmitted === "true") {
@@ -264,7 +263,6 @@ export const QuizPage = () => {
     return null;
   }
 
-  // Time formatting
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -294,7 +292,6 @@ export const QuizPage = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row p-6 gap-6">
-          {/* Questions Navigation Panel */}
           <div className="lg:w-1/4">
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 sticky top-6">
               <h2 className="text-sm font-medium text-gray-700 mb-3">
@@ -324,7 +321,6 @@ export const QuizPage = () => {
             </div>
           </div>
 
-          {/* Questions List */}
           <div className="lg:w-3/4 space-y-6">
             {questions.map((question, index) => (
               <div
@@ -348,7 +344,6 @@ export const QuizPage = () => {
                   </div>
                 </div>
 
-                {/* Answer Options */}
                 {question.question_type === "mcq" && (
                   <div className="space-y-2">
                     {question.choices.map((choice) => (
@@ -441,7 +436,6 @@ export const QuizPage = () => {
               </div>
             ))}
 
-            {/* Navigation Controls */}
             <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
               <button
                 onClick={handlePreviousQuestion}

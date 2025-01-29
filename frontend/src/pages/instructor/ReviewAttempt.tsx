@@ -4,7 +4,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { useEffect, useState } from "react";
-import { BeatLoader } from "react-spinners"; // Loading spinner
+import { BeatLoader, ClipLoader } from "react-spinners"; // Loading spinner
 import { InstructorLayout } from "../../layouts/InstructorLayout";
 import Markdown from "react-markdown";
 interface QuizAnswers {
@@ -163,7 +163,7 @@ export const ReviewAttempt = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <BeatLoader color="#3B82F6" size={15} />
+        <ClipLoader  size={25} />
       </div>
     );
   }

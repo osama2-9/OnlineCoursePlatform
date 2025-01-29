@@ -185,7 +185,7 @@ export const ReviewQuiz = () => {
                   <button
                     onClick={() =>
                       navigator(
-                        `/instructor/add-questions/${quizDetails.quiz.quiz_id}/quiz/${quizDetails.quiz.title}`
+                        `/instructor/add-questions/${quizDetails.quiz.quiz_id}/quiz/${quizDetails.quiz.title}/c/`
                       )
                     }
                     className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"

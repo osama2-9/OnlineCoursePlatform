@@ -7,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { FaEye } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "../../components/Loading";
+import { ClipLoader } from "react-spinners";
 
 interface User {
   full_name: string;
@@ -170,7 +171,7 @@ const QuizzesAttempts = () => {
           <>
             {loading ? (
               <div className="flex items-center justify-center">
-                <Loading />
+                <ClipLoader size={25} />
               </div>
             ) : (
               <>

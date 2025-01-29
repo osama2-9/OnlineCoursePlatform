@@ -50,7 +50,6 @@ export const ShowCourses = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>("");
   const [categories, setCategories] = useState<string[]>([]);
 
-  // Add debounce timeout state
   const [searchTimeout, setSearchTimeout] = useState<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -88,17 +87,14 @@ export const ShowCourses = () => {
     }
   };
 
-  // Update search handler to use debounce
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = event.target.value;
     setSearchQuery(searchValue);
 
-    // Clear existing timeout
     if (searchTimeout) {
       clearTimeout(searchTimeout);
     }
 
-    // Set new timeout
     const timeout = setTimeout(() => {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
       fetchCourses(1, pagination.pageSize);
@@ -107,7 +103,6 @@ export const ShowCourses = () => {
     setSearchTimeout(timeout);
   };
 
-  // Update useEffect to include all filter dependencies
   useEffect(() => {
     fetchCourses(pagination.currentPage, pagination.pageSize);
   }, [

@@ -185,7 +185,7 @@ export const UpdateCourse = ({
                 value={instructorOptions.find(
                   (option) => option.value === instructorId
                 )}
-                className="mt-1"
+                className="mt-1 z-50"
                 isSearchable
                 placeholder="Search and select an instructor"
                 styles={{
@@ -214,7 +214,7 @@ export const UpdateCourse = ({
                   categoryOptions.find((option) => option.value === category) ||
                   null
                 }
-                className="mt-1"
+                className="mt-1 z-50"
                 isSearchable
                 placeholder="Select a category"
                 styles={{

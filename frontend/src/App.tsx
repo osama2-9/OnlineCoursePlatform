@@ -45,6 +45,7 @@ import ResetPasswordRequest from "./pages/ResetPasswordRequest";
 import SetNewPassword from "./SetNewPassword";
 import { CourseReview } from "./pages/learner/CourseReview";
 import { Reviews } from "./pages/admin/Reviews";
+import { ExploreCoursesPage } from "./pages/ExploreCoursesPage";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -55,6 +56,7 @@ function App() {
         <Route path="/*" element={<NotFound />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/explore" element={<ExploreCoursesPage />} />
         <Route path="/forgot-password" element={<ResetPasswordRequest />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route

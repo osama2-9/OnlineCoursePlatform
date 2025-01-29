@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import ExploreCourses from "../components/ExploreCourses";
 import Services from "../components/Services";
 import { HomePageLayout } from "../layouts/HomePageLayout";
@@ -45,12 +46,12 @@ export const HomePage = () => {
                 learners.
               </p>
               <div className="flex gap-4">
-                <button className="px-8 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
+                <Link to={'/login'} className="px-8 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
                   Get Started
-                </button>
-                <button className="px-8 py-3 bg-white text-gray-800 font-medium rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                </Link>
+                <Link to={'/explore'} className="px-8 py-3 bg-white text-gray-800 font-medium rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
                   Browse Courses
-                </button>
+                </Link>
               </div>
             </div>
             <div

@@ -21,10 +21,10 @@ export interface EnrollmentsData {
   };
 }
 interface Pagination {
-    totalEnrollments: number;
-    totalPages: number;
-    currentPage: number;
-    limit: number;
+  totalEnrollments: number;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
 }
 
 export const useGetInstructorEnrollments = () => {
@@ -59,7 +59,6 @@ export const useGetInstructorEnrollments = () => {
   useEffect(() => {
     getEnrollmentsData();
   }, [user?.userId]);
-  
-  return { enrollments, enrollmentsLoading, pagination };
 
+  return { enrollments, enrollmentsLoading, pagination };
 };
