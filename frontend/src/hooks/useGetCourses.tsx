@@ -27,10 +27,10 @@ interface CoursesResponse {
 }
 
 export const useGetCourses = (
-  currentPage: number,
-  searchQuery: string,
-  categoryFilter: string,
-  priceFilter: string
+  currentPage?: number,
+  searchQuery?: string,
+  categoryFilter?: string,
+  priceFilter?: string
 ) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(false);

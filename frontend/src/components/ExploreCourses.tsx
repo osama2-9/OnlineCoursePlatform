@@ -5,20 +5,17 @@ import { FaSearch } from "react-icons/fa";
 import { FaFilter } from "react-icons/fa";
 import CourseCard from "./CourseCard";
 
-
 const ExploreCourses = () => {
   const [filter, setFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { courses, loading } = useGetCourses();
 
-  
   const categories = Array?.from(
     new Set(courses?.map((course) => course.category))
   );
 
   const filteredCourses = courses?.filter((course) => {
-   
     const price = Number(course.price);
     const priceFilter =
       filter === "all"
@@ -47,7 +44,6 @@ const ExploreCourses = () => {
   return (
     <div className="bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-       
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
             Professional Development Courses
@@ -58,7 +54,6 @@ const ExploreCourses = () => {
           </p>
         </div>
 
-        
         <div className="mb-8 bg-white p-4 rounded-lg shadow-sm">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
@@ -106,7 +101,6 @@ const ExploreCourses = () => {
           </div>
         </div>
 
-     
         <div className="mb-6">
           <p className="text-gray-600">
             Showing {filteredCourses?.length}{" "}
@@ -114,7 +108,6 @@ const ExploreCourses = () => {
           </p>
         </div>
 
-        
         {filteredCourses?.length === 0 ? (
           <div className="bg-white rounded-lg p-8 text-center">
             <FaFilter className="mx-auto text-4xl text-gray-400 mb-4" />
@@ -128,7 +121,11 @@ const ExploreCourses = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredCourses?.map((course) => (
-              <CourseCard key={course.course_id} {...course} instructor_name={course.instructor.full_name} />
+              <CourseCard
+                key={course.course_id}
+                {...course}
+                instructor_name={course.instructor.full_name}
+              />
             ))}
           </div>
         )}
