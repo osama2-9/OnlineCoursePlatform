@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import { useLogout } from "../hooks/useLogout";
+import { FaChalkboardUser } from "react-icons/fa6";
 
 export const HomePageNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

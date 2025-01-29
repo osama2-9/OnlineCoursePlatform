@@ -234,6 +234,7 @@ export const QuizPage = () => {
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
+          timeout: 500000,
         }
       );
 

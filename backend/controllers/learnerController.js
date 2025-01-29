@@ -681,8 +681,9 @@ export const submitQuizAnswers = async (req, res) => {
       });
     }
 
-    for (const ua of userAnswers) {
-      await prisma.answer.create({
+   
+    const createAnswerPromises = userAnswers.map((ua) => {
+      return prisma.answer.create({
         data: {
           attempt_id: attemptIdInt,
           question_id: ua.question_id,
@@ -690,7 +691,9 @@ export const submitQuizAnswers = async (req, res) => {
           answer_id_choice: ua.answer_id || null,
         },
       });
-    }
+    });
+
+    await Promise.all(createAnswerPromises);
 
     await prisma.attempt.update({
       where: {
@@ -711,6 +714,7 @@ export const submitQuizAnswers = async (req, res) => {
     });
   }
 };
+
 
 export const getCourseReviews = async (req, res) => {
   try {
