@@ -214,7 +214,6 @@ export const QuizPage = () => {
               answer_text: answerData.answer_text,
             };
           } else {
-            // For text questions
             return {
               question_id: parseInt(questionId),
               answer_id: null,
@@ -279,9 +278,6 @@ export const QuizPage = () => {
               <h1 className="text-xl font-semibold text-gray-800">
                 {quizTitle}
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Attempt ID: {attemptId}
-              </p>
             </div>
             <div className="flex items-center gap-3 bg-gray-200 px-4 py-2 rounded-md">
               <FiClock className="h-5 w-5 text-gray-600" />
@@ -291,19 +287,26 @@ export const QuizPage = () => {
             </div>
           </div>
         </div>
-
-        <div className="flex flex-col lg:flex-row p-6 gap-6">
-          <div className="lg:w-1/4">
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 sticky top-6">
-              <h2 className="text-sm font-medium text-gray-700 mb-3">
-                Questions ({pagination.totalQuestions})
-              </h2>
-              <div className="grid grid-cols-5 lg:grid-cols-3 gap-2">
-                {Array.from({ length: pagination.totalQuestions }, (_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleQuestionNavigation(i)}
-                    className={`relative h-8 rounded-md flex items-center justify-center text-sm transition-colors
+        {loading ? (
+          <>
+            <ClipLoader size={25} />
+          </>
+        ) : (
+          <>
+            <div className="flex flex-col lg:flex-row p-6 gap-6">
+              <div className="lg:w-1/4">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 sticky top-6">
+                  <h2 className="text-sm font-medium text-gray-700 mb-3">
+                    Questions ({pagination.totalQuestions})
+                  </h2>
+                  <div className="grid grid-cols-5 lg:grid-cols-3 gap-2">
+                    {Array.from(
+                      { length: pagination.totalQuestions },
+                      (_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleQuestionNavigation(i)}
+                          className={`relative h-8 rounded-md flex items-center justify-center text-sm transition-colors
                       ${
                         currentQuestionIndex === i
                           ? "bg-gray-800 text-white"
@@ -314,168 +317,176 @@ export const QuizPage = () => {
                           ? 'after:content-[" "] after:absolute after:top-0 after:right-0 after:w-2 after:h-2 after:bg-green-500 after:rounded-full'
                           : ""
                       }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:w-3/4 space-y-6">
-            {questions.map((question, index) => (
-              <div
-                id={`question-${question.question_id}`}
-                key={question.question_id}
-                className="bg-white p-6 rounded-lg border border-gray-200"
-              >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-700">
-                        {currentQuestionIndex + index + 1}
-                        <span className="text-xs text-gray-500 ml-1">
-                          ({question.marks})
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                  <div className="prose max-w-none text-gray-800">
-                    <ReactMarkdown>{question.question_text}</ReactMarkdown>
+                        >
+                          {i + 1}
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
+              </div>
 
-                {question.question_type === "mcq" && (
-                  <div className="space-y-2">
-                    {question.choices.map((choice) => (
-                      <label
-                        key={choice.choice_id}
-                        className={`flex items-center p-3 rounded-md cursor-pointer transition-colors
+              <div className="lg:w-3/4 space-y-6">
+                {questions.map((question, index) => (
+                  <div
+                    id={`question-${question.question_id}`}
+                    key={question.question_id}
+                    className="bg-white p-6 rounded-lg border border-gray-200"
+                  >
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center">
+                          <span className="text-sm font-medium text-gray-700">
+                            {currentQuestionIndex + index + 1}
+                            <span className="text-xs text-gray-500 ml-1">
+                              ({question.marks})
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                      <div className="prose max-w-none text-gray-800">
+                        <ReactMarkdown>{question.question_text}</ReactMarkdown>
+                      </div>
+                    </div>
+
+                    {question.question_type === "mcq" && (
+                      <div className="space-y-2">
+                        {question.choices.map((choice) => (
+                          <label
+                            key={choice.choice_id}
+                            className={`flex items-center p-3 rounded-md cursor-pointer transition-colors
                           ${
                             selectedAnswers[question.question_id]?.answer_id ===
                             choice.choice_id
                               ? "bg-gray-100 border border-gray-300"
                               : "hover:bg-gray-50 border border-gray-200"
                           }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`question-${question.question_id}`}
-                          className="form-radio h-4 w-4 text-gray-800 border-gray-400"
-                          checked={
-                            selectedAnswers[question.question_id]?.answer_id ===
-                            choice.choice_id
+                          >
+                            <input
+                              type="radio"
+                              name={`question-${question.question_id}`}
+                              className="form-radio h-4 w-4 text-gray-800 border-gray-400"
+                              checked={
+                                selectedAnswers[question.question_id]
+                                  ?.answer_id === choice.choice_id
+                              }
+                              onChange={() =>
+                                handleAnswerSelect(
+                                  question.question_id,
+                                  choice.choice_id,
+                                  choice.choice_text
+                                )
+                              }
+                            />
+                            <span className="ml-3 text-gray-700">
+                              {choice.choice_text}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {question.question_type === "truefalse" && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {["True", "False"].map((option, i) => (
+                          <label
+                            key={i}
+                            className={`flex items-center justify-center p-3 rounded-md cursor-pointer transition-colors
+                          ${
+                            selectedAnswers[question.question_id]
+                              ?.answer_text === option
+                              ? "bg-gray-100 border border-gray-300"
+                              : "hover:bg-gray-50 border border-gray-200"
+                          }`}
+                          >
+                            <input
+                              type="radio"
+                              name={`question-${question.question_id}`}
+                              className="form-radio h-4 w-4 text-gray-800 border-gray-400"
+                              checked={
+                                selectedAnswers[question.question_id]
+                                  ?.answer_text === option
+                              }
+                              onChange={() =>
+                                handleAnswerSelect(
+                                  question.question_id,
+                                  i,
+                                  option
+                                )
+                              }
+                            />
+                            <span className="ml-2 text-gray-700">{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {question.question_type === "text" && (
+                      <div className="relative">
+                        <textarea
+                          className="w-full p-3 bg-gray-50 rounded-md focus:ring-1 focus:ring-gray-400
+                        border border-gray-300 placeholder-gray-400 text-gray-700"
+                          rows={4}
+                          placeholder="Type your answer here..."
+                          value={
+                            selectedAnswers[question.question_id]
+                              ?.answer_text || ""
                           }
-                          onChange={() =>
+                          onChange={(e) =>
                             handleAnswerSelect(
                               question.question_id,
-                              choice.choice_id,
-                              choice.choice_text
+                              undefined,
+                              e.target.value
                             )
                           }
                         />
-                        <span className="ml-3 text-gray-700">
-                          {choice.choice_text}
-                        </span>
-                      </label>
-                    ))}
+                        <FiCheckCircle className="absolute bottom-3 right-3 h-5 w-5 text-gray-400" />
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
 
-                {question.question_type === "truefalse" && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {["True", "False"].map((option, i) => (
-                      <label
-                        key={i}
-                        className={`flex items-center justify-center p-3 rounded-md cursor-pointer transition-colors
-                          ${
-                            selectedAnswers[question.question_id]
-                              ?.answer_text === option
-                              ? "bg-gray-100 border border-gray-300"
-                              : "hover:bg-gray-50 border border-gray-200"
-                          }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`question-${question.question_id}`}
-                          className="form-radio h-4 w-4 text-gray-800 border-gray-400"
-                          checked={
-                            selectedAnswers[question.question_id]
-                              ?.answer_text === option
-                          }
-                          onChange={() =>
-                            handleAnswerSelect(question.question_id, i, option)
-                          }
-                        />
-                        <span className="ml-2 text-gray-700">{option}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-
-                {question.question_type === "text" && (
-                  <div className="relative">
-                    <textarea
-                      className="w-full p-3 bg-gray-50 rounded-md focus:ring-1 focus:ring-gray-400
-                        border border-gray-300 placeholder-gray-400 text-gray-700"
-                      rows={4}
-                      placeholder="Type your answer here..."
-                      value={
-                        selectedAnswers[question.question_id]?.answer_text || ""
-                      }
-                      onChange={(e) =>
-                        handleAnswerSelect(
-                          question.question_id,
-                          undefined,
-                          e.target.value
-                        )
-                      }
-                    />
-                    <FiCheckCircle className="absolute bottom-3 right-3 h-5 w-5 text-gray-400" />
-                  </div>
-                )}
-              </div>
-            ))}
-
-            <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
-              <button
-                onClick={handlePreviousQuestion}
-                disabled={pagination.currentPage === 1}
-                className="flex items-center gap-2 px-5 py-2 bg-white text-gray-700 rounded-md
+                <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
+                  <button
+                    onClick={handlePreviousQuestion}
+                    disabled={pagination.currentPage === 1}
+                    className="flex items-center gap-2 px-5 py-2 bg-white text-gray-700 rounded-md
                   disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors
                   border border-gray-300 text-sm font-medium"
-              >
-                <FiChevronLeft className="h-4 w-4" />
-                Previous
-              </button>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                {pagination.currentPage < pagination.totalPages && (
-                  <button
-                    onClick={handleNextQuestion}
-                    className="flex items-center gap-2 px-5 py-2 bg-white text-gray-700 rounded-md
-                      hover:bg-gray-50 transition-colors border border-gray-300 text-sm font-medium"
                   >
-                    Next
-                    <FiChevronRight className="h-4 w-4" />
+                    <FiChevronLeft className="h-4 w-4" />
+                    Previous
                   </button>
-                )}
 
-                <button
-                  onClick={handleSubmitQuiz}
-                  className="px-5 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {pagination.currentPage < pagination.totalPages && (
+                      <button
+                        onClick={handleNextQuestion}
+                        className="flex items-center gap-2 px-5 py-2 bg-white text-gray-700 rounded-md
+                      hover:bg-gray-50 transition-colors border border-gray-300 text-sm font-medium"
+                      >
+                        Next
+                        <FiChevronRight className="h-4 w-4" />
+                      </button>
+                    )}
+
+                    <button
+                      onClick={handleSubmitQuiz}
+                      className="px-5 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 
                     transition-colors border border-gray-800 text-sm font-medium"
-                >
-                  {loading ? (
-                    <ClipLoader size={18} color="#FFFFFF" />
-                  ) : (
-                    "Submit "
-                  )}
-                </button>
+                    >
+                      {loading ? (
+                        <ClipLoader size={18} color="#FFFFFF" />
+                      ) : (
+                        "Submit "
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
