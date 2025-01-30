@@ -22,7 +22,11 @@ model Users {
   activeEmailToken           String?   @unique
   activeEmailTokenExpiresAt  DateTime?
   isEmailVerified            Boolean   @default(false)
-
+  activeAccountToken         String?
+  activeAccountTokenExpiresAt DateTime?
+  is_2fa_enabled             Boolean   @default(false)  
+  two_fa_secret              String?  
+  backup_codes               String[]  
   courses       Courses[]
   enrollments   Enrollments[]
   payments      Payments[]

@@ -1,12 +1,18 @@
 import express from "express";
 import {
+  activeAccountRequest,
   activeEmailRequest,
+  activeMyAccount,
+  deactiveMyAccount,
   isAuthenticated,
   login,
   logout,
   resetPasswordRequest,
   setNewPassword,
   signup,
+  towFADisable,
+  towFAEnable,
+  verify2FA,
   verifyEmail,
 } from "../controllers/authController.js";
 import protectedRoute from "../middlewares/protectedRoute.js";
@@ -20,5 +26,11 @@ authRoute.post("/active-email-request", protectedRoute, activeEmailRequest);
 authRoute.post("/verify-email", protectedRoute, verifyEmail);
 authRoute.post("/reset-password-request", resetPasswordRequest);
 authRoute.post("/set-new-password", setNewPassword);
+authRoute.post("/deactive", protectedRoute, deactiveMyAccount);
+authRoute.post("/active-account-request", activeAccountRequest);
+authRoute.get("/active-attempt", activeMyAccount);
+authRoute.post("/enable2FA", protectedRoute, towFAEnable);
+authRoute.post("/verify-2fa", verify2FA);
+authRoute.post("/disable2FA", protectedRoute, towFADisable);
 
 export default authRoute;

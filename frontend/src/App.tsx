@@ -46,6 +46,8 @@ import SetNewPassword from "./SetNewPassword";
 import { CourseReview } from "./pages/learner/CourseReview";
 import { Reviews } from "./pages/admin/Reviews";
 import { ExploreCoursesPage } from "./pages/ExploreCoursesPage";
+import { LearnerSettings } from "./pages/instructor/LearnerSettings";
+import { AccountSetting } from "./pages/admin/AccountSetting";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -82,6 +84,10 @@ function App() {
         <Route
           path="/learner/course/review"
           element={<ProtectLearnerRoute element={<CourseReview />} />}
+        />
+        <Route
+          path="/learner/account/settings"
+          element={<ProtectLearnerRoute element={<LearnerSettings />} />}
         />
         <Route
           path="/quiz/:quizId/course/:courseId/a/:attemptId/e/:enrollmentId"
@@ -196,6 +202,10 @@ function App() {
         <Route
           path="/admin/reviews"
           element={<ProtectAdminRoute element={<Reviews />} />}
+        />
+        <Route
+          path="/admin/settings/account"
+          element={<ProtectAdminRoute element={<AccountSetting />} />}
         />
         <Route path="/course-page/:course_id" element={<CoursePage />} />
         <Route path="/payment/success" element={<SuccessPayment />} />

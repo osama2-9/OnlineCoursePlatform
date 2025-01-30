@@ -28,6 +28,8 @@
     "nodemailer": "^6.9.16",
     "nodemon": "^2.0.22",
     "openai": "^4.80.1",
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0",
     "stripe": "^17.5.0"
   },
   "devDependencies": {

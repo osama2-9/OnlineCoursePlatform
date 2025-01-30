@@ -1,5 +1,5 @@
 import { FaHome, FaBook, FaChartLine, FaBell, FaStar } from "react-icons/fa"; // Import icons from react-icons
-import { NavLink } from "react-router-dom"; // For active link highlighting
+import { Link, NavLink } from "react-router-dom"; // For active link highlighting
 
 export const Sidebar = () => {
   return (
@@ -94,13 +94,13 @@ export const Sidebar = () => {
         <h3 className="text-sm font-semibold text-gray-500 mb-3">More</h3>
         <ul className="space-y-3">
           <li>
-            <a
-              href="#"
+            <Link
+              to="/learner/account/settings"
               className="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
             >
               <span>⚙️</span>
               <span>Settings</span>
-            </a>
+            </Link>
           </li>
           <li>
             <a

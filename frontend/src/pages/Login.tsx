@@ -6,12 +6,14 @@ import { HomePageLayout } from "../layouts/HomePageLayout";
 import { setUser } from "../store/userSlice";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  const [is2FARequired, setIs2FARequired] = useState(false);
+  const [twoFACode, setTwoFACode] = useState("");
   const dispatch = useDispatch();
   const navigator = useNavigate();
 
@@ -27,7 +29,36 @@ export const Login = () => {
           withCredentials: true,
         }
       );
-      const data = await res.data;
+      const data = res.data;
+      if (data) {
+        if (data.twoFARequired) {
+          setIs2FARequired(true);
+        } else {
+          dispatch(setUser(data));
+          navigator("/");
+        }
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.response?.data?.error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handle2FAVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsLoading(true);
+      const res = await axios.post(
+        `${API}/auth/verify-2fa`,
+        { email, token: twoFACode },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+      const data = res.data;
       if (data) {
         dispatch(setUser(data));
         navigator("/");
@@ -60,52 +91,79 @@ export const Login = () => {
               Log in to continue your learning journey
             </p>
 
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form
+              onSubmit={is2FARequired ? handle2FAVerification : handleLogin}
+              className="space-y-6"
+            >
               <div className="space-y-4">
-                <div className="relative">
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Email Address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="example@gmail.com"
-                    className="block w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 hover:border-orange-300"
-                    required
-                  />
-                </div>
+                {!is2FARequired && (
+                  <>
+                    <div className="relative">
+                      <label
+                        htmlFor="email"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Email Address
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="example@gmail.com"
+                        className="block w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 hover:border-orange-300"
+                        required
+                      />
+                    </div>
 
-                <div className="relative">
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Password
-                  </label>
+                    <div className="relative">
+                      <label
+                        htmlFor="password"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="********"
+                          className="block w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 hover:border-orange-300"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {showPassword ? "Hide" : "Show"}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {is2FARequired && (
                   <div className="relative">
+                    <label
+                      htmlFor="2fa-code"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      2FA Code
+                    </label>
                     <input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="********"
+                      id="2fa-code"
+                      type="text"
+                      value={twoFACode}
+                      onChange={(e) => setTwoFACode(e.target.value)}
+                      placeholder="Enter 2FA code"
                       className="block w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 hover:border-orange-300"
                       required
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showPassword ? "Hide" : "Show"}
-                    </button>
                   </div>
-                </div>
+                )}
               </div>
 
               <button
@@ -140,6 +198,8 @@ export const Login = () => {
                     </svg>
                     Logging in...
                   </span>
+                ) : is2FARequired ? (
+                  "Verify 2FA"
                 ) : (
                   "Login"
                 )}
