@@ -107,20 +107,21 @@ export const login = async (req, res) => {
       return res.status(200).json({
         twoFARequired: true,
       });
+    } else {
+      generateTokenAndSetCookies(user?.user_id, user?.role, res);
+
+      await prisma.users.update({
+        where: { email },
+        data: { lastLogin: new Date() },
+      });
+
+      return res.status(200).json({
+        userId: user.user_id,
+        full_name: user.full_name,
+        email: user.email,
+        role: user.role,
+      });
     }
-    generateTokenAndSetCookies(user?.user_id, user?.role, res);
-
-    await prisma.users.update({
-      where: { email },
-      data: { lastLogin: new Date() },
-    });
-
-    return res.status(200).json({
-      userId: user.user_id,
-      full_name: user.full_name,
-      email: user.email,
-      role: user.role,
-    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
