@@ -3,6 +3,7 @@ import {
   activeAccountRequest,
   activeEmailRequest,
   activeMyAccount,
+  changePassword,
   deactiveMyAccount,
   isAuthenticated,
   login,
@@ -32,5 +33,6 @@ authRoute.get("/active-attempt", activeMyAccount);
 authRoute.post("/enable2FA", protectedRoute, towFAEnable);
 authRoute.post("/verify-2fa", verify2FA);
 authRoute.post("/disable2FA", protectedRoute, towFADisable);
+authRoute.post("/change-password", protectedRoute, changePassword);
 
 export default authRoute;

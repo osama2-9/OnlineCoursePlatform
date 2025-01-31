@@ -214,7 +214,7 @@ export const UpdateCourse = ({
                   categoryOptions.find((option) => option.value === category) ||
                   null
                 }
-                className="mt-1 z-50"
+                className="mt-1 z-40"
                 isSearchable
                 placeholder="Select a category"
                 styles={{

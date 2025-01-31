@@ -95,7 +95,7 @@ export const disable2FA = async (userId) => {
       data: {
         is_2fa_enabled: false,
         two_fa_secret: null,
-        backup_codes: null,
+        backup_codes: [],
       },
     });
     if (disable) {

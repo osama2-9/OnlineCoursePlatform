@@ -120,6 +120,7 @@ export const login = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         role: user.role,
+        towFAStatus: user.is_2fa_enabled,
       });
     }
   } catch (error) {
@@ -205,6 +206,7 @@ export const verify2FA = async (req, res) => {
           full_name: user.full_name,
           email: user.email,
           role: user.role,
+          towFAStatus: user.is_2fa_enabled,
         });
       }
     }
@@ -600,6 +602,62 @@ export const activeMyAccount = async (req, res) => {
     return res.status(200).json({
       message: "account activated successfully",
     });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { userId, oldPassword, newPassword } = req.body;
+    if (!userId || !oldPassword || !newPassword) {
+      return res.status(400).json({
+        error: "Missing required data",
+      });
+    }
+    const user = await prisma.users.findUnique({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        password_hash: true,
+      },
+    });
+
+    const verifyOldPassword = await bcrypt.compare(
+      oldPassword,
+      user.password_hash
+    );
+    if (!verifyOldPassword) {
+      return res.status(400).json({
+        error: "Incorrect old password",
+      });
+    }
+
+    const newPasswordHash = await passwordHashing(newPassword);
+    if (newPasswordHash) {
+      const setNewPassword = await prisma.users.update({
+        where: {
+          user_id: userId,
+        },
+        data: {
+          password_hash: newPasswordHash,
+        },
+      });
+
+      if (setNewPassword) {
+        return res.status(200).json({
+          message: "Password Updated",
+        });
+      }
+
+      return res.status(400).json({
+        error: "Error while update password",
+      });
+    }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
