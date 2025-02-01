@@ -452,13 +452,11 @@ export const setNewPassword = async (req, res) => {
 
 export const deactiveMyAccount = async (req, res) => {
   try {
+    console.log(req.body);
+    
     const { userId, accStatus } = req.body;
 
-    if (!userId || !accStatus) {
-      return res.status(400).json({
-        error: "Missing required data",
-      });
-    }
+   
     const user = await prisma.users.findUnique({
       where: {
         user_id: userId,

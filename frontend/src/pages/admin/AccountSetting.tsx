@@ -15,6 +15,7 @@ import {
   Power,
   X,
 } from "lucide-react";
+import { useLogout } from "../../hooks/useLogout";
 
 export const AccountSetting = () => {
   const { user } = useAuth();
@@ -34,7 +35,7 @@ export const AccountSetting = () => {
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 
   const dispatch = useDispatch();
-
+const {handleLogout} = useLogout()
 
   const enable2FA = async () => {
     setIsLoading2FA(true);
@@ -164,6 +165,7 @@ export const AccountSetting = () => {
         }
       );
 
+      handleLogout()
       const data = await res.data;
       if (data && data.message) {
         setIsAccountActive(!isAccountActive);
