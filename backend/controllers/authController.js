@@ -121,6 +121,7 @@ export const login = async (req, res) => {
         email: user.email,
         role: user.role,
         towFAStatus: user.is_2fa_enabled,
+        isActive: user.is_active,
       });
     }
   } catch (error) {
@@ -207,6 +208,7 @@ export const verify2FA = async (req, res) => {
           email: user.email,
           role: user.role,
           towFAStatus: user.is_2fa_enabled,
+          isActive: user.is_active,
         });
       }
     }
@@ -450,7 +452,13 @@ export const setNewPassword = async (req, res) => {
 
 export const deactiveMyAccount = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId, accStatus } = req.body;
+
+    if (!userId || !accStatus) {
+      return res.status(400).json({
+        error: "Missing required data",
+      });
+    }
     const user = await prisma.users.findUnique({
       where: {
         user_id: userId,
@@ -469,7 +477,7 @@ export const deactiveMyAccount = async (req, res) => {
         user_id: userId,
       },
       data: {
-        is_active: !user.is_active,
+        is_active: accStatus,
       },
     });
     if (!status) {
@@ -549,7 +557,7 @@ export const activeAccountRequest = async (req, res) => {
 
 export const activeMyAccount = async (req, res) => {
   try {
-    const { token } = req.query;
+    const { token } = req.body;
 
     if (!token) {
       return res.status(400).json({ error: "invaild token" });

@@ -48,6 +48,8 @@ import { Reviews } from "./pages/admin/Reviews";
 import { ExploreCoursesPage } from "./pages/ExploreCoursesPage";
 import { LearnerSettings } from "./pages/instructor/LearnerSettings";
 import { AccountSetting } from "./pages/admin/AccountSetting";
+import ActiveAccountRequest from "./pages/ActiveAccountRequest";
+import { ActiveAccount } from "./pages/ActiveAccount";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -61,6 +63,11 @@ function App() {
         <Route path="/explore" element={<ExploreCoursesPage />} />
         <Route path="/forgot-password" element={<ResetPasswordRequest />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
+        <Route
+          path="/active-account-request"
+          element={<ActiveAccountRequest />}
+        />
+        <Route path="/active-account" element={<ActiveAccount />} />
         <Route
           path="/learner/dashboard"
           element={<ProtectLearnerRoute element={<LearnerDashboard />} />}

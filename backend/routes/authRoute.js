@@ -29,7 +29,7 @@ authRoute.post("/reset-password-request", resetPasswordRequest);
 authRoute.post("/set-new-password", setNewPassword);
 authRoute.post("/deactive", protectedRoute, deactiveMyAccount);
 authRoute.post("/active-account-request", activeAccountRequest);
-authRoute.get("/active-attempt", activeMyAccount);
+authRoute.post("/active-acc-attempt", activeMyAccount);
 authRoute.post("/enable2FA", protectedRoute, towFAEnable);
 authRoute.post("/verify-2fa", verify2FA);
 authRoute.post("/disable2FA", protectedRoute, towFADisable);

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API } from "../API/ApiBaseUrl";
 
-const ResetPasswordRequest = () => {
+const ActiveAccountRequest = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
@@ -15,9 +15,9 @@ const ResetPasswordRequest = () => {
     setMessage({ text: "", type: "" });
 
     try {
-      await axios.post(`${API}/auth/reset-password-request`, { email });
+      await axios.post(`${API}/auth/active-account-request`, { email });
       setMessage({
-        text: "Password reset link has been sent to your email.",
+        text: "Active account link has been sent to your email.",
         type: "success",
       });
     } catch (error: any) {
@@ -38,15 +38,14 @@ const ResetPasswordRequest = () => {
         {/* Header */}
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-            Reset Password
+            Active You Account
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Enter your email address and we'll send you a link to reset your
-            password
+            Enter your email address and we'll send you a link to active your
+            account
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="space-y-2">
             <label
@@ -81,7 +80,6 @@ const ResetPasswordRequest = () => {
             </div>
           )}
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
@@ -112,7 +110,6 @@ const ResetPasswordRequest = () => {
             )}
           </button>
 
-          {/* Back to Login Link */}
           <button
             type="button"
             onClick={() => navigate("/login")}
@@ -126,4 +123,4 @@ const ResetPasswordRequest = () => {
   );
 };
 
-export default ResetPasswordRequest;
+export default ActiveAccountRequest;

@@ -6,6 +6,7 @@ interface User {
     email: string
     role: string
     towFAStatus: boolean
+    isActive: boolean
 
 }
 

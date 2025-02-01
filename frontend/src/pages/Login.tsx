@@ -1,7 +1,6 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { API } from "../API/ApiBaseUrl";
-import toast from "react-hot-toast";
 import { HomePageLayout } from "../layouts/HomePageLayout";
 import { setUser } from "../store/userSlice";
 import { useDispatch } from "react-redux";
@@ -14,6 +13,7 @@ export const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [is2FARequired, setIs2FARequired] = useState(false);
   const [twoFACode, setTwoFACode] = useState("");
+  const [error, setError] = useState<string>("");
   const dispatch = useDispatch();
   const navigator = useNavigate();
 
@@ -40,7 +40,13 @@ export const Login = () => {
       }
     } catch (error: any) {
       console.error(error);
-      toast.error(error?.response?.data?.error);
+      if (
+        error?.response?.data?.error === "This Account has been deactivated "
+      ) {
+        setError(error?.response?.data?.error);
+      } else {
+        setError(error?.response?.data?.error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -65,21 +71,28 @@ export const Login = () => {
       }
     } catch (error: any) {
       console.error(error);
-      toast.error(error?.response?.data?.error);
+      setError(error?.response?.data?.error);
     } finally {
       setIsLoading(false);
     }
+  };
+  const activeLink = () => {
+    return (
+      <Link to={"/active-account-request"} className="text-green-600 font-semibold">
+        Reactive Your accout
+      </Link>
+    );
   };
 
   return (
     <HomePageLayout>
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="flex flex-col lg:flex-row w-full max-w-6xl bg-white lg:shadow-xl lg:rounded-xl overflow-hidden transform transition-all  duration-300">
+        <div className="flex flex-col lg:flex-row w-full max-w-6xl bg-white lg:shadow-xl lg:rounded-xl overflow-hidden transform transition-all duration-300">
           <div className="hidden lg:flex items-center justify-center w-full lg:w-1/2 bg-gradient-to-br from-gray-50 to-gray-100 p-12">
             <img
               src={"/login.png"}
               alt="Login Illustration"
-              className="w-3/4 h-auto transform transition-transform  duration-300"
+              className="w-3/4 h-auto transform transition-transform duration-300"
             />
           </div>
 
@@ -165,6 +178,19 @@ export const Login = () => {
                   </div>
                 )}
               </div>
+
+              {error && (
+                <div className="text-red-500 text-sm mt-2 text-center">
+                  {error === "This Account has been deactivated" ? (
+                    <>
+                      {error} <br />
+                      {activeLink()}
+                    </>
+                  ) : (
+                    error
+                  )}
+                </div>
+              )}
 
               <button
                 type="submit"
