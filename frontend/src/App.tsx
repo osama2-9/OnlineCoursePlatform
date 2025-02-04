@@ -46,10 +46,11 @@ import SetNewPassword from "./SetNewPassword";
 import { CourseReview } from "./pages/learner/CourseReview";
 import { Reviews } from "./pages/admin/Reviews";
 import { ExploreCoursesPage } from "./pages/ExploreCoursesPage";
-import { LearnerSettings } from "./pages/instructor/LearnerSettings";
+import { LearnerSettings } from "./pages/LearnerSettings";
 import { AccountSetting } from "./pages/admin/AccountSetting";
 import ActiveAccountRequest from "./pages/ActiveAccountRequest";
 import { ActiveAccount } from "./pages/ActiveAccount";
+import InstractourSettings from "./pages/instructor/InstractourSettings";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -161,6 +162,12 @@ function App() {
         <Route
           path="/instructor/update-question/:questionId/course/:courseId"
           element={<ProtectedInstractourRoute element={<UpdateQuestion />} />}
+        />
+        <Route
+          path="/instructor/settings"
+          element={
+            <ProtectedInstractourRoute element={<InstractourSettings />} />
+          }
         />
         <Route
           path="/admin/dashboard"
