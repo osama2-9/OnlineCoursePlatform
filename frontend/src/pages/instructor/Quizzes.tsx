@@ -7,7 +7,7 @@ import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
 import { Loading } from "../../components/Loading";
 import Switch from "react-switch";
-import { FaEye } from "react-icons/fa";
+import { FaEye, FaEdit } from "react-icons/fa";
 
 interface Quiz {
   quiz_id: number;
@@ -135,7 +135,6 @@ export const Quizzes = () => {
       }
     } catch (error: any) {
       console.log(error);
-      // Revert the local state if the API call fails
       setQuizzes((prevQuizzes) =>
         prevQuizzes.map((quiz) =>
           quiz.quiz_id === quizId
@@ -147,6 +146,18 @@ export const Quizzes = () => {
         error?.response?.data?.error || "Failed to update quiz status"
       );
     }
+  };
+
+  const handleUpdateQuiz = (quiz: Quiz) => {
+    navigate("/instructor/update-quiz", {
+      state: {
+        quizId: quiz.quiz_id,
+        title: quiz.title,
+        description: quiz.description,
+        duration: quiz.duration,
+        maxAttempts: quiz.max_attempts,
+      },
+    });
   };
 
   return (
@@ -178,32 +189,35 @@ export const Quizzes = () => {
         ) : (
           <>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <table className="min-w-full divide-y  divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase ">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Title
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase ">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Course
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase ">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Duration (mins)
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase ">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Max Attempts
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase ">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase ">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Created At
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase ">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Actions
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase ">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Review
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Edit
                     </th>
                   </tr>
                 </thead>
@@ -264,6 +278,15 @@ export const Quizzes = () => {
                           className="cursor-pointer hover:text-gray-700"
                         />
                       </td>
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-500"
+                        onClick={() => handleUpdateQuiz(quiz)}
+                      >
+                        <FaEdit
+                          size={22}
+                          className="cursor-pointer hover:text-blue-600"
+                        />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -317,3 +340,5 @@ export const Quizzes = () => {
     </InstructorLayout>
   );
 };
+
+export default Quizzes;

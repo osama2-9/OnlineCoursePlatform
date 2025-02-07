@@ -17,6 +17,7 @@ import {
   updateAttemptScore,
   updateMyCourse,
   updateQuestion,
+  updateQuizInformations,
 } from "../controllers/instructorController.js";
 import { checkRole } from "../middlewares/checkRole.js";
 const instructorRoute = express.Router();
@@ -111,5 +112,10 @@ instructorRoute.post(
   "/get-ai-suggestions",
   checkRole("instructor"),
   aiSuggestionsQuestion
+);
+instructorRoute.put(
+  "/update-quiz",
+  checkRole("instructor"),
+  updateQuizInformations
 );
 export default instructorRoute;

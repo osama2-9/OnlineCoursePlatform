@@ -1179,7 +1179,7 @@ export const getUserAnswers = async (req, res) => {
                 answer_id: true,
                 answer_text: true,
                 answer_id_choice: true,
-                question_id:true
+                question_id: true,
               },
             },
           },
@@ -1211,7 +1211,7 @@ export const getUserAnswers = async (req, res) => {
           quiz_id: quiz.quiz_id,
           title: quiz.title,
           questions: quiz.questions,
-          attempt:quiz.Attempt 
+          attempt: quiz.Attempt,
         },
       },
       pagination: {
@@ -1372,6 +1372,57 @@ export const aiSuggestionsQuestion = async (req, res) => {
         error: "Error while try to get suggestion",
       });
     }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const updateQuizInformations = async (req, res) => {
+  try {
+    const { quizId, title, description, max_attempts, duration } = req.body;
+    
+    if (!quizId || !title || !description || !max_attempts || !duration) {
+      return res.status(400).json({
+        error: "Missing required data",
+      });
+    }
+    const quiz = await prisma.quizzes.findUnique({
+      where: {
+        quiz_id: quizId,
+      },
+      select: {
+        title: true,
+        description: true,
+        max_attempts: true,
+        duration: true,
+        course_id: true,
+      },
+    });
+
+
+    const update = await prisma.quizzes.update({
+      where: {
+        quiz_id: quizId,
+      },
+      data: {
+        title: title || quiz.title,
+        description: description || quiz.description,
+        max_attempts: max_attempts || quiz.max_attempts,
+        duration: duration || quiz.duration,
+      },
+    });
+
+    if (!update) {
+      return res.status(400).json({
+        error: "Error while try to update quiz",
+      });
+    }
+    return res.status(200).json({
+      message: "Quiz updated successfully ",
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({

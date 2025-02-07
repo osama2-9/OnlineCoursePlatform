@@ -529,17 +529,13 @@ export const startQuizAttempt = async (req, res) => {
     });
   }
 };
-
 export const getQuizQuestions = async (req, res) => {
   try {
     const { quizId, courseId, userId, attemptId, enrollmentId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = 5;
 
     if (!quizId || !courseId || !userId || !attemptId || !enrollmentId) {
       return res.status(400).json({
-        error:
-          "Missing required parameters: quizId, courseId, userId, attemptId, or enrollmentId.",
+        error: "Missing required parameters.",
       });
     }
 
@@ -550,7 +546,6 @@ export const getQuizQuestions = async (req, res) => {
         course_id: parseInt(courseId),
       },
     });
-
     if (!isUserEnrolled) {
       return res.status(403).json({
         error: "You are not enrolled in this course.",
@@ -562,7 +557,6 @@ export const getQuizQuestions = async (req, res) => {
       isUserEnrolled.course_id,
       isUserEnrolled.enrollment_id
     );
-
     if (!verifyAccess) {
       return res.status(403).json({
         error: "Access denied. Invalid access token.",
@@ -576,7 +570,6 @@ export const getQuizQuestions = async (req, res) => {
         user_id: parseInt(userId),
       },
     });
-
     if (!isAttemptValid) {
       return res.status(400).json({
         error: "Invalid attempt. Please start a new quiz attempt.",
@@ -596,8 +589,6 @@ export const getQuizQuestions = async (req, res) => {
             marks: true,
             choices: true,
           },
-          skip: (page - 1) * limit,
-          take: limit,
         },
       },
     });
@@ -621,19 +612,15 @@ export const getQuizQuestions = async (req, res) => {
       })),
     };
 
-    const totalQuestions = await prisma.question.count({
-      where: {
-        quiz_id: parseInt(quizId),
-      },
-    });
-
+    const totalQuestions = quiz.questions.length;
+    const limit = 5;
     const totalPages = Math.ceil(totalQuestions / limit);
 
     return res.status(200).json({
       quiz: {
         ...transformedQuiz,
         pagination: {
-          currentPage: page,
+          currentPage: 1,
           totalPages: totalPages,
           totalQuestions: totalQuestions,
           questionsPerPage: limit,
@@ -649,7 +636,6 @@ export const getQuizQuestions = async (req, res) => {
 };
 export const submitQuizAnswers = async (req, res) => {
   try {
-    console.log(req.body);
     const { attemptId, userAnswers, end_time } = req.body;
 
     if (!attemptId || !userAnswers || !end_time) {
@@ -681,7 +667,6 @@ export const submitQuizAnswers = async (req, res) => {
       });
     }
 
-   
     const createAnswerPromises = userAnswers.map((ua) => {
       return prisma.answer.create({
         data: {
@@ -714,7 +699,6 @@ export const submitQuizAnswers = async (req, res) => {
     });
   }
 };
-
 
 export const getCourseReviews = async (req, res) => {
   try {

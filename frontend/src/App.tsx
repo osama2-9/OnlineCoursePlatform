@@ -51,6 +51,7 @@ import { AccountSetting } from "./pages/admin/AccountSetting";
 import ActiveAccountRequest from "./pages/ActiveAccountRequest";
 import { ActiveAccount } from "./pages/ActiveAccount";
 import InstractourSettings from "./pages/instructor/InstractourSettings";
+import { UpdateQuiz } from "./pages/instructor/UpdateQuiz";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -138,6 +139,10 @@ function App() {
         <Route
           path="/instructor/quizess"
           element={<ProtectedInstractourRoute element={<Quizzes />} />}
+        />
+        <Route
+          path="/instructor/update-quiz"
+          element={<ProtectedInstractourRoute element={<UpdateQuiz />} />}
         />
         <Route
           path="/instructor/quizzes/attempts"
