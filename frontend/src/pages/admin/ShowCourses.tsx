@@ -12,6 +12,7 @@ import { Course } from "../../types/Course";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
 import { FaSort, FaDownload } from "react-icons/fa";
 import { CSVLink } from "react-csv";
+import { useQuery } from "@tanstack/react-query";
 
 interface Pagination {
   totalCourses: number;
@@ -76,9 +77,9 @@ export const ShowCourses = () => {
         }
       );
 
-      const data = res.data;
-      setCourses(data.courses);
-      setPagination(data.pagination);
+      if (res.data) {
+        return res.data;
+      }
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error || "Failed to fetch courses");
@@ -86,6 +87,14 @@ export const ShowCourses = () => {
       setIsLoading(false);
     }
   };
+
+  const { data } = useQuery({
+    queryKey: ["courses", pagination.currentPage, pagination.pageSize],
+    queryFn: () => fetchCourses(pagination.currentPage, pagination.pageSize),
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
+    retry: 2,
+  });
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = event.target.value;
@@ -128,8 +137,6 @@ export const ShowCourses = () => {
       setPagination((prev) => ({ ...prev, currentPage: newPage }));
     }
   };
-
- 
 
   const handleAddLesson = (courseId: number, instructorId: number) => {
     navigate(
@@ -251,7 +258,7 @@ export const ShowCourses = () => {
     setSortField(field);
     setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
 
-    const sortedCourses = [...(courses || [])].sort((a, b) => {
+    const sortedCourses = [...(data?.courses || [])].sort((a, b) => {
       let compareA = field.split(".").reduce((obj: any, key) => obj[key], a) as
         | string
         | number;
@@ -273,7 +280,7 @@ export const ShowCourses = () => {
     setCourses(sortedCourses);
   };
 
-  const exportData = courses?.map((course) => ({
+  const exportData = data?.courses?.map((course) => ({
     ID: course.course_id,
     Title: course.title,
     Instructor: course.instructor.full_name,
@@ -305,7 +312,7 @@ export const ShowCourses = () => {
                 Total Courses
               </h3>
               <p className="text-3xl font-bold text-indigo-600">
-                {pagination.totalCourses}
+                {data?.pagination.totalCourses}
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
@@ -313,7 +320,7 @@ export const ShowCourses = () => {
                 Published
               </h3>
               <p className="text-3xl font-bold text-green-600">
-                {courses?.filter((c) => c.is_published).length}
+                {data?.courses?.filter((c) => c.is_published).length}
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
@@ -321,7 +328,7 @@ export const ShowCourses = () => {
                 Unpublished
               </h3>
               <p className="text-3xl font-bold text-yellow-600">
-                {courses?.filter((c) => !c.is_published).length}
+                {data?.courses?.filter((c) => !c.is_published).length}
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
@@ -372,7 +379,7 @@ export const ShowCourses = () => {
                   <option value="101+">$101+</option>
                 </select>
 
-                {courses && courses.length > 0 && (
+                {data?.courses && data?.courses.length > 0 && (
                   <CSVLink
                     data={exportData || []}
                     filename="courses-export.csv"
@@ -439,7 +446,7 @@ export const ShowCourses = () => {
                       </td>
                     </tr>
                   ) : (
-                    courses?.map((course) => (
+                    data?.courses?.map((course) => (
                       <tr
                         key={course.course_id}
                         className="hover:bg-gray-50 cursor-pointer"

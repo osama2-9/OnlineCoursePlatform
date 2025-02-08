@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { API } from "../API/ApiBaseUrl";
 
@@ -32,14 +32,15 @@ export const useGetCourses = (
   categoryFilter?: string,
   priceFilter?: string
 ) => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
-
-  const getCourses = async () => {
-    try {
-      setLoading(true);
-
+  const { data, isLoading, isError, error } = useQuery<CoursesResponse, Error>({
+    queryKey: [
+      "courses",
+      currentPage,
+      searchQuery,
+      categoryFilter,
+      priceFilter,
+    ],
+    queryFn: async () => {
       const res = await axios.get<CoursesResponse>(
         `${API}/course/get-courses`,
         {
@@ -55,22 +56,17 @@ export const useGetCourses = (
           withCredentials: true,
         }
       );
+      return res.data;
+    },
+    staleTime: 1000 * 60 * 5,
+    retry: 1, 
+  });
 
-      const data = res.data;
-      if (data) {
-        setCourses(data.courses);
-        setPagination(data.pagination);
-      }
-    } catch (error) {
-      console.error("Error fetching courses:", error);
-    } finally {
-      setLoading(false);
-    }
+  return {
+    courses: data?.courses || [],
+    pagination: data?.pagination || null,
+    loading: isLoading,
+    isError,
+    error,
   };
-
-  useEffect(() => {
-    getCourses();
-  }, [currentPage, searchQuery, categoryFilter, priceFilter]);
-
-  return { courses, loading, pagination, setCourses, setPagination };
 };

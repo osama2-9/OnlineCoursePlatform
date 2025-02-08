@@ -1,18 +1,21 @@
 import { FaBook, FaChalkboardTeacher, FaSmile, FaUser } from "react-icons/fa";
 import TopCoursesChart from "../../components/admin/TopCoursesChart";
 import { AdminLayout } from "../../layouts/AdminLayout";
-import toast from "react-hot-toast";
+import { useAuth } from "../../hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
-import { useState, useEffect } from "react";
-import { useAuth } from "../../hooks/useAuth";
+import toast from "react-hot-toast";
 
 interface Cards {
   totalLearners: number;
   totalInstructors: number;
   totalCourses: number;
+  lastPayments: Payment[];
+  lastEnrollments: Enrollment[];
 }
-interface Enrollments {
+
+interface Enrollment {
   enrollment_date: Date;
   user: {
     full_name: string;
@@ -22,7 +25,7 @@ interface Enrollments {
   };
 }
 
-interface Payments {
+interface Payment {
   amount: number;
   created_at: Date;
   user: {
@@ -30,42 +33,52 @@ interface Payments {
   };
 }
 
+interface DashboardResponse {
+  cards: Cards;
+}
+
 export const AdminDashboard = () => {
   const { user } = useAuth();
-  const [cardsData, setCardsData] = useState<Cards | null>(null);
-  const [lastPayments, setLastPayments] = useState<Payments[] | null>([]);
-  const [lastEnrollments, setLastEnrollments] = useState<Enrollments[] | null>(
-    []
-  );
 
-  const dashboardSummary = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const res = await axios.get(`${API}/admin/dashboard-summary`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true,
-      });
-      const data = res.data;
-      if (data) {
-        setCardsData(data.cards);
-        setLastPayments(data.cards.lastPayments);
-        setLastEnrollments(data.cards.lastEnrollments);
-      }
+      const { data } = await axios.get<DashboardResponse>(
+        `${API}/admin/dashboard-summary`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+      return data;
     } catch (error: any) {
-      console.log(error);
       toast.error(error?.response?.data?.error || "An error occurred");
+      throw error;
     }
   };
 
-  useEffect(() => {
-    dashboardSummary();
-  }, []);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["adminDashboard"],
+    queryFn: fetchDashboardData,
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+  if (isError) {
+    return (
+      <AdminLayout>
+        <div className="text-center text-red-600 p-8">
+          Failed to load dashboard data. Please try again later.
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
-      {/* Hero Section with Gradient */}
-      <div className="bg-gradient-to-r  from-blue-700 to-blue-500 rounded-xl shadow-xl p-8 text-white mb-8">
+      <div className="bg-gradient-to-r from-blue-700 to-blue-500 rounded-xl shadow-xl p-8 text-white mb-8">
         <div className="flex items-center space-x-6">
           <div className="p-4 bg-white/20 backdrop-blur-lg rounded-xl">
             <FaSmile className="w-10 h-10" />
@@ -90,7 +103,7 @@ export const AdminDashboard = () => {
                 Total Learners
               </p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {cardsData ? cardsData.totalLearners : "..."}
+                {isLoading ? "..." : data?.cards.totalLearners}
               </p>
             </div>
             <div className="p-3 bg-blue-50 rounded-lg">
@@ -106,7 +119,7 @@ export const AdminDashboard = () => {
                 Total Instructors
               </p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {cardsData ? cardsData.totalInstructors : "..."}
+                {isLoading ? "..." : data?.cards.totalInstructors}
               </p>
             </div>
             <div className="p-3 bg-blue-50 rounded-lg">
@@ -120,7 +133,7 @@ export const AdminDashboard = () => {
             <div>
               <p className="text-sm font-medium text-gray-500">Total Courses</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {cardsData ? cardsData.totalCourses : "..."}
+                {isLoading ? "..." : data?.cards.totalCourses}
               </p>
             </div>
             <div className="p-3 bg-blue-50 rounded-lg">
@@ -157,8 +170,18 @@ export const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {lastEnrollments && lastEnrollments.length > 0 ? (
-                    lastEnrollments.map((enrollment, index) => (
+                  {isLoading ? (
+                    <tr>
+                      <td
+                        colSpan={3}
+                        className="py-4 text-center text-gray-500"
+                      >
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : data?.cards.lastEnrollments &&
+                    data.cards.lastEnrollments.length > 0 ? (
+                    data.cards.lastEnrollments.map((enrollment, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="py-3 px-4 text-sm text-gray-900">
                           {enrollment.user.full_name}
@@ -209,8 +232,18 @@ export const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {lastPayments && lastPayments.length > 0 ? (
-                    lastPayments.map((payment, index) => (
+                  {isLoading ? (
+                    <tr>
+                      <td
+                        colSpan={3}
+                        className="py-4 text-center text-gray-500"
+                      >
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : data?.cards.lastPayments &&
+                    data.cards.lastPayments.length > 0 ? (
+                    data.cards.lastPayments.map((payment, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="py-3 px-4 text-sm text-gray-900">
                           {payment.user.full_name}

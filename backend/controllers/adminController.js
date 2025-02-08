@@ -97,8 +97,9 @@ export const deleteUser = async (req, res) => {
   try {
     const { user_id } = req.params;
     const userId = parseInt(user_id);
+
     if (!user_id) {
-      return res.status(400).jsno({
+      return res.status(400).json({
         error: "No user found",
       });
     }
@@ -111,9 +112,10 @@ export const deleteUser = async (req, res) => {
 
     if (!deleteUser) {
       return res.status(400).json({
-        error: "Error while try to delete user",
+        error: "Error while trying to delete user",
       });
     }
+
     return res.status(200).json({
       message: "User deleted successfully",
     });
