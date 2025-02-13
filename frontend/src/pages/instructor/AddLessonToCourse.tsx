@@ -28,9 +28,11 @@ export const AddLessonToCourse = () => {
     lesson_order: 1,
   });
   const [loading, setLoading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0); // Progress for video upload
+  const [fileUploadProgress, setFileUploadProgress] = useState(0); // Progress for file upload
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -65,6 +67,7 @@ export const AddLessonToCourse = () => {
     setDragActive(false);
 
     const file = e.dataTransfer.files?.[0];
+
     if (file && file.type.startsWith("video/")) {
       setVideoFile(file);
       toast.success("Video file selected!");
@@ -84,6 +87,37 @@ export const AddLessonToCourse = () => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const fileType = file.type;
+
+      const fileCategories: Record<string, string> = {
+        "application/pdf": "PDF",
+        "application/msword": "Word",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+          "Word",
+        "application/vnd.ms-excel": "Excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+          "Excel",
+        "application/vnd.ms-powerpoint": "PowerPoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+          "PowerPoint",
+      };
+
+      const fileCategory = Object.keys(fileCategories).find((type) =>
+        fileType.startsWith(type)
+      );
+
+      if (fileCategory) {
+        setFile(file);
+        console.log(file);
+      } else {
+        toast.error("Unsupported file type");
+      }
+    }
+  };
+
   const uploadVideo = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -99,7 +133,7 @@ export const AddLessonToCourse = () => {
               const progress = Math.round(
                 (progressEvent.loaded / progressEvent.total) * 100
               );
-              setUploadProgress(progress);
+              setVideoUploadProgress(progress);
             }
           },
         }
@@ -108,6 +142,35 @@ export const AddLessonToCourse = () => {
     } catch (error) {
       console.error("Failed to upload video:", error);
       toast.error("Failed to upload video.");
+      return null;
+    }
+  };
+
+  const uploadFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", `${cloudinaryUploadrePreset}`);
+    formData.append("resource_type", "raw");
+    try {
+      const response = await axios.post(
+        `${cloudinaryUrl}/${cloudinaryCloude}/upload`,
+        formData,
+        {
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const progress = Math.round(
+                (progressEvent.loaded / progressEvent.total) * 100
+              );
+              setFileUploadProgress(progress);
+            }
+          },
+        }
+      );
+
+      return response.data.secure_url;
+    } catch (error) {
+      console.error("Failed to upload file:", error);
+      toast.error("Failed to upload file.");
       return null;
     }
   };
@@ -126,9 +189,19 @@ export const AddLessonToCourse = () => {
         }
       }
 
+      let attachment = formData.attachment;
+      if (file) {
+        attachment = await uploadFile(file);
+        if (!attachment) {
+          setLoading(false);
+          return;
+        }
+      }
+
       const payload = {
         ...formData,
         video_url: videoUrl,
+        attachment: attachment,
         instructor_id: instructorId,
         course_id: courseId,
       };
@@ -173,7 +246,11 @@ export const AddLessonToCourse = () => {
             Add New Lesson
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            encType="multipart/form-data"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label
@@ -289,18 +366,44 @@ export const AddLessonToCourse = () => {
                 )}
               </div>
             </div>
-
-            {uploadProgress > 0 && (
+            {videoUploadProgress > 0 && (
               <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                 <div
                   className="bg-blue-600 h-full transition-all duration-300 flex items-center justify-center text-xs text-white"
-                  style={{ width: `${uploadProgress}%` }}
+                  style={{ width: `${videoUploadProgress}%` }}
                 >
-                  {uploadProgress}%
+                  {videoUploadProgress}%
                 </div>
               </div>
             )}
 
+            <div>
+              <label
+                htmlFor="attachments"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Attachments
+              </label>
+              <input
+                type="file"
+                id="attachments"
+                name="attachments"
+                onChange={handleFileChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                required
+                placeholder="pdf,dox,docx,pptx,etc..."
+              />
+            </div>
+            {fileUploadProgress > 0 && (
+              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                <div
+                  className="bg-blue-600 h-full transition-all duration-300 flex items-center justify-center text-xs text-white"
+                  style={{ width: `${fileUploadProgress}%` }}
+                >
+                  {fileUploadProgress}%
+                </div>
+              </div>
+            )}
             <div className="flex items-center space-x-3 bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center">
                 <input

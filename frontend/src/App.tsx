@@ -52,6 +52,8 @@ import ActiveAccountRequest from "./pages/ActiveAccountRequest";
 import { ActiveAccount } from "./pages/ActiveAccount";
 import InstractourSettings from "./pages/instructor/InstractourSettings";
 import { UpdateQuiz } from "./pages/instructor/UpdateQuiz";
+import BecomeMentor from "./pages/BecomeAnInstractour";
+import { InstructorApplications } from "./pages/admin/InstructorApplications";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -62,6 +64,7 @@ function App() {
         <Route path="/*" element={<NotFound />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/become-an-instractour" element={<BecomeMentor />} />
         <Route path="/explore" element={<ExploreCoursesPage />} />
         <Route path="/forgot-password" element={<ResetPasswordRequest />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
@@ -217,6 +220,10 @@ function App() {
         <Route
           path="/admin/analystics"
           element={<ProtectAdminRoute element={<AdminAnalystic />} />}
+        />
+        <Route
+          path="/admin/applications"
+          element={<ProtectAdminRoute element={<InstructorApplications />} />}
         />
         <Route
           path="/admin/reviews"

@@ -1,6 +1,7 @@
 import express from "express";
 import { checkRole } from "../middlewares/checkRole.js";
 import {
+  cardsOverview,
   getAvliableQuizzes,
   getCompletedLessons,
   getCourseReviews,
@@ -21,6 +22,7 @@ learnerRoute.get(
   checkRole("learner"),
   getEnrolledInCourses
 );
+learnerRoute.get("/get-overview/:userId", checkRole("learner"), cardsOverview);
 
 learnerRoute.get(
   "/get-payments-history/:userId",
@@ -68,5 +70,5 @@ learnerRoute.get(
   checkRole("learner"),
   getCourseReviews
 );
-learnerRoute.post('/submit-review' , checkRole("learner") ,submitReview)
+learnerRoute.post("/submit-review", checkRole("learner"), submitReview);
 export default learnerRoute;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -12,7 +12,6 @@ import { Course } from "../../types/Course";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
 import { FaSort, FaDownload } from "react-icons/fa";
 import { CSVLink } from "react-csv";
-import { useQuery } from "@tanstack/react-query";
 
 interface Pagination {
   totalCourses: number;
@@ -54,6 +53,7 @@ export const ShowCourses = () => {
   const [searchTimeout, setSearchTimeout] = useState<ReturnType<
     typeof setTimeout
   > | null>(null);
+  const cache = useRef<{ [key: number]: Course[] }>({});
 
   const fetchCourses = async (page: number, pageSize: number) => {
     try {
@@ -77,8 +77,11 @@ export const ShowCourses = () => {
         }
       );
 
-      if (res.data) {
-        return res.data;
+      const data = res.data;
+      if (data) {
+        setCourses(data.courses);
+        setPagination(data.pagination);
+        cache.current[page] = data.courses;
       }
     } catch (error: any) {
       console.log(error);
@@ -87,14 +90,6 @@ export const ShowCourses = () => {
       setIsLoading(false);
     }
   };
-
-  const { data } = useQuery({
-    queryKey: ["courses", pagination.currentPage, pagination.pageSize],
-    queryFn: () => fetchCourses(pagination.currentPage, pagination.pageSize),
-    staleTime: 5 * 60 * 1000,
-    refetchInterval: 5 * 60 * 1000,
-    retry: 2,
-  });
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = event.target.value;
@@ -186,7 +181,7 @@ export const ShowCourses = () => {
       const data = await res.data;
       if (data) {
         toast.success(data.message);
-        fetchCourses(pagination.currentPage, pagination.pageSize); // Refresh the list
+        fetchCourses(pagination.currentPage, pagination.pageSize);
       }
     } catch (error: any) {
       console.log(error);
@@ -196,7 +191,6 @@ export const ShowCourses = () => {
 
   const handleUpdateCourse = async (updatedCourse: Course) => {
     try {
-      // Ensure all required fields are present in the request
       const courseToUpdate = {
         ...updatedCourse,
         courseType: updatedCourse.course_type,
@@ -258,7 +252,7 @@ export const ShowCourses = () => {
     setSortField(field);
     setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
 
-    const sortedCourses = [...(data?.courses || [])].sort((a, b) => {
+    const sortedCourses = [...(courses || [])].sort((a, b) => {
       let compareA = field.split(".").reduce((obj: any, key) => obj[key], a) as
         | string
         | number;
@@ -280,7 +274,7 @@ export const ShowCourses = () => {
     setCourses(sortedCourses);
   };
 
-  const exportData = data?.courses?.map((course) => ({
+  const exportData = courses?.map((course) => ({
     ID: course.course_id,
     Title: course.title,
     Instructor: course.instructor.full_name,
@@ -312,7 +306,7 @@ export const ShowCourses = () => {
                 Total Courses
               </h3>
               <p className="text-3xl font-bold text-indigo-600">
-                {data?.pagination.totalCourses}
+                {pagination.totalCourses}
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
@@ -320,7 +314,7 @@ export const ShowCourses = () => {
                 Published
               </h3>
               <p className="text-3xl font-bold text-green-600">
-                {data?.courses?.filter((c) => c.is_published).length}
+                {courses?.filter((c) => c.is_published).length}
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
@@ -328,7 +322,7 @@ export const ShowCourses = () => {
                 Unpublished
               </h3>
               <p className="text-3xl font-bold text-yellow-600">
-                {data?.courses?.filter((c) => !c.is_published).length}
+                {courses?.filter((c) => !c.is_published).length}
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
@@ -379,7 +373,7 @@ export const ShowCourses = () => {
                   <option value="101+">$101+</option>
                 </select>
 
-                {data?.courses && data?.courses.length > 0 && (
+                {courses && courses.length > 0 && (
                   <CSVLink
                     data={exportData || []}
                     filename="courses-export.csv"
@@ -446,7 +440,7 @@ export const ShowCourses = () => {
                       </td>
                     </tr>
                   ) : (
-                    data?.courses?.map((course) => (
+                    courses?.map((course) => (
                       <tr
                         key={course.course_id}
                         className="hover:bg-gray-50 cursor-pointer"

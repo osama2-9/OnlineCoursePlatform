@@ -297,6 +297,22 @@ export const AdminSidebar = () => {
             </li>
             <li>
               <NavLink
+                to="/admin/applications"
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`
+                }
+                onClick={closeSidebar}
+              >
+                <FaClipboardList className="w-5 h-5" />
+                <span>Applications</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
                 to="/admin/payments/show"
                 className={({ isActive }) =>
                   `flex items-center space-x-3 p-3 rounded-lg transition-colors ${

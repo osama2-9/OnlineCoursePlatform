@@ -47,9 +47,9 @@ export const UpdateCourse = ({
     { value: "cybersecurity", label: "Cybersecurity" },
     { value: "project-management", label: "Project Management" },
   ];
+
   useEffect(() => {
     if (courseData) {
-      console.log(courseData);
       setTitle(courseData.title);
       setPrice(courseData.price);
       setCategory(courseData.category || "programming");
@@ -66,6 +66,13 @@ export const UpdateCourse = ({
 
   const handleCategoryChange = (selectedOption: any) => {
     setCategory(selectedOption.value);
+  };
+
+  const handleCourseTypeChange = (type: "free" | "paid") => {
+    setCourseType(type);
+    if (type === "free") {
+      setPrice(0);
+    }
   };
 
   const handleLearnOutcomeChange = (index: number, value: string) => {
@@ -87,7 +94,6 @@ export const UpdateCourse = ({
     if (
       !title ||
       !description ||
-      !price ||
       !category ||
       !courseType ||
       learnOutcomes.length === 0 ||
@@ -102,9 +108,9 @@ export const UpdateCourse = ({
         course_id: courseData.course_id,
         title: title,
         description: description,
-        price: price,
+        price: courseType === "free" ? 0 : price,
         category: category,
-        courseType: courseType,
+        course_type: courseType, // Changed from courseType to course_type
         learning_outcomes: learnOutcomes,
         is_published: courseData.is_published,
         course_img: img || courseData.course_img,
@@ -160,6 +166,35 @@ export const UpdateCourse = ({
               />
             </div>
 
+            {/* Course Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Course Type
+              </label>
+              <div className="flex space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="free"
+                    checked={courseType === "free"}
+                    onChange={() => handleCourseTypeChange("free")}
+                    className="mr-2"
+                  />
+                  Free
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="paid"
+                    checked={courseType === "paid"}
+                    onChange={() => handleCourseTypeChange("paid")}
+                    className="mr-2"
+                  />
+                  Paid
+                </label>
+              </div>
+            </div>
+
             {/* Price */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -170,8 +205,16 @@ export const UpdateCourse = ({
                 placeholder="Price"
                 value={price}
                 onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={courseType === "free"}
+                className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  courseType === "free" ? "bg-gray-100" : ""
+                }`}
               />
+              {courseType === "free" && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Price is automatically set to 0 for free courses
+                </p>
+              )}
             </div>
 
             {/* Instructor */}
@@ -229,35 +272,6 @@ export const UpdateCourse = ({
                   }),
                 }}
               />
-            </div>
-
-            {/* Course Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Course Type
-              </label>
-              <div className="flex space-x-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="free"
-                    checked={courseType === "free"}
-                    onChange={() => setCourseType("free")}
-                    className="mr-2"
-                  />
-                  Free
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="paid"
-                    checked={courseType === "paid"}
-                    onChange={() => setCourseType("paid")}
-                    className="mr-2"
-                  />
-                  Paid
-                </label>
-              </div>
             </div>
 
             {/* Learning Outcomes */}

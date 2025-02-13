@@ -71,7 +71,7 @@ export const ShowCourseLessons = () => {
   const onConfirmUpdate = () => {
     setShowUpdateModal(false);
     setSelectedLesson(null);
-    getLessons(); // Refresh lessons after update
+    getLessons(); 
   };
 
   const handleDeleteLesson = async () => {
@@ -118,7 +118,7 @@ export const ShowCourseLessons = () => {
       toast.success("Lesson order updated successfully!");
     } catch (error: any) {
       toast.error("Failed to update lesson order.");
-      getLessons(); // Revert to original order if update fails
+      getLessons(); 
     }
   };
 
@@ -267,6 +267,7 @@ export const ShowCourseLessons = () => {
                         >
                           {lesson.is_free ? "Free Preview" : "Premium"}
                         </span>
+
                       </div>
                     </div>
                   </div>

@@ -62,6 +62,44 @@ model Courses {
   @@map("courses")
 }
 
+model InstructorsApplications {
+  application_id        Int                @id @default(autoincrement())
+  application_status    ApplicationStatus  @default(pending)
+  submitted_at          DateTime           @default(now())
+  reviewed_at           DateTime?
+  notes                 String?
+  
+  full_name            String
+  email                String
+  phone_number         String?
+  bio                  String?
+  profile_picture_url  String?
+  
+  expertise_area       String[]           
+  certifications       String[]           
+  years_of_experience  Int                
+  
+  education_background String             
+  institution          String             
+  degree               String             
+  
+  previous_courses     String[]           
+  teaching_style       String?            
+  language_skills      String[]           
+  
+  preferred_schedule   String?            
+  preferred_course_type CourseType?       
+  
+
+  @@map("instructor_applications")
+}
+
+enum ApplicationStatus {
+  pending
+  approved
+  rejected
+}
+
 enum CourseType {
   free
   paid

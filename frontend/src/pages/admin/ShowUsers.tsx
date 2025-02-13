@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -45,7 +45,14 @@ export const ShowUsers = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
 
+  const cache = useRef<{ [key: number]: User[] }>({});
+
   const fetchUsers = async (page: number, pageSize: number) => {
+    if (cache.current[page]) {
+      setUsers(cache.current[page]);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const res = await axios.get<FetchUsersResponse>(
@@ -70,6 +77,7 @@ export const ShowUsers = () => {
 
       setUsers(data.users);
       setPagination(paginationData);
+      cache.current[page] = data.users;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error || "Failed to fetch users");

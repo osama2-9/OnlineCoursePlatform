@@ -46,10 +46,16 @@ export const HomePage = () => {
                 learners.
               </p>
               <div className="flex gap-4">
-                <Link to={'/login'} className="px-8 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
+                <Link
+                  to={"/login"}
+                  className="px-8 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                >
                   Get Started
                 </Link>
-                <Link to={'/explore'} className="px-8 py-3 bg-white text-gray-800 font-medium rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                <Link
+                  to={"/explore"}
+                  className="px-8 py-3 bg-white text-gray-800 font-medium rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+                >
                   Browse Courses
                 </Link>
               </div>
@@ -112,9 +118,12 @@ export const HomePage = () => {
               community of leading instructors and help shape the future of
               online education.
             </p>
-            <button className="px-8 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
+            <Link
+              to={"/become-an-instractour"}
+              className="px-8 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+            >
               Start Teaching Today
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -170,9 +179,12 @@ export const HomePage = () => {
             Join thousands of learners who are advancing their careers through
             our platform.
           </p>
-          <button className="px-8 py-3 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors">
+          <Link
+            to={"/signup"}
+            className="px-8 py-3 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+          >
             Get Started Now
-          </button>
+          </Link>
         </div>
       </div>
     </HomePageLayout>

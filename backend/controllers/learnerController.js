@@ -817,3 +817,82 @@ export const submitReview = async (req, res) => {
     });
   }
 };
+
+export const cardsOverview = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({
+        error: "Missing required data",
+      });
+    }
+    const userIdInt = parseInt(userId);
+
+    const enrollments = await prisma.enrollments.findMany({
+      where: {
+        user_id: userIdInt,
+      },
+      select: {
+        status: true,
+        course: {
+          select: {
+            course_id: true,
+          },
+        },
+      },
+    });
+
+    const courses = enrollments.map(
+      (enrollment) => enrollment.course.course_id
+    );
+
+    const quizzes = await prisma.quizzes.findMany({
+      where: {
+        course_id: { in: courses },
+      },
+      select: {
+        Attempt: {
+          select: {
+            score: true,
+          },
+        },
+      },
+    });
+
+    let totalScore = 0;
+    let totalQuizzes = quizzes.length;
+    let completed = 0;
+    let inProgress = 0;
+
+    enrollments.map((enrollment) => {
+      if (enrollment.status === "completed") {
+        completed++;
+      }
+      if (enrollment.status === "active") {
+        inProgress++;
+      }
+    });
+    console.log(totalQuizzes);
+
+    quizzes.map((quiz) => {
+      quiz.Attempt.map((attempt) => {
+        console.log(attempt);
+
+        totalScore += attempt.score;
+      });
+    });
+
+    const avgScore = totalScore / totalQuizzes;
+
+    return res.status(200).json({
+      averageScore: avgScore,
+      completed: completed,
+      inProgress: inProgress,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
