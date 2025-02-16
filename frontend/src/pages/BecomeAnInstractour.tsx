@@ -389,7 +389,7 @@ const BecomeMentor = () => {
                 Phone Number *
               </label>
               <PhoneInput
-                country={"us"}
+                country={"ps"}
                 value={formData.phone_number}
                 onChange={handlePhoneChange}
                 inputClass={`w-full px-4 py-2 rounded-lg border ${

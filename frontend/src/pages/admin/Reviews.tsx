@@ -32,7 +32,7 @@ export const Reviews = () => {
   const [reviews, setReviews] = useState<Reviews[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<Reviews[]>([]);
   const [ratingFilter, setRatingFilter] = useState<number | "all">("all");
-  const [dateFilter, setDateFilter] = useState<string>("all"); // all, week, month, year
+  const [dateFilter, setDateFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState<Pagination>({
     totalReviews: 0,
@@ -69,14 +69,12 @@ export const Reviews = () => {
   const applyFilters = () => {
     let filtered = [...reviews];
 
-    // Apply rating filter
     if (ratingFilter !== "all") {
       filtered = filtered.filter(
         (review) => Math.floor(review.rating) === ratingFilter
       );
     }
 
-    // Apply date filter
     const now = new Date();
     if (dateFilter !== "all") {
       filtered = filtered.filter((review) => {
@@ -105,7 +103,6 @@ export const Reviews = () => {
       });
     }
 
-    // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(
         (review) =>

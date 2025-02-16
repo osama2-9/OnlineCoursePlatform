@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa";
 import { Loading } from "../Loading";
+import { useQuery } from "@tanstack/react-query";
 
 interface EnrolledCourses {
   enrollment_id: number;
@@ -31,7 +32,7 @@ export const EnrolledCourses = ({ userId }: any) => {
 
   const getEnrolledInCourses = async () => {
     try {
-      const res = await axios.get(
+      const { data } = await axios.get(
         `${API}/learner/get-enrolled-courses/${userId}`,
         {
           headers: {
@@ -40,10 +41,7 @@ export const EnrolledCourses = ({ userId }: any) => {
           withCredentials: true,
         }
       );
-      const data = await res.data;
-      if (data) {
-        setEnrolledCourses(data);
-      }
+      return data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error);
@@ -52,9 +50,17 @@ export const EnrolledCourses = ({ userId }: any) => {
     }
   };
 
+  const { data } = useQuery({
+    queryKey: ["userenrollmentdata", userId ?? null],
+    queryFn: getEnrolledInCourses,
+    staleTime: 15 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
+    retry: 2,
+  });
+
   useEffect(() => {
-    getEnrolledInCourses();
-  }, [userId]);
+    setEnrolledCourses(data);
+  }, [data]);
 
   return (
     <div>

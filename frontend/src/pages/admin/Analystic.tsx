@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Line, Bar, Doughnut } from "react-chartjs-2";
+import { Loader2 } from "lucide-react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,7 +17,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
-import { ClipLoader } from "react-spinners";
+import { useQuery } from "@tanstack/react-query";
 
 ChartJS.register(
   CategoryScale,
@@ -57,71 +57,10 @@ interface Response {
 
 export const AdminAnalystic = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [cardsData, setCardsData] = useState({
-    totalSuccessedPayments: 0,
-    totalCourses: 0,
-    totalCompletionPercentage: 0,
-    totalStudents: 0,
-  });
-
-  const [enrollmentTrend, setEnrollmentTrend] = useState<
-    Response["enrollmentTrend"]
-  >([
-    {
-      month: new Date(),
-      count: 0,
-    },
-  ]);
-
-  const enrollmentMonthes = enrollmentTrend.map((enrollment) => {
-    return enrollment.month;
-  });
-
-  const enrollmentCount = enrollmentTrend.map((enrollment) => {
-    return enrollment.count;
-  });
-
-  const [revenueTrend, setRevenueTrend] = useState<Response["revenueTrend"]>([
-    {
-      month: new Date(),
-      amount: 0,
-    },
-  ]);
-
-  const revenueMonthes = revenueTrend.map((revenue: any) => {
-    return revenue.month;
-  });
-
-  const revenueAmount = revenueTrend.map((revenue: any) => {
-    return revenue.amount;
-  });
-
-  const [coursesByCategory, setCoursesByCategory] = useState<
-    Response["coursesByCategory"]
-  >([
-    {
-      category: "",
-      count: 0,
-    },
-  ]);
-
-  const categorys = coursesByCategory.map((category) => {
-    return category.category;
-  });
-
-  const categoryCoursesCount = coursesByCategory.map((category) => {
-    return category.count;
-  });
-
-  const [topCourses, setTopCourses] = useState<
-    Response["topPerformingCourses"]
-  >([]);
 
   const getAnalaytics = async () => {
     try {
-      setLoading(true);
-      const res = await axios.get<Response>(
+      const { data } = await axios.get<Response>(
         `${API}/admin/analystics/${user?.userId}`,
         {
           headers: {
@@ -130,36 +69,35 @@ export const AdminAnalystic = () => {
           withCredentials: true,
         }
       );
-      const data = res.data;
-      if (data) {
-        setCardsData({
-          totalCompletionPercentage: data.totalCompletionPercentage,
-          totalCourses: data.totalCourses,
-          totalStudents: data.totalStudents,
-          totalSuccessedPayments: data.totalSuccessedPayments,
-        });
-        setRevenueTrend(data.revenueTrend);
-        setEnrollmentTrend(data.enrollmentTrend);
-        setCoursesByCategory(data.coursesByCategory);
-        setTopCourses(data.topPerformingCourses);
-      }
+      return data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error);
-    } finally {
-      setLoading(false);
+      throw error;
     }
   };
 
-  useEffect(() => {
-    getAnalaytics();
-  }, [user?.userId]);
+  const { data, isError, isLoading } = useQuery({
+    queryKey: ["adminanalystics", user?.userId],
+    queryFn: getAnalaytics,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
+
+  const cardsData = {
+    totalSuccessedPayments: data?.totalSuccessedPayments || 0,
+    totalCourses: data?.totalCourses || 0,
+    totalCompletionPercentage: data?.totalCompletionPercentage || 0,
+    totalStudents: data?.totalStudents || 0,
+  };
+
   const revenueData = {
-    labels: revenueMonthes,
+    labels: data?.revenueTrend.map((revenue) => revenue.month) || [],
     datasets: [
       {
         label: "Revenue ($)",
-        data: revenueAmount,
+        data: data?.revenueTrend.map((revenue) => revenue.amount) || [],
         borderColor: "rgb(75, 192, 192)",
         tension: 0.1,
       },
@@ -167,21 +105,21 @@ export const AdminAnalystic = () => {
   };
 
   const enrollmentData = {
-    labels: enrollmentMonthes,
+    labels: data?.enrollmentTrend.map((enrollment) => enrollment.month) || [],
     datasets: [
       {
         label: "New Enrollments",
-        data: enrollmentCount,
+        data: data?.enrollmentTrend.map((enrollment) => enrollment.count) || [],
         backgroundColor: "rgba(54, 162, 235, 0.5)",
       },
     ],
   };
 
   const categoryData = {
-    labels: categorys,
+    labels: data?.coursesByCategory.map((category) => category.category) || [],
     datasets: [
       {
-        data: categoryCoursesCount,
+        data: data?.coursesByCategory.map((category) => category.count) || [],
         backgroundColor: [
           "rgba(255, 99, 132, 0.5)",
           "rgba(54, 162, 235, 0.5)",
@@ -193,12 +131,22 @@ export const AdminAnalystic = () => {
     ],
   };
 
+  if (isError) {
+    return (
+      <AdminLayout>
+        <p className="flex justify-center text-center text-red-500">
+          Error fetching data
+        </p>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="p-6">
-        {loading ? (
-          <div className="flex justify-center items-center h-full">
-            <ClipLoader size={50} color={"#123abc"} loading={loading} />
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="animate-spin" size={30} color={"#123abc"} />
           </div>
         ) : (
           <>
@@ -225,9 +173,7 @@ export const AdminAnalystic = () => {
               </div>
             </div>
 
-            {/* Charts */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Revenue Trend */}
               <div className="bg-white p-4 rounded-lg shadow">
                 <h3 className="text-lg font-semibold mb-4">Revenue Trend</h3>
                 <Line
@@ -241,7 +187,6 @@ export const AdminAnalystic = () => {
                 />
               </div>
 
-              {/* Course Enrollments */}
               <div className="bg-white p-4 rounded-lg shadow">
                 <h3 className="text-lg font-semibold mb-4">
                   Monthly Enrollments
@@ -256,8 +201,6 @@ export const AdminAnalystic = () => {
                   }}
                 />
               </div>
-
-              {/* Course Categories */}
               <div className="bg-white p-4 rounded-lg shadow">
                 <h3 className="text-lg font-semibold mb-4">
                   Course Categories
@@ -273,13 +216,12 @@ export const AdminAnalystic = () => {
                 />
               </div>
 
-              {/* Top Performing Courses */}
               <div className="bg-white p-4 rounded-lg shadow">
                 <h3 className="text-lg font-semibold mb-4">
                   Top Performing Courses
                 </h3>
                 <div className="space-y-4">
-                  {topCourses.map((course, index) => (
+                  {data?.topPerformingCourses.map((course, index) => (
                     <div
                       key={index}
                       className="flex justify-between items-center"

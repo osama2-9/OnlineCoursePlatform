@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
+import { useQuery } from "@tanstack/react-query";
 
 // Register Chart.js components
 ChartJS.register(
@@ -33,34 +34,46 @@ const TopCoursesChart = () => {
 
   const getEnrollmentsData = async () => {
     try {
-      const res = await axios.get(`${API}/admin/top-enrolled-courses`, {
+      const { data } = await axios.get(`${API}/admin/top-enrolled-courses`, {
         headers: {
           "Content-Type": "application/json",
         },
         withCredentials: true,
       });
 
-      const data = await res.data;
-      if (data) {
-        setEnrollmentsData(data);
-      }
+      return data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error || "An error occurred");
     }
   };
 
+  const { data, isError } = useQuery({
+    queryKey: ["adminTopCourses"],
+    queryFn: getEnrollmentsData,
+    retry: 2,
+    refetchInterval: 10 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+  });
+
   useEffect(() => {
-    getEnrollmentsData();
-  }, []);
-  console.log(enrollmentsData);
+    setEnrollmentsData(data)
+  }, [data]);
+
+  if (isError) {
+    return (
+      <p className="flex justify-center items-center text-center text-red-500">
+        Error fetcing data
+      </p>
+    );
+  }
 
   const chartData = {
-    labels: enrollmentsData.map((course) => course.courseName),
+    labels: enrollmentsData?.map((course) => course.courseName),
     datasets: [
       {
         label: "Enrollments",
-        data: enrollmentsData.map((course) => course.count),
+        data: enrollmentsData?.map((course) => course.count),
         backgroundColor: "rgba(54, 162, 235, 0.5)",
         borderColor: "rgba(54, 162, 235)",
         borderWidth: 1,

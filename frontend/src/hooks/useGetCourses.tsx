@@ -58,8 +58,9 @@ export const useGetCourses = (
       );
       return res.data;
     },
-    staleTime: 1000 * 60 * 5,
-    retry: 1, 
+    staleTime: 1000 * 60 * 12,
+    refetchInterval: 1000 * 60 * 12,
+    retry: 1,
   });
 
   return {

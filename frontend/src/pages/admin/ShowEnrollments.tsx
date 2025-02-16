@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/Loading";
 import { UpdateEnrollment } from "../../components/admin/UpdateEnrollment";
+import { useQuery } from "@tanstack/react-query";
 
 interface Enrollment {
   enrollment_id: number;
@@ -26,6 +27,11 @@ interface FilterOptions {
   searchTerm: string;
 }
 
+interface EnrollmentResponse {
+  enrollments: Enrollment[];
+  totalPages: number;
+}
+
 export const ShowEnrollments = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -39,7 +45,7 @@ export const ShowEnrollments = () => {
   });
 
   const getFilteredEnrollments = () => {
-    return enrollments.filter((enrollment) => {
+    return enrollments?.filter((enrollment) => {
       const matchesStatus =
         filters.status === "all" || enrollment.status === filters.status;
       const matchesSearch =
@@ -56,23 +62,22 @@ export const ShowEnrollments = () => {
   const getEnrollments = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get(`${API}/enrollment/get-enrollments`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        params: {
-          page: currentPage,
-          limit: rowsPerPage,
-          status: filters.status !== "all" ? filters.status : undefined,
-          search: filters.searchTerm || undefined,
-        },
-        withCredentials: true,
-      });
-      const data = await res.data;
-      if (data) {
-        setEnrollments(data.enrollments);
-        setTotalPages(data.totalPages);
-      }
+      const { data } = await axios.get<EnrollmentResponse>(
+        `${API}/enrollment/get-enrollments`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          params: {
+            page: currentPage,
+            limit: rowsPerPage,
+            status: filters.status !== "all" ? filters.status : undefined,
+            search: filters.searchTerm || undefined,
+          },
+          withCredentials: true,
+        }
+      );
+      return data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error || "An error occurred");
@@ -80,6 +85,25 @@ export const ShowEnrollments = () => {
       setIsLoading(false);
     }
   };
+
+  const { data } = useQuery({
+    queryKey: ["enrollmentsData", currentPage],
+    queryFn: getEnrollments,
+    staleTime: 15 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
+    retry: 2,
+  });
+
+  useEffect(() => {
+    if (data) {
+      setEnrollments(data.enrollments || []);
+      setTotalPages(data.totalPages || 1);
+    } else {
+      console.error("No data received from the API");
+      setEnrollments([]);
+      setTotalPages(1);
+    }
+  }, [data]);
 
   const [selectdEnrollment, setSelectedEnrollment] =
     useState<Enrollment | null>(null);
@@ -125,10 +149,6 @@ export const ShowEnrollments = () => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
-
-  useEffect(() => {
-    getEnrollments();
-  }, [currentPage, rowsPerPage, filters]);
 
   const exportToCSV = () => {
     const csvContent = [
@@ -195,11 +215,7 @@ export const ShowEnrollments = () => {
               </select>
             </div>
             <div className="flex gap-4">
-              <button
-                onClick={exportToCSV}
-              >
-                Export CSV
-              </button>
+              <button onClick={exportToCSV}>Export CSV</button>
               <div className="relative inline-block w-full sm:w-auto">
                 <select
                   value={rowsPerPage}
