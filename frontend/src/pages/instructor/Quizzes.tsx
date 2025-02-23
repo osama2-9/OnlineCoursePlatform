@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
-import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
 import { Loading } from "../../components/Loading";
 import Switch from "react-switch";
 import { FaEye, FaEdit } from "react-icons/fa";
+import { useGetInstructorQuizzes } from "../../hooks/useGetInstructorQuizzes";
 
 interface Quiz {
   quiz_id: number;
@@ -23,81 +23,31 @@ interface Quiz {
   };
 }
 
-interface Pagination {
-  currentPage: number;
-  totalPages: number;
-  totalQuizzes: number;
-}
-
 export const Quizzes = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [pagination, setPagination] = useState<Pagination>({
-    currentPage: 1,
-    totalPages: 1,
-    totalQuizzes: 0,
-  });
+  const { quizzes, quizzesLoading, pagination, changePage } =
+    useGetInstructorQuizzes();
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const quizzesPerPage = 8;
-
-  const getQuizzes = async (page: number = 1) => {
-    try {
-      setLoading(true);
-      const res = await axios.get(
-        `${API}/instructor/get-quizzes/${user?.userId}`,
-        {
-          params: { page, pageSize: quizzesPerPage },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-      const data = res.data;
-      if (data) {
-        setQuizzes(data.quizzes);
-        setPagination({
-          currentPage: data.currentPage,
-          totalPages: data.totalPages,
-          totalQuizzes: data.totalQuizzes,
-        });
-      }
-    } catch (error: any) {
-      console.log(error);
-      toast.error(error?.response?.data?.error || "Failed to fetch quizzes");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getQuizzes(pagination.currentPage);
-  }, [user?.userId, pagination.currentPage]);
-
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= pagination.totalPages) {
-      setPagination((prev) => ({ ...prev, currentPage: page }));
+    if (page >= 1 && page <= (pagination?.totalPages || 1)) {
+      changePage(page);
     }
   };
-
-  const filteredQuizzes = quizzes.filter((quiz) => {
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "published" && quiz.is_published) ||
-      (statusFilter === "unpublished" && !quiz.is_published);
-    const matchesSearch = quiz.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
-
+  const filteredQuizzes =
+    quizzes?.filter((quiz) => {
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "published" && quiz.is_published) ||
+        (statusFilter === "unpublished" && !quiz.is_published);
+      const matchesSearch = quiz.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return matchesStatus && matchesSearch;
+    }) || [];
   const handleCreateQuiz = () => {
     navigate("/instructor/create-quiz");
   };
-
   const handleManageClick = (quizId: number, event: React.MouseEvent) => {
     event.stopPropagation();
     navigate(
@@ -106,11 +56,9 @@ export const Quizzes = () => {
       }/c/${quizzes.find((q) => q.quiz_id === quizId)?.course.title}`
     );
   };
-
   const handleReviewClick = (quizId: number, courseId: number) => {
     navigate(`/instructor/review-quiz/${quizId}/course/${courseId}`);
   };
-
   const handleTogglePublish = async (quizId: number, isPublished: boolean) => {
     try {
       const res = await axios.put(
@@ -131,23 +79,15 @@ export const Quizzes = () => {
         toast.success(
           `Quiz ${!isPublished ? "published" : "unpublished"} successfully!`
         );
-        getQuizzes(pagination.currentPage);
       }
     } catch (error: any) {
       console.log(error);
-      setQuizzes((prevQuizzes) =>
-        prevQuizzes.map((quiz) =>
-          quiz.quiz_id === quizId
-            ? { ...quiz, is_published: isPublished }
-            : quiz
-        )
-      );
+
       toast.error(
         error?.response?.data?.error || "Failed to update quiz status"
       );
     }
   };
-
   const handleUpdateQuiz = (quiz: Quiz) => {
     navigate("/instructor/update-quiz", {
       state: {
@@ -159,7 +99,10 @@ export const Quizzes = () => {
       },
     });
   };
-
+  if (!pagination) {
+    return null;
+  }
+  // Remove the pagination check that was causing the blank page
   return (
     <InstructorLayout>
       <div className="p-6 bg-gray-100 min-h-screen">
@@ -184,7 +127,7 @@ export const Quizzes = () => {
           </select>
         </div>
 
-        {loading ? (
+        {quizzesLoading ? (
           <Loading />
         ) : (
           <>
@@ -293,11 +236,12 @@ export const Quizzes = () => {
               </table>
             </div>
 
+            {/* Keep only one pagination control */}
             <div className="flex justify-between items-center mt-6">
               <button
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
-                disabled={pagination.currentPage === 1}
-                className="p-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                disabled={pagination.currentPage <= 1}
+                className="p-2 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50"
               >
                 Previous
               </button>
@@ -306,8 +250,8 @@ export const Quizzes = () => {
               </span>
               <button
                 onClick={() => handlePageChange(pagination.currentPage + 1)}
-                disabled={pagination.currentPage === pagination.totalPages}
-                className="p-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                disabled={pagination.currentPage >= pagination.totalPages}
+                className="p-2 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50"
               >
                 Next
               </button>

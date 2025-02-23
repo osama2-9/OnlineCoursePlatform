@@ -128,7 +128,6 @@ export const getEnrollmentData = async (req, res) => {
     const { instructorId } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
-    // Validate instructorId
     if (!instructorId) {
       return res.status(400).json({ error: "Missing instructor id" });
     }
@@ -589,8 +588,6 @@ export const createQuiz = async (req, res) => {
 
 export const createQuestion = async (req, res) => {
   try {
-    console.log(req.body);
-
     const {
       courseId,
       instructorId,
@@ -610,7 +607,6 @@ export const createQuestion = async (req, res) => {
 
     await isHavePermession(courseId, instructorId);
 
-    // Validate correct_answer for MCQ and True/False questions
     if (question_type === "mcq" || question_type === "truefalse") {
       if (correct_answer === undefined || correct_answer === null) {
         return res.status(400).json({
@@ -625,7 +621,6 @@ export const createQuestion = async (req, res) => {
       }
     }
 
-    // Create the question
     const createQuestion = await prisma.question.create({
       data: {
         quiz_id: parseInt(quizId),
@@ -641,9 +636,7 @@ export const createQuestion = async (req, res) => {
       });
     }
 
-    // Handle MCQ and True/False questions
     if (question_type === "mcq" || question_type === "truefalse") {
-      // Create choices
       for (const choice of choices) {
         await prisma.choice.create({
           data: {
@@ -784,13 +777,12 @@ export const reviewQuiz = async (req, res) => {
       });
     }
 
-    // Fetch questions and their choices
     const questions = await prisma.question.findMany({
       where: {
         quiz_id: parseInt(quizId),
       },
       include: {
-        choices: true, // Include choices for each question
+        choices: true,
       },
       orderBy: {
         question_id: "asc",
@@ -803,7 +795,6 @@ export const reviewQuiz = async (req, res) => {
       });
     }
 
-    // Format the response
     const formattedQuestions = questions.map((question) => {
       return {
         question_id: question.question_id,
@@ -1383,7 +1374,7 @@ export const aiSuggestionsQuestion = async (req, res) => {
 export const updateQuizInformations = async (req, res) => {
   try {
     const { quizId, title, description, max_attempts, duration } = req.body;
-    
+
     if (!quizId || !title || !description || !max_attempts || !duration) {
       return res.status(400).json({
         error: "Missing required data",
@@ -1401,7 +1392,6 @@ export const updateQuizInformations = async (req, res) => {
         course_id: true,
       },
     });
-
 
     const update = await prisma.quizzes.update({
       where: {

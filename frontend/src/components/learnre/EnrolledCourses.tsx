@@ -1,7 +1,6 @@
 import axios from "axios";
 import toast from "react-hot-toast";
 import { API } from "../../API/ApiBaseUrl";
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa";
 import { Loading } from "../Loading";
@@ -25,11 +24,6 @@ interface EnrolledCourses {
 }
 
 export const EnrolledCourses = ({ userId }: any) => {
-  const [enrolledCourses, setEnrolledCourses] = useState<
-    EnrolledCourses[] | null
-  >([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
   const getEnrolledInCourses = async () => {
     try {
       const { data } = await axios.get(
@@ -45,26 +39,20 @@ export const EnrolledCourses = ({ userId }: any) => {
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const { data } = useQuery({
-    queryKey: ["userenrollmentdata", userId ?? null],
+  const { data: enrolledCourses, isLoading } = useQuery({
+    queryKey: ["userenrollmentdata", userId],
     queryFn: getEnrolledInCourses,
-    staleTime: 15 * 60 * 1000,
-    refetchInterval: 15 * 60 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    enabled: !!userId,
     retry: 2,
   });
 
-  useEffect(() => {
-    setEnrolledCourses(data);
-  }, [data]);
-
   return (
     <div>
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center items-center min-h-[200px]">
           <Loading />
         </div>
@@ -93,7 +81,7 @@ export const EnrolledCourses = ({ userId }: any) => {
           <div className="p-6">
             {enrolledCourses && enrolledCourses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {enrolledCourses.map((enrollment) => (
+                {enrolledCourses.map((enrollment: any) => (
                   <div
                     key={enrollment.course.course_id}
                     className="group bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-all duration-300"
@@ -102,7 +90,7 @@ export const EnrolledCourses = ({ userId }: any) => {
                       <img
                         src={enrollment.course.course_img}
                         alt={enrollment.course.title}
-                        className="w-full h-40  rounded-t-lg"
+                        className="w-full h-40 rounded-t-lg"
                       />
                       <div className="absolute top-3 right-3">
                         <span

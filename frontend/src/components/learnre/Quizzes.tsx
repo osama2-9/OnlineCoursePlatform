@@ -8,7 +8,6 @@ import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
 import { ClipLoader } from "react-spinners";
 import { FaClock, FaClipboardList } from "react-icons/fa";
-
 export const Quizzes = () => {
   const { quizzesLoading, quizzs } = useGetLearnerQuizzes();
   const navigate = useNavigate();
@@ -93,58 +92,58 @@ export const Quizzes = () => {
             </h2>
           </div>
 
-          <div className="space-y-4">
-            {quizzs.map((quiz) => (
-              <div
-                key={quiz.quiz_id}
-                className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-300"
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {quiz.title}
-                    </h3>
-                    {quiz.Attempt?.length > 0 && quiz.Attempt[0].score > 0 && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        Score: {quiz.Attempt[0].score}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-2">
-                      {quiz.description}
-                    </p>
-                    <p className="text-sm font-medium text-gray-900">
-                      Course: {quiz.course.title}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <FaClock className="mr-2" />
-                      <span>Duration: {quiz.duration} minutes</span>
+          {quizzs && quizzs.length > 0 ? (
+            <div className="space-y-4">
+              {quizzs.map((quiz) => (
+                <div
+                  key={quiz.quiz_id}
+                  className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-300"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {quiz.title}
+                      </h3>
+                      {quiz.Attempt?.length > 0 &&
+                        quiz.Attempt[0].score > 0 && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            Score: {quiz.Attempt[0].score}
+                          </span>
+                        )}
                     </div>
-                    <button
-                      onClick={() =>
-                        handleStartQuiz(
-                          quiz.quiz_id,
-                          quiz.course_id,
-                          quiz.enrollment_id
-                        )
-                      }
-                      className="inline-flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
-                    >
-                      Start Quiz
-                    </button>
+
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 mb-2">
+                        {quiz.description}
+                      </p>
+                      <p className="text-sm font-medium text-gray-900">
+                        Course: {quiz.course.title}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <FaClock className="mr-2" />
+                        <span>Duration: {quiz.duration} minutes</span>
+                      </div>
+                      <button
+                        onClick={() =>
+                          handleStartQuiz(
+                            quiz.quiz_id,
+                            quiz.course_id,
+                            quiz.enrollment_id
+                          )
+                        }
+                        className="inline-flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                      >
+                        Start Quiz
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Empty State */}
-          {quizzs.length === 0 && (
+              ))}
+            </div>
+          ) : (
             <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
               <div className="mb-4">
                 <FaClipboardList className="mx-auto h-12 w-12 text-gray-400" />
@@ -156,7 +155,6 @@ export const Quizzes = () => {
             </div>
           )}
 
-          {/* Confirmation Modal */}
           {isModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">

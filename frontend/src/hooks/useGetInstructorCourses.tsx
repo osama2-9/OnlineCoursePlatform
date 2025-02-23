@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { API } from "../API/ApiBaseUrl";
 import { useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
+import { useQuery } from "@tanstack/react-query";
 export interface CourseDetails {
   title: string;
   description: string;
@@ -23,16 +24,18 @@ interface Pagination {
   currentPage: 1;
   limit: 10;
 }
+
+interface InstructorCoursesResponse {
+  courses: CourseDetails[];
+  pagination: Pagination;
+}
 export const useGetInstructorCourses = () => {
   const [courses, setCourses] = useState<CourseDetails[] | null>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
   const getInstructorCourses = async () => {
     try {
-      setLoading(true);
-      const res = await axios.get(
+      const res = await axios.get<InstructorCoursesResponse>(
         `${API}/instructor/instructor-courses/${user?.userId}`,
         {
           headers: {
@@ -41,22 +44,26 @@ export const useGetInstructorCourses = () => {
           withCredentials: true,
         }
       );
-      const data = await res.data;
-      if (data) {
-        setCourses(data.courses);
-        setPagination(data.pagination);
-      }
+      return res.data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    getInstructorCourses();
-  }, [user?.userId]);
+  const { data, isLoading } = useQuery({
+    queryKey: ["instructorcourses", user?.userId],
+    queryFn: getInstructorCourses,
+    staleTime: 1 * 1000 * 60,
+    refetchInterval: 1 * 1000 * 60,
+    retry: 2,
+  });
 
-  return { courses, loading, pagination };
+  useEffect(() => {
+    if (data) {
+      setCourses(data.courses || []);
+    }
+  }, [data]);
+
+  return { courses, isLoading };
 };

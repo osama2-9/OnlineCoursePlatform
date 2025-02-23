@@ -8,7 +8,7 @@ interface LearnerLayoutProps {
 export const InstructorLayout = ({ children }: LearnerLayoutProps) => {
   return (
     <div className="flex min-h-screen max-w-full">
-      <div className="w-64 bg-white shadow-lg">
+      <div className="lg:w-64 lg:bg-white lg:shadow-lg">
         <InstructorSidebar />
       </div>
 

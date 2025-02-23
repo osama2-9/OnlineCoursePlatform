@@ -1,8 +1,9 @@
 import axios from "axios";
 import { API } from "../API/ApiBaseUrl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "./useAuth";
 import toast from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 
 interface Quiz {
   quiz_id: number;
@@ -14,40 +15,72 @@ interface Quiz {
   created_at: string;
   course: {
     title: string;
-    course_id:number
+    course_id: number;
   };
 }
 
+interface Pagination {
+  totalQuizzes: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+interface QuizzesResponse {
+  quizzes: Quiz[];
+  pagination: Pagination;
+}
+
 export const useGetInstructorQuizzes = () => {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [quizzesloading, setQuizzesLoading] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [quizzesLoading, setQuizzesLoading] = useState<boolean>(false);
   const { user } = useAuth();
-  let quizzesPerPage = 8;
-  const getQuizzes = async (page: number = 1) => {
+  const quizzesPerPage = 8;
+
+  const getQuizzes = async () => {
+    if (!user?.userId) return null;
+    setQuizzesLoading(true);
     try {
-      setQuizzesLoading(true);
-      const res = await axios.get(
-        `${API}/instructor/get-quizzes/${user?.userId}`,
+      const res = await axios.get<QuizzesResponse>(
+        `${API}/instructor/get-quizzes/${user.userId}`,
         {
-          params: { page, pageSize: quizzesPerPage },
+          params: { page: currentPage, pageSize: quizzesPerPage },
           headers: {
             "Content-Type": "application/json",
           },
           withCredentials: true,
         }
       );
-      const data = res.data;
-      if (data) {
-        setQuizzes(data.quizzes);
-      }
+      return res.data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error || "Failed to fetch quizzes");
+      return {
+        quizzes: [],
+        pagination: { currentPage: 1, totalPages: 1, totalQuizzes: 0 },
+      };
     } finally {
       setQuizzesLoading(false);
     }
   };
-
-  useEffect(()=>{getQuizzes()} ,[user?.userId])
-  return { quizzes, quizzesloading };
+  const { data } = useQuery({
+    queryKey: ["quizzes", user?.userId, currentPage],
+    queryFn: getQuizzes,
+    staleTime: 1 * 60 * 1000,
+    refetchInterval: 1 * 60 * 1000,
+    retry: 2,
+    enabled: !!user?.userId,
+  });
+  const changePage = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+  return {
+    quizzes: data?.quizzes || [],
+    quizzesLoading,
+    pagination: data?.pagination || {
+      currentPage: 1,
+      totalPages: 1,
+      totalQuizzes: 0,
+    },
+    changePage,
+  };
 };

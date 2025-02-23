@@ -6,6 +6,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { Star, StarHalf } from "lucide-react";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/Loading";
+import { useQuery } from "@tanstack/react-query";
 
 interface Reviews {
   review_id: number;
@@ -27,6 +28,13 @@ interface Pagination {
   currentPage: number;
 }
 
+interface ReviewsResponse {
+  reviews: Reviews[];
+  currentPage: number;
+  totalPages: number;
+  totalReviews: number;
+}
+
 export const Reviews = () => {
   const { user } = useAuth();
   const [reviews, setReviews] = useState<Reviews[]>([]);
@@ -39,33 +47,43 @@ export const Reviews = () => {
     totalPages: 0,
     currentPage: 1,
   });
-  const [loading, setLoading] = useState(true);
 
   const getReviews = async (page: number = 1) => {
     try {
-      setLoading(true);
-      const res = await axios.get(`${API}/admin/reviews/${user?.userId}`, {
-        params: { page },
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true,
-      });
-      const data = await res.data;
-      if (data) {
-        setReviews(data.reviews);
-        setPagination({
-          totalReviews: data.totalReviews,
-          totalPages: data.totalPages,
-          currentPage: data.currentPage,
-        });
-      }
+      const res = await axios.get<ReviewsResponse>(
+        `${API}/admin/reviews/${user?.userId}`,
+        {
+          params: { page },
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+      const data = res.data;
+      return data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error);
-    } finally {
-      setLoading(false);
     }
   };
 
+  const { data, isError, isLoading } = useQuery({
+    queryKey: ["adminreviews", pagination.currentPage, pagination.totalPages],
+    queryFn: () => getReviews(pagination.currentPage || 1),
+    staleTime: 10 * 1000 * 60,
+    refetchInterval: 10 * 1000 * 60,
+    retry: 2,
+  });
+
+  useEffect(() => {
+    if (data) {
+      setReviews(data.reviews || []);
+      setPagination({
+        currentPage: data.currentPage || 1,
+        totalPages: data.totalPages || 0,
+        totalReviews: data.totalReviews || 0,
+      });
+    }
+  }, [data]);
   const applyFilters = () => {
     let filtered = [...reviews];
 
@@ -118,12 +136,6 @@ export const Reviews = () => {
   };
 
   useEffect(() => {
-    if (user?.userId) {
-      getReviews();
-    }
-  }, [user]);
-
-  useEffect(() => {
     applyFilters();
   }, [reviews, ratingFilter, dateFilter, searchTerm]);
 
@@ -153,10 +165,18 @@ export const Reviews = () => {
     return stars;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loading />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center text-red-500 justify-center min-h-[400px]">
+        error while fetch data
       </div>
     );
   }

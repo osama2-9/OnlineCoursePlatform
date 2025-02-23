@@ -7,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { Loading } from "../../components/Loading";
 import { Link } from "react-router-dom";
 import { FaBook } from "react-icons/fa";
+import { useQuery } from "@tanstack/react-query";
 
 interface EnrolledCourses {
   enrollment_id: number;
@@ -45,9 +46,7 @@ export const MyCourses = () => {
         }
       );
       const data = await res.data;
-      if (data) {
-        setEnrolledCourses(data);
-      }
+      return data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error);
@@ -56,9 +55,25 @@ export const MyCourses = () => {
     }
   };
 
+  const { data, isError } = useQuery({
+    queryKey: ["mycourses"],
+    queryFn: getCourses,
+    staleTime: 30 * 1000 * 60,
+    refetchInterval: 30 * 1000 * 60,
+    retry: 2,
+  });
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center text-red-500">
+        error while fetching data
+      </div>
+    );
+  }
+
   useEffect(() => {
-    getCourses();
-  }, [user?.userId]);
+    setEnrolledCourses(data);
+  }, [user?.userId, data]);
   return (
     <LearnerLayout>
       {loading ? (

@@ -68,6 +68,7 @@ const BarChart = ({ data, title }: BarChartProps) => {
   return <Bar data={data} options={options} />;
 };
 
+
 export const Analystic = () => {
   const { user } = useAuth();
   const [coursesProgress, setCoursesProgress] = useState<any[]>([]);

@@ -12,6 +12,7 @@ import { UpdateLesson } from "../../components/admin/UpdateLesson";
 import { Lesson } from "../../types/Lesson";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 
 interface Response {
   lessons: Lesson[];
@@ -40,7 +41,8 @@ export const ShowCourseLessons = () => {
           withCredentials: true,
         }
       );
-      setLessons(res.data.lessons);
+      const data = res.data;
+      return data;
     } catch (error: any) {
       toast.error(error?.response?.data?.error || "Failed to fetch lessons.");
     } finally {
@@ -48,6 +50,17 @@ export const ShowCourseLessons = () => {
     }
   };
 
+  const { data } = useQuery({
+    queryKey: ["lessons", user?.userId, courseId],
+    queryFn: getLessons,
+    staleTime: 15 * 1000 * 60,
+    refetchInterval: 15 * 1000 * 60,
+    retry: 2,
+  });
+
+  useEffect(() => {
+    setLessons(data && data.lessons ? data.lessons : []);
+  }, [data]);
   const onClickDelete = (lesson: Lesson) => {
     setSelectedLesson(lesson);
     setShowDeleteModal(true);
@@ -71,7 +84,7 @@ export const ShowCourseLessons = () => {
   const onConfirmUpdate = () => {
     setShowUpdateModal(false);
     setSelectedLesson(null);
-    getLessons(); 
+    getLessons();
   };
 
   const handleDeleteLesson = async () => {
@@ -118,7 +131,7 @@ export const ShowCourseLessons = () => {
       toast.success("Lesson order updated successfully!");
     } catch (error: any) {
       toast.error("Failed to update lesson order.");
-      getLessons(); 
+      getLessons();
     }
   };
 
@@ -146,10 +159,6 @@ export const ShowCourseLessons = () => {
     updateLessonOrder(newLessons);
   };
 
-  useEffect(() => {
-    getLessons();
-  }, [courseId]);
-
   return (
     <InstructorLayout>
       <div className="container mx-auto px-4 py-8">
@@ -162,7 +171,9 @@ export const ShowCourseLessons = () => {
           </button>
           <button
             onClick={() =>
-              navigate(`/instructor/courses/${courseId}/add-lesson/${user?.userId}`)
+              navigate(
+                `/instructor/courses/${courseId}/add-lesson/${user?.userId}`
+              )
             }
             className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium flex items-center gap-2 shadow-sm hover:shadow-md"
           >
@@ -267,7 +278,6 @@ export const ShowCourseLessons = () => {
                         >
                           {lesson.is_free ? "Free Preview" : "Premium"}
                         </span>
-
                       </div>
                     </div>
                   </div>

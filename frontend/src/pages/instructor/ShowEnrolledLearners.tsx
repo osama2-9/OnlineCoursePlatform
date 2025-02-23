@@ -4,7 +4,7 @@ import { InstructorLayout } from "../../layouts/InstructorLayout";
 import { EnrollmentsData } from "../../hooks/useGetInstructorEnrollments";
 import { Loading } from "../../components/Loading";
 export const ShowEnrolledLearners = () => {
-  const { enrollments, enrollmentsLoading, pagination } =
+  const { enrollments, enrollmentsLoading, pagintion } =
     useGetInstructorEnrollments();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] =
@@ -41,7 +41,6 @@ export const ShowEnrolledLearners = () => {
         ) : (
           <div className="overflow-x-auto bg-white rounded-lg shadow-md">
             <table className="min-w-full divide-y divide-gray-200">
-              {/* Table Header */}
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -110,21 +109,21 @@ export const ShowEnrolledLearners = () => {
           </div>
         )}
 
-        {pagination && (
+        {pagintion && (
           <div className="flex justify-between items-center mt-6">
             <div className="text-sm text-gray-700">
-              Showing page {pagination.currentPage} of {pagination.totalPages}
+              Showing page {pagintion.currentPage} of {pagintion.totalPages}
             </div>
             <div className="flex space-x-2">
               <button
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                disabled={pagination.currentPage === 1}
+                disabled={pagintion.currentPage === 1}
               >
                 Previous
               </button>
               <button
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                disabled={pagination.currentPage === pagination.totalPages}
+                disabled={pagintion.currentPage === pagintion.totalPages}
               >
                 Next
               </button>

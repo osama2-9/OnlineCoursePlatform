@@ -3,6 +3,7 @@ import { useAuth } from "./useAuth";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { API } from "../API/ApiBaseUrl";
+import { useQuery } from "@tanstack/react-query";
 interface Quizzes {
   quiz_id: number;
   course_id: number;
@@ -17,16 +18,17 @@ interface Quizzes {
   enrollment_id: number;
   Attempt: {
     score: number;
-  }[]
+  }[];
 }
 export const useGetLearnerQuizzes = () => {
   const [quizzesLoading, setIsQuizzesLoading] = useState<boolean>(false);
   const [quizzs, setQuizzes] = useState<Quizzes[]>([]);
   const { user } = useAuth();
+
   const getQuizzes = async () => {
     try {
       setIsQuizzesLoading(true);
-      const res = await axios.get(
+      const { data } = await axios.get(
         `${API}/learner/get-avliable-quizzes/${user?.userId}`,
         {
           headers: {
@@ -35,10 +37,7 @@ export const useGetLearnerQuizzes = () => {
           withCredentials: true,
         }
       );
-      const data = await res.data;
-      if (data) {
-        setQuizzes(data.quizzes);
-      }
+      return data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error);
@@ -47,9 +46,19 @@ export const useGetLearnerQuizzes = () => {
     }
   };
 
+  const { data } = useQuery({
+    queryKey: ["userquizzes"],
+    queryFn: getQuizzes,
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
+    retry: 2,
+  });
 
   useEffect(() => {
-    getQuizzes();
-  }, [user?.userId]);
+    if (data) {
+      setQuizzes(data.quizzes);
+    }
+  }, [data]);
+
   return { quizzs, quizzesLoading };
 };

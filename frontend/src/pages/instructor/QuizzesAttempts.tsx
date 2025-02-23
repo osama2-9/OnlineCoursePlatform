@@ -7,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { FaEye } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
+import { useQuery } from "@tanstack/react-query";
 
 interface User {
   full_name: string;
@@ -36,6 +37,11 @@ interface Pagination {
   totalPages: number;
 }
 
+interface QuizzesResponse {
+  data: Quiz[];
+  pagination: Pagination;
+}
+
 const QuizzesAttempts = () => {
   const { user } = useAuth();
   const [attempts, setAttempts] = useState<Quiz[]>([]);
@@ -53,10 +59,10 @@ const QuizzesAttempts = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const getUsersAttempts = async (page: number = 1, limit: number = 10) => {
+  const getUsersAttempts = async (page: number = 1, limit: number = 7) => {
     try {
       setLoading(true);
-      const res = await axios.get(
+      const res = await axios.get<QuizzesResponse>(
         `${API}/instructor/get-quizzes-attempts/${user?.userId}`,
         {
           params: { page, limit },
@@ -65,11 +71,7 @@ const QuizzesAttempts = () => {
         }
       );
       const data = res.data;
-      if (data) {
-        setAttempts(data.data);
-        setQuizzes(data.data);
-        setPagination(data.pagination);
-      }
+      return data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error || "Failed to fetch attempts");
@@ -78,8 +80,25 @@ const QuizzesAttempts = () => {
     }
   };
 
+  const { data } = useQuery({
+    queryKey: ["quizzes", user?.userId, pagination.page, pagination.limit],
+    queryFn: () => getUsersAttempts(pagination.page, pagination.limit),
+    staleTime: 15 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
+    retry: 2,
+    enabled: !!user?.userId,
+  });
+
+  useEffect(() => {
+    if (data) {
+      setQuizzes(data.data);
+      setAttempts(data.data);
+      setPagination(data.pagination);
+    }
+  }, [data]);
+
   const handlePageChange = (newPage: number) => {
-    getUsersAttempts(newPage, pagination.limit);
+    setPagination((prev) => ({ ...prev, page: newPage }));
   };
 
   const handleReview = (
@@ -106,12 +125,6 @@ const QuizzesAttempts = () => {
       }).map((attempt) => ({ ...quiz, Attempt: [attempt] }))
     )
     .flat();
-
-  useEffect(() => {
-    if (user?.userId) {
-      getUsersAttempts(pagination.page, pagination.limit);
-    }
-  }, [user?.userId]);
 
   return (
     <InstructorLayout>
