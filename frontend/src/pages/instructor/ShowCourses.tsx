@@ -7,7 +7,7 @@ import { CourseDetails } from "../../hooks/useGetInstructorCourses";
 import { useNavigate } from "react-router-dom";
 
 export const ShowInstractourCourses = () => {
-  const { courses, loading, pagination } = useGetInstructorCourses();
+  const { courses, isLoading, pagination } = useGetInstructorCourses();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedCourse, setSelectedCourse] = useState<CourseDetails | null>(
     null
@@ -33,7 +33,7 @@ export const ShowInstractourCourses = () => {
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-6">Your Courses</h1>
 
-        {loading ? (
+        {isLoading ? (
           <Loading />
         ) : courses?.length === 0 ? (
           <div className="text-center text-gray-600">No courses found.</div>

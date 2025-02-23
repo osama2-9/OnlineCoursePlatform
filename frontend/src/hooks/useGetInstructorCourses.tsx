@@ -20,9 +20,9 @@ export interface CourseDetails {
 
 interface Pagination {
   totalCourses: number;
-  totalPages: 1;
-  currentPage: 1;
-  limit: 10;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
 }
 
 interface InstructorCoursesResponse {
@@ -31,6 +31,12 @@ interface InstructorCoursesResponse {
 }
 export const useGetInstructorCourses = () => {
   const [courses, setCourses] = useState<CourseDetails[] | null>([]);
+  const [pagination, setPagination] = useState<Pagination>({
+    currentPage: 1,
+    limit: 0,
+    totalCourses: 0,
+    totalPages: 0,
+  });
   const { user } = useAuth();
 
   const getInstructorCourses = async () => {
@@ -52,7 +58,12 @@ export const useGetInstructorCourses = () => {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["instructorcourses", user?.userId],
+    queryKey: [
+      "instructorcourses",
+      user?.userId,
+      pagination.currentPage,
+      pagination.totalPages,
+    ],
     queryFn: getInstructorCourses,
     staleTime: 1 * 1000 * 60,
     refetchInterval: 1 * 1000 * 60,
@@ -62,8 +73,9 @@ export const useGetInstructorCourses = () => {
   useEffect(() => {
     if (data) {
       setCourses(data.courses || []);
+      setPagination(data.pagination || null);
     }
   }, [data]);
 
-  return { courses, isLoading };
+  return { courses, isLoading, pagination };
 };
