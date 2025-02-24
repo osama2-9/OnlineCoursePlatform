@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Clock,
   MessageSquare,
-  Tag,
   Filter,
   ChevronDown,
   ArrowUp,
@@ -14,7 +13,29 @@ import {
 } from "lucide-react";
 
 export const Feed = () => {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<
+    {
+      article_id: number;
+      title: string;
+      slug: string;
+      excerpt: string;
+      status: string;
+      content_type: string;
+      published_at: string;
+      category: string;
+      tags: string[];
+      featured_image: string | null;
+      word_count: number;
+      author: {
+        name: string;
+        avatar: string;
+        role: string;
+      };
+      comments: any[];
+      read_time: number;
+      popularity: number;
+    }[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -176,7 +197,7 @@ export const Feed = () => {
         // Sort posts
         if (sortBy === "latest") {
           filteredPosts.sort(
-            (a, b) => new Date(b.published_at) - new Date(a.published_at)
+            (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
           );
         } else if (sortBy === "popular") {
           filteredPosts.sort((a, b) => b.popularity - a.popularity);
@@ -225,7 +246,7 @@ export const Feed = () => {
   ];
 
   // Format date to readable format
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string | number | Date) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
@@ -495,7 +516,7 @@ export const Feed = () => {
 
             {/* Posts grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post) => (
+              {posts.map((post:any) => (
                 <article
                   key={post.article_id}
                   className="flex flex-col rounded-lg overflow-hidden bg-white shadow hover:shadow-lg transition duration-300"
