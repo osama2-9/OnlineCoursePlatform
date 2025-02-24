@@ -1,5 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
-import { FiMenu, FiLogIn, FiUserPlus, FiLogOut } from "react-icons/fi";
+import {
+  FiMenu,
+  FiLogIn,
+  FiUserPlus,
+  FiLogOut,
+  FiBookOpen,
+} from "react-icons/fi";
+import { RiDashboard3Line } from "react-icons/ri";
+
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
@@ -36,16 +44,24 @@ export const HomePageNavbar = () => {
           </div>
         </Link>
 
-        {/* Desktop Menu Links */}
         <div className="space-x-6 hidden md:flex items-center">
+          <Link
+            to="/feed"
+            className="flex items-center hover:text-gray-700 transition-all duration-300 ease-in-out"
+            aria-label="Articles"
+          >
+            <FiBookOpen className="mr-2" />
+            Feed
+          </Link>
           {user ? (
             <>
               <div className="flex items-center space-x-4">
                 <button
                   onClick={navigateBasedOnRole}
-                  className="text-gray-700 hover:text-orange-500 transition-all duration-300 ease-in-out"
+                  className="text-orange-600 hover:text-gray-700 transition-all duration-300 ease-in-out flex items-center"
                 >
-                  Welcome, {user.full_name}
+                  <RiDashboard3Line className="mr-2" />
+                  Dashboard
                 </button>
                 <button
                   onClick={handleLogout}
@@ -97,6 +113,15 @@ export const HomePageNavbar = () => {
           isMobileMenuOpen ? "block" : "hidden"
         }`}
       >
+        <Link
+          to="/articles"
+          className="block py-2 px-4 text-gray-700 hover:bg-orange-100 rounded-md transition-all duration-300 ease-in-out"
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-label="Articles"
+        >
+          <FiBookOpen className="mr-2 inline" />
+          Articles
+        </Link>
         {user ? (
           <>
             <button

@@ -42,7 +42,7 @@ import { AdminAnalystic } from "./pages/admin/Analystic";
 import { ShowCourseLessons } from "./pages/instructor/ShowCourseLessons";
 import { AddLessonToCourse } from "./pages/instructor/AddLessonToCourse";
 import ResetPasswordRequest from "./pages/ResetPasswordRequest";
-import SetNewPassword from "./SetNewPassword";
+import SetNewPassword from "./pages/SetNewPassword";
 import { CourseReview } from "./pages/learner/CourseReview";
 import { Reviews } from "./pages/admin/Reviews";
 import { ExploreCoursesPage } from "./pages/ExploreCoursesPage";
@@ -54,6 +54,9 @@ import InstractourSettings from "./pages/instructor/InstractourSettings";
 import { UpdateQuiz } from "./pages/instructor/UpdateQuiz";
 import BecomeMentor from "./pages/BecomeAnInstractour";
 import { InstructorApplications } from "./pages/admin/InstructorApplications";
+import Feed from "./pages/Feed";
+import CreateArticle from "./pages/CreateArticle";
+import ArticlePage from "./pages/ArticalPage";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -68,6 +71,9 @@ function App() {
         <Route path="/explore" element={<ExploreCoursesPage />} />
         <Route path="/forgot-password" element={<ResetPasswordRequest />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
+        <Route path="/feed" element={<Feed />} />
+        <Route path="/articels/create" element={<CreateArticle />} />
+        <Route path="/articels/read/:articalId" element={<ArticlePage />} />
         <Route
           path="/active-account-request"
           element={<ActiveAccountRequest />}

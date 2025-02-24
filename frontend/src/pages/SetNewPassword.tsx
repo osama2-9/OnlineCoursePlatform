@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API } from "./API/ApiBaseUrl";
+import { API } from "../API/ApiBaseUrl";
 
 const SetNewPassword = () => {
   const [password, setPassword] = useState("");

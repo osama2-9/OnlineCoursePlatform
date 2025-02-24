@@ -13,6 +13,7 @@ import enrollmentRoute from "./routes/enrollmentRoute.js";
 import learnerRoute from "./routes/learnerRoute.js";
 import instructorRoute from "./routes/instructorRoute.js";
 import applicationsRoute from "./routes/applicationRoute.js";
+import articleRoute from "./routes/articalsRoute.js";
 dotenv.config();
 
 const app = express();
@@ -42,6 +43,7 @@ app.use("/api/enrollment", enrollmentRoute);
 app.use("/api/learner", learnerRoute);
 app.use("/api/instructor", instructorRoute);
 app.use("/api/application", applicationsRoute);
+app.use("/api/articels", articleRoute);
 
 app.listen(process.env.PORT, () => {
   console.log("server work");

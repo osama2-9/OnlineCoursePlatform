@@ -3,6 +3,7 @@ import protectedRoute from "../middlewares/protectedRoute.js";
 import {
   createCheckoutSession,
   getPayments,
+  handlePaymentCancel,
   handlePaymentSuccess,
 } from "../controllers/paymentController.js";
 import { checkRole } from "../middlewares/checkRole.js";
@@ -16,5 +17,6 @@ paymentRoute.post(
 
 paymentRoute.get("/payment-success/:sessionId", handlePaymentSuccess);
 paymentRoute.get("/payment-data", checkRole("admin"), getPayments);
+paymentRoute.get("/payment-cancel/:sessionId", handlePaymentCancel);
 
 export default paymentRoute;

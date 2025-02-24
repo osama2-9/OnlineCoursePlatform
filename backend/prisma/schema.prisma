@@ -31,11 +31,13 @@ model Users {
   enrollments   Enrollments[]
   payments      Payments[]
   reviews       Reviews[]
+  comments      Comment[]
   subscriptions Subscriptions[]
   attempts      Attempt[]
   userProgress  UserProgress[]
-
+@@index([email])
   @@map("users")
+  Article Article[]
 }
 
 model Courses {
@@ -92,6 +94,124 @@ model InstructorsApplications {
   
 
   @@map("instructor_applications")
+}
+
+model Article {
+  article_id       Int             @id @default(autoincrement())
+  author_id        Int
+  title            String
+  slug             String          @unique
+  content          Json            
+  search_text      String          @db.Text 
+  excerpt          String?         @db.VarChar(300)
+  status           ContentStatus   @default(draft)
+  content_type     ArticleType     @default(tutorial)
+  published_at     DateTime?
+  category         String?
+  tags             String[]
+  featured_image   String?
+  word_count       Int?
+  seo_title        String?
+  seo_description  String?
+  seo_keywords     String[]
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+  deleted_at       DateTime?
+
+  author           Users           @relation(fields: [author_id], references: [user_id])
+  comments         Comment[]
+  categories       Category[]
+  content_blocks   ContentBlock[]
+
+  @@index([slug], type: Hash)
+  @@index([published_at])
+  @@map("articles")
+}
+
+model Category {
+  category_id   Int            @id @default(autoincrement())
+  name          String
+  slug          String         @unique
+  description   String?
+  articles      Article[]
+
+  @@map("categories")
+}
+
+enum ContentStatus {
+  draft
+  published
+  archived
+  deleted
+}
+model Comment {
+  comment_id     Int            @id @default(autoincrement())
+  content        String
+  author_id      Int
+  article_id     Int
+  parent_id      Int?
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+  status         CommentStatus  @default(published)
+
+  author        Users          @relation(fields: [author_id], references: [user_id])
+  article       Article        @relation(fields: [article_id], references: [article_id])
+
+  @@index([article_id])
+  @@index([parent_id])
+  @@index([created_at])
+  
+  @@map("comments")
+}
+
+
+enum CommentStatus {
+  published
+  hidden
+  deleted
+}
+
+
+
+model ContentBlock {
+  block_id      Int            @id @default(autoincrement())
+  article_id    Int
+  order         Int
+  block_type    BlockType
+  content       String?
+  code_language String?
+  code_content  String?
+  image_url     String?
+  image_caption String?
+  video_url     String?
+  video_duration Int?
+  quiz_id       Int?
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  article       Article        @relation(fields: [article_id], references: [article_id])
+
+  @@map("content_blocks")
+}
+
+enum BlockType {
+  TEXT
+  CODE
+  IMAGE
+  WARNING
+  TIP
+  QUOTE
+  HEADING
+  DIVIDER
+}
+
+enum ArticleType {
+  tutorial
+  howto
+  explainer
+  news
+  opinion
+  reference
 }
 
 enum ApplicationStatus {

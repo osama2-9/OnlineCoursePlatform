@@ -8,6 +8,8 @@ import toast from "react-hot-toast";
 import { API } from "../API/ApiBaseUrl";
 import { useAuth } from "../hooks/useAuth";
 import { loadStripe } from "@stripe/stripe-js";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 const PBK = import.meta.env.VITE_PUBLISH_KEY;
 const stripePromise = loadStripe(PBK);
@@ -58,23 +60,29 @@ export const CoursePage = () => {
           withCredentials: true,
         }
       );
-
-      const data = res.data;
-      if (data) {
-        setCourse(data.course);
-        console.log(data);
-      }
+      return res.data;
     } catch (error: any) {
       console.log(error);
+      toast.error(
+        error?.response?.data?.error || "Failed to fetch course details"
+      );
+      return null;
     } finally {
       setIsCourseLoading(false);
     }
   };
+  const { data, isLoading } = useQuery({
+    queryKey: ["course", course_id],
+    queryFn: getCourseDetails,
+    staleTime: 60 * 60 * 1000,
+    refetchInterval: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
 
   useEffect(() => {
-    getCourseDetails();
-  }, [course_id]);
-
+    setCourse(data?.course);
+  }, [data]);
   const handleLectureClick = (index: number) => {
     setSelectedLecture(selectedLecture === index ? null : index);
   };
@@ -87,8 +95,11 @@ export const CoursePage = () => {
   );
 
   const lessonsLength = course?.lessons?.length;
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+
   const handlePayment = async () => {
     try {
+      setIsPaymentLoading(true);
       const res = await axios.post(
         `${API}/payment/create-checkout-session`,
         {
@@ -107,13 +118,13 @@ export const CoursePage = () => {
 
       if (data && data.sessionId) {
         const stripe = await stripePromise;
-
         const result = await stripe?.redirectToCheckout({
           sessionId: data.sessionId,
         });
 
         if (result?.error) {
           console.error("Error during checkout redirection:", result.error);
+          toast.error("Payment initialization failed. Please try again.");
         }
       }
     } catch (error: any) {
@@ -122,8 +133,15 @@ export const CoursePage = () => {
         error?.response?.data?.error ||
           "Payment failed. Please try again later."
       );
+    } finally {
+      setIsPaymentLoading(false);
     }
   };
+
+  // Update the loading check
+  if (isLoading || isCourseLoading) {
+    return <Loading />;
+  }
 
   return (
     <>
@@ -266,26 +284,36 @@ export const CoursePage = () => {
                     </div>
                     <button
                       onClick={handlePayment}
-                      className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
+                      disabled={isPaymentLoading}
+                      className="w-full py-4 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
                     >
-                      <span>
-                        {course?.course_type === "free"
-                          ? "Enroll now"
-                          : "Buy this course"}
-                      </span>
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M17 8l4 4m0 0l-4 4m4-4H3"
-                        />
-                      </svg>
+                      {isPaymentLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>
+                            {course?.course_type === "free"
+                              ? "Enroll now"
+                              : "Buy this course"}
+                          </span>
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M17 8l4 4m0 0l-4 4m4-4H3"
+                            />
+                          </svg>
+                        </>
+                      )}
                     </button>
 
                     <div className="border-t pt-6">

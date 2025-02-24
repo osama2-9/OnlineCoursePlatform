@@ -53,7 +53,7 @@ export const createCheckoutSession = async (req, res) => {
         },
       ],
       success_url: `${process.env.BASE_URL}/payment/success?sessionId={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.BASE_URL}/payment/cancel`,
+      cancel_url: `${process.env.BASE_URL}/payment/cancel?sessionId={CHECKOUT_SESSION_ID}`,
       mode: "payment",
       metadata: {
         courseId,
@@ -63,15 +63,15 @@ export const createCheckoutSession = async (req, res) => {
 
     await prisma.payments.create({
       data: {
-        amount: course.price, // Price of the course
-        sessionId: session.id, // Stripe session ID
-        stripe_payment_intent_id: session.id, // Stripe payment intent ID
-        payment_status: "pending", // Set initial payment status to "pending"
+        amount: course.price,
+        sessionId: session.id,
+        stripe_payment_intent_id: session.id,
+        payment_status: "pending",
         user: {
-          connect: { user_id: parseInt(userId) }, // Use connect to link the user by user_id
+          connect: { user_id: parseInt(userId) },
         },
         course: {
-          connect: { course_id: parseInt(courseId) }, // Use connect to link the course by course_id
+          connect: { course_id: parseInt(courseId) },
         },
       },
     });
@@ -132,7 +132,6 @@ export const handlePaymentSuccess = async (req, res) => {
           enrollment.enrollment_id,
           courseIdInt
         );
-        console.log("ACCESS TOKEN", accessToken);
 
         if (enrollment) {
           await prisma.enrollments.update({
@@ -196,6 +195,43 @@ export const getPayments = async (req, res) => {
       totalPages: Math.ceil(totalPayments / limit),
       currentPage: page,
       payments,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const handlePaymentCancel = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      return res.status(400).json({
+        error: "No payment found",
+      });
+    }
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (!session) {
+      return res.status(400).json({
+        error: "No session found",
+      });
+    }
+
+    if (session.payment_status === "unpaid") {
+      await prisma.payments.update({
+        where: {
+          stripe_payment_intent_id: sessionId,
+        },
+        data: {
+          payment_status: "failed",
+        },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
     });
   } catch (error) {
     console.log(error);
