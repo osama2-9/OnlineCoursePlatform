@@ -191,7 +191,7 @@ export const createArtical = async (req, res) => {
         return article;
       },
       {
-        timeout: 60000, 
+        timeout: 60000,
       }
     );
 
@@ -253,6 +253,88 @@ export const getArticalById = async (req, res) => {
     console.log(error);
     return res.status(500).json({
       error: "Internal server error",
+    });
+  }
+};
+export const getArticles = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const categoryFilter = req.query.category
+      ? { category: req.query.category }
+      : {};
+    const tagFilter = req.query.tag ? { tags: { has: req.query.tag } } : {};
+    const searchFilter = req.query.search
+      ? {
+          OR: [
+            { title: { contains: req.query.search, mode: "insensitive" } },
+            { excerpt: { contains: req.query.search, mode: "insensitive" } },
+          ],
+        }
+      : {};
+
+    const where = {
+      ...categoryFilter,
+      ...tagFilter,
+      ...searchFilter,
+    };
+
+    const totalArticles = await prisma.article.count({ where });
+
+    const articles = await prisma.article.findMany({
+      where,
+      select: {
+        article_id: true,
+        categories: true,
+        category: true,
+        content_blocks: true,
+        created_at: true,
+        excerpt: true,
+        featured_image: true,
+        content_type: true,
+        content: true,
+        author: {
+          select: {
+            full_name: true,
+          },
+        },
+        tags: true,
+        title: true,
+        comments: true,
+        author_id:true
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+      skip,
+      take: limit,
+    });
+
+    const totalPages = Math.ceil(totalArticles / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    return res.status(200).json({
+      success: true,
+      data: articles,
+      pagination: {
+        totalArticles,
+        totalPages,
+        currentPage: page,
+        pageSize: limit,
+        hasNextPage,
+        hasPrevPage,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

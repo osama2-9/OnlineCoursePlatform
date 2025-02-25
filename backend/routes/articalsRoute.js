@@ -3,6 +3,7 @@ import {
   createArtical,
   createCategory,
   getArticalById,
+  getArticles,
   getCategories,
 } from "../controllers/articalsController.js";
 import { checkRole } from "../middlewares/checkRole.js";
@@ -16,5 +17,6 @@ articleRoute.post(
 articleRoute.post("/create-category", checkRole(["admin"]), createCategory);
 articleRoute.get("/get-categories", getCategories);
 articleRoute.get("/get-article/:articalId", getArticalById);
+articleRoute.get("/get-articles", getArticles);
 
 export default articleRoute;

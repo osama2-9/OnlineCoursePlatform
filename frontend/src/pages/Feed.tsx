@@ -6,642 +6,605 @@ import {
   Filter,
   ChevronDown,
   ArrowUp,
-  Bell,
   User,
   Bookmark,
   TrendingUp,
+  Loader2,
+  X,
+  Heart,
+  Share2,
+  Calendar,
+  Plus,
 } from "lucide-react";
+import axios from "axios";
+import { API } from "../API/ApiBaseUrl";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+
+interface ContentBlock {
+  block_id: number;
+  article_id: number;
+  order: number;
+  block_type: string;
+  content: string | null;
+  code_language: string | null;
+  code_content: string | null;
+  image_url: string | null;
+  image_caption: string | null;
+  video_url: string | null;
+}
+
+interface Pagination {
+  totalArticles: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+interface Article {
+  article_id: number;
+  categories: any[];
+  category: string;
+  content_blocks: ContentBlock[];
+  excerpt: string;
+  featured_image: string;
+  content_type: string;
+  content: string;
+  author: {
+    full_name: string;
+  };
+  tags: string[];
+  title: string;
+  author_id: number;
+  created_at: string;
+}
+
+interface ArticleResponse {
+  success: boolean;
+  data: Article[];
+  pagination: Pagination;
+}
 
 export const Feed = () => {
-  const [posts, setPosts] = useState<
-    {
-      article_id: number;
-      title: string;
-      slug: string;
-      excerpt: string;
-      status: string;
-      content_type: string;
-      published_at: string;
-      category: string;
-      tags: string[];
-      featured_image: string | null;
-      word_count: number;
-      author: {
-        name: string;
-        avatar: string;
-        role: string;
-      };
-      comments: any[];
-      read_time: number;
-      popularity: number;
-    }[]
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+  const { user } = useAuth();
+  const isAdminOrInstructor =
+    user && (user.role === "admin" || user.role === "instructor");
+
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("latest");
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
-  // Mock data for demonstration
-  const mockPosts = [
-    {
-      article_id: 1,
-      title: "Getting Started with React Hooks",
-      slug: "getting-started-with-react-hooks",
-      excerpt:
-        "Learn how to use React Hooks to simplify your functional components and manage state effectively with practical examples.",
-      status: "published",
-      content_type: "tutorial",
-      published_at: "2025-02-20T14:30:00Z",
-      category: "Frontend",
-      tags: ["React", "JavaScript", "Hooks"],
-      featured_image: "/api/placeholder/800/400",
-      word_count: 1200,
-      author: {
-        name: "Jane Doe",
-        avatar: "/api/placeholder/40/40",
-        role: "Senior Developer",
-      },
-      comments: Array(12),
-      read_time: 12,
-      popularity: 98,
-    },
-    {
-      article_id: 2,
-      title: "Building RESTful APIs with Node.js and Express",
-      slug: "building-restful-apis-with-nodejs-express",
-      excerpt:
-        "A comprehensive guide to creating robust and scalable RESTful APIs using Node.js and Express framework with authentication and error handling.",
-      status: "published",
-      content_type: "tutorial",
-      published_at: "2025-02-18T09:15:00Z",
-      category: "Backend",
-      tags: ["Node.js", "Express", "API", "REST"],
-      featured_image: null,
-      word_count: 2500,
-      author: {
-        name: "John Smith",
-        avatar: "/api/placeholder/40/40",
-        role: "Backend Engineer",
-      },
-      comments: Array(8),
-      read_time: 18,
-      popularity: 85,
-    },
-    {
-      article_id: 3,
-      title: "CSS Grid vs Flexbox: When to Use Each",
-      slug: "css-grid-vs-flexbox",
-      excerpt:
-        "Understand the key differences between CSS Grid and Flexbox, and learn when to use each layout method for optimal results and responsive designs.",
-      status: "published",
-      content_type: "explainer",
-      published_at: "2025-02-15T11:45:00Z",
-      category: "CSS",
-      tags: ["CSS", "Layout", "Web Design"],
-      featured_image: "/api/placeholder/800/400",
-      word_count: 1800,
-      author: {
-        name: "Sarah Jones",
-        avatar: "/api/placeholder/40/40",
-        role: "UI/UX Designer",
-      },
-      comments: Array(15),
-      read_time: 15,
-      popularity: 92,
-    },
-    {
-      article_id: 4,
-      title: "Understanding TypeScript Generics",
-      slug: "understanding-typescript-generics",
-      excerpt:
-        "Master TypeScript generics to write more reusable and type-safe code in your applications with practical examples and common patterns.",
-      status: "published",
-      content_type: "tutorial",
-      published_at: "2025-02-12T16:20:00Z",
-      category: "TypeScript",
-      tags: ["TypeScript", "JavaScript", "Generics"],
-      featured_image: "/api/placeholder/800/400",
-      word_count: 1600,
-      author: {
-        name: "Mike Chen",
-        avatar: "/api/placeholder/40/40",
-        role: "Full Stack Developer",
-      },
-      comments: Array(5),
-      read_time: 14,
-      popularity: 78,
-    },
-    {
-      article_id: 5,
-      title: "Mastering Git Workflows for Teams",
-      slug: "mastering-git-workflows-for-teams",
-      excerpt:
-        "Learn effective Git strategies and workflows that will help your development team collaborate more efficiently with branching strategies.",
-      status: "published",
-      content_type: "howto",
-      published_at: "2025-02-10T10:00:00Z",
-      category: "DevOps",
-      tags: ["Git", "Collaboration", "Version Control"],
-      featured_image: null,
-      word_count: 2200,
-      author: {
-        name: "Alex Brown",
-        avatar: "/api/placeholder/40/40",
-        role: "DevOps Engineer",
-      },
-      comments: Array(19),
-      read_time: 16,
-      popularity: 89,
-    },
-    {
-      article_id: 6,
-      title: "Introduction to GraphQL",
-      slug: "introduction-to-graphql",
-      excerpt:
-        "Discover how GraphQL provides a more efficient and powerful alternative to REST APIs for data fetching with real-world implementation examples.",
-      status: "published",
-      content_type: "tutorial",
-      published_at: "2025-02-08T14:30:00Z",
-      category: "Backend",
-      tags: ["GraphQL", "API", "JavaScript"],
-      featured_image: "/api/placeholder/800/400",
-      word_count: 1900,
-      author: {
-        name: "Emma Wilson",
-        avatar: "/api/placeholder/40/40",
-        role: "API Specialist",
-      },
-      comments: Array(7),
-      read_time: 16,
-      popularity: 76,
-    },
-  ];
-
-  // Simulate API fetch
   useEffect(() => {
-    const loadPosts = () => {
-      setLoading(true);
-
-      // Simulate API delay
-      setTimeout(() => {
-        let filteredPosts = [...mockPosts];
-
-        // Filter by category if not 'All'
-        if (selectedCategory !== "All") {
-          filteredPosts = filteredPosts.filter(
-            (post) => post.category === selectedCategory
-          );
-        }
-
-        // Sort posts
-        if (sortBy === "latest") {
-          filteredPosts.sort(
-            (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
-          );
-        } else if (sortBy === "popular") {
-          filteredPosts.sort((a, b) => b.popularity - a.popularity);
-        } else if (sortBy === "comments") {
-          filteredPosts.sort((a, b) => b.comments.length - a.comments.length);
-        }
-
-        // Duplicate and modify for pagination simulation
-        const paginatedPosts = [
-          ...filteredPosts,
-          ...filteredPosts.map((post) => ({
-            ...post,
-            article_id: post.article_id + 100 * page,
-          })),
-        ].slice(0, page * 10);
-
-        setPosts(paginatedPosts);
-        setLoading(false);
-      }, 800);
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
     };
 
-    loadPosts();
-  }, [page, selectedCategory, sortBy]);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  // Intersection Observer for infinite scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !loading && posts.length < 50) {
-          setPage((prevPage) => prevPage + 1);
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    const sentinel = document.getElementById("scroll-sentinel");
-    if (sentinel) observer.observe(sentinel);
-
-    return () => observer.disconnect();
-  }, [loading, posts.length]);
-
-  // Available categories derived from posts
-  const categories = [
-    "All",
-    ...Array.from(new Set(mockPosts.map((post) => post.category))),
-  ];
-
-  // Format date to readable format
-  const formatDate = (dateString: string | number | Date) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }).format(date);
+  const fetchArticles = async () => {
+    try {
+      const res = await axios.get(`${API}/articels/get-articles`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+        params: {
+          page,
+          category: selectedCategory !== "All" ? selectedCategory : undefined,
+          sort: sortBy,
+          search: searchTerm || undefined,
+        },
+      });
+      return res.data as ArticleResponse;
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      throw error;
+    }
   };
 
-  const handleCategoryChange = (category: any) => {
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["articles", page, selectedCategory, sortBy, searchTerm],
+    queryFn: fetchArticles,
+    staleTime: 24 * 1000 * 60,
+    refetchInterval: 24 * 1000 * 60,
+    retry: 2,
+    refetchOnWindowFocus: false,
+  });
+
+  const calculateReadTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const wordCount = content.split(/\s+/).length;
+    return Math.ceil(wordCount / wordsPerMinute);
+  };
+
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setPage(1);
   };
 
-  const handleSortChange = (sortMethod: any) => {
-    setSortBy(sortMethod);
+  const handleSortChange = (sortOption: string) => {
+    setSortBy(sortOption);
     setPage(1);
   };
 
-  // Scroll to top button handler
-  const scrollToTop = () => {
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(1);
+  };
+
+  const resetFilters = () => {
+    setSelectedCategory("All");
+    setSortBy("latest");
+    setSearchTerm("");
+    setPage(1);
+  };
+
+  const categories = [
+    "All",
+    "web-development",
+    "mobile-development",
+    "devops",
+    "data-science",
+    "machine-learning",
+    "ui-ux",
+  ];
+
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200 fixed w-full z-10">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 mb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <div className="h-8 w-8 bg-blue-600 rounded-md flex items-center justify-center text-white font-bold">
-                  UL
-                </div>
-                <span className="ml-2 text-xl font-semibold">Uplearn</span>
-              </div>
-              <div className="hidden md:ml-6 md:flex md:space-x-8">
-                <a
-                  href="#"
-                  className="border-b-2 border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium"
-                >
-                  Feed
-                </a>
-                <a
-                  href="#"
-                  className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  My Courses
-                </a>
-                <a
-                  href="#"
-                  className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  Bookmarks
-                </a>
-                <a
-                  href="/articels/create"
-                  className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  Create Post
-                </a>
-              </div>
-            </div>
-            <div className="hidden md:ml-6 md:flex md:items-center">
-              <button className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                <span className="sr-only">View notifications</span>
-                <Bell className="h-6 w-6" />
-              </button>
+          <div className="text-center md:text-left md:flex md:justify-between md:items-center">
+            <div className="mb-6 md:mb-0 md:max-w-2xl">
+              <h1 className="text-4xl font-extrabold tracking-tight mb-3">
+                Discover Tech Knowledge
+              </h1>
+              <p className="text-xl text-blue-100 max-w-xl mx-auto md:mx-0">
+                Explore our curated collection of expert articles on web
+                development, AI, data science, and more.
+              </p>
 
-              <div className="ml-3 relative">
-                <div>
-                  <button className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <span className="sr-only">Open user menu</span>
-                    <User className="h-8 w-8 rounded-full bg-gray-100 p-1" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="pt-16 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header with search */}
-          <div className="py-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Learning Feed
-                </h1>
-                <p className="mt-1 text-sm text-gray-500">
-                  Discover the latest programming tutorials and articles
-                </p>
-              </div>
-              <div className="relative w-full md:w-96">
-                <input
-                  type="text"
-                  placeholder="Search courses and tutorials..."
-                  className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                />
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Filters section */}
-            <div className="bg-white rounded-lg shadow p-4 mb-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="font-medium text-gray-900">Browse Content</h2>
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="flex items-center text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    <Filter className="h-4 w-4 mr-1" />
-                    Filters
-                    <ChevronDown
-                      className={`h-4 w-4 ml-1 transition-transform ${
-                        showFilters ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="mt-4 md:mt-0 flex items-center">
-                  <span className="text-sm text-gray-500 mr-2">Sort by:</span>
-                  <div className="relative">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => handleSortChange(e.target.value)}
-                      className="appearance-none bg-gray-50 border border-gray-300 text-gray-700 py-1 pl-3 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500"
-                    >
-                      <option value="latest">Latest</option>
-                      <option value="popular">Popular</option>
-                      <option value="comments">Most Discussed</option>
-                    </select>
-                    <ChevronDown className="absolute right-2 top-2 h-4 w-4 text-gray-500 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Expanded filters */}
-              {showFilters && (
-                <div className="pt-4 border-t border-gray-100">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">
-                        Categories
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {categories.map((category) => (
-                          <button
-                            key={category}
-                            onClick={() => handleCategoryChange(category)}
-                            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                              selectedCategory === category
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                            }`}
-                          >
-                            {category}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">
-                        Content Type
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {Array.from(
-                          new Set(mockPosts.map((post) => post.content_type))
-                        ).map((type) => (
-                          <button
-                            key={type}
-                            className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          >
-                            {type.charAt(0).toUpperCase() + type.slice(1)}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">
-                        Reading Time
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        <button className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
-                          &lt; 10 min
-                        </button>
-                        <button className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
-                          10-20 min
-                        </button>
-                        <button className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
-                          &gt; 20 min
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+              {/* Welcome message for admin/instructor */}
+              {isAdminOrInstructor && (
+                <div className="mt-4 px-4 py-2 bg-blue-500 rounded-lg inline-block animate-pulse">
+                  <p className="text-white font-medium">
+                    Welcome, {user.full_name}! Ready to share your knowledge?
+                  </p>
                 </div>
               )}
             </div>
 
-            {/* Featured post */}
-            {selectedCategory === "All" && page === 1 && (
-              <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-                <div className="md:flex">
-                  <div className="md:flex-shrink-0 md:w-1/3">
-                    <img
-                      src="/api/placeholder/800/600"
-                      alt="Featured post"
-                      className="h-48 md:h-full w-full object-cover"
-                    />
-                  </div>
-                  <div className="p-6 md:p-8 md:w-2/3">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="px-2 py-1 text-xs font-medium rounded-full text-white bg-blue-600">
-                        Featured
-                      </span>
-                      <span className="px-2 py-1 text-xs font-medium rounded-full text-white bg-purple-600">
-                        Tutorial
-                      </span>
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                      Complete Guide to Modern Frontend Development
-                    </h2>
-                    <p className="text-gray-600 mb-4">
-                      Master the essential tools and frameworks for modern
-                      frontend development, including React, TypeScript, and
-                      Tailwind CSS with this comprehensive guide.
-                    </p>
-                    <div className="flex items-center gap-3 mb-4">
-                      <img
-                        src="/api/placeholder/40/40"
-                        alt="Author"
-                        className="w-8 h-8 rounded-full"
-                      />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          Robert Johnson
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Lead Frontend Developer
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500 gap-4">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>25 min read</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <TrendingUp className="w-4 h-4" />
-                        <span>Trending</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MessageSquare className="w-4 h-4" />
-                        <span>32 comments</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Posts grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post:any) => (
-                <article
-                  key={post.article_id}
-                  className="flex flex-col rounded-lg overflow-hidden bg-white shadow hover:shadow-lg transition duration-300"
+            <div className="w-full md:w-auto">
+              <form onSubmit={handleSearch} className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search articles..."
+                  className="pl-10 pr-4 py-3 rounded-full border-none w-full md:w-64 text-gray-800 shadow-lg focus:ring-2 focus:ring-blue-300 focus:outline-none"
+                />
+                <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-500" />
+                <button
+                  type="submit"
+                  className="absolute right-3 top-2 bg-blue-500 hover:bg-blue-600 rounded-full p-1.5 text-white transition-colors duration-200"
                 >
-                  {post.featured_image && (
-                    <div className="relative h-48 bg-gray-100">
-                      <img
-                        src={post.featured_image}
-                        alt={post.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-2 right-2">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full text-white ${
-                            post.content_type === "tutorial"
-                              ? "bg-blue-600"
-                              : post.content_type === "howto"
-                              ? "bg-green-600"
-                              : post.content_type === "explainer"
-                              ? "bg-purple-600"
-                              : "bg-gray-600"
-                          }`}
-                        >
-                          {post.content_type.charAt(0).toUpperCase() +
-                            post.content_type.slice(1)}
-                        </span>
-                      </div>
-                      <button className="absolute top-2 left-2 bg-white/80 rounded-full p-1.5 hover:bg-white transition-colors">
-                        <Bookmark className="w-4 h-4 text-gray-700" />
-                      </button>
-                    </div>
-                  )}
+                  <Search className="h-4 w-4" />
+                </button>
+              </form>
 
-                  <div className="flex-1 p-5">
-                    {!post.featured_image && (
-                      <div className="flex justify-between items-start mb-3">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full text-white ${
-                            post.content_type === "tutorial"
-                              ? "bg-blue-600"
-                              : post.content_type === "howto"
-                              ? "bg-green-600"
-                              : post.content_type === "explainer"
-                              ? "bg-purple-600"
-                              : "bg-gray-600"
-                          }`}
-                        >
-                          {post.content_type.charAt(0).toUpperCase() +
-                            post.content_type.slice(1)}
-                        </span>
-                        <button className="bg-gray-100 rounded-full p-1.5 hover:bg-gray-200 transition-colors">
-                          <Bookmark className="w-4 h-4 text-gray-700" />
-                        </button>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-3 mb-3">
-                      <img
-                        src={post.author.avatar}
-                        alt={post.author.name}
-                        className="w-6 h-6 rounded-full"
-                      />
-                      <div>
-                        <p className="text-xs font-medium text-gray-900">
-                          {post.author.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {post.author.role}
-                        </p>
-                      </div>
-                    </div>
-
-                    <h2 className="text-xl font-bold mb-2 text-gray-900 line-clamp-2">
-                      {post.title}
-                    </h2>
-
-                    <p className="text-gray-600 mb-4 text-sm line-clamp-3">
-                      {post.excerpt}
-                    </p>
-
-                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100">
-                      <div className="flex items-center gap-4 text-gray-500 text-xs">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          <span>{post.read_time} min</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MessageSquare className="w-3 h-3" />
-                          <span>{post.comments.length}</span>
-                        </div>
-                      </div>
-
-                      <div className="text-xs text-gray-500">
-                        {formatDate(post.published_at)}
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              ))}
+              {isAdminOrInstructor && (
+                <Link
+                  to="/articels/create"
+                  className="mt-4 md:mt-3 inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-md transition-colors duration-200 font-medium text-sm"
+                >
+                  <Plus className="h-4 w-4" /> Create New Article
+                </Link>
+              )}
             </div>
-
-            {/* Loading indicator */}
-            {loading && (
-              <div className="mt-8 text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-                <p className="mt-2 text-gray-600">Loading more posts...</p>
-              </div>
-            )}
-
-            {/* Scroll sentinel for infinite loading */}
-            <div id="scroll-sentinel" className="h-4 mt-8"></div>
           </div>
         </div>
       </div>
 
-      {/* Scroll to top button */}
-      {posts.length > 10 && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-10"
-          aria-label="Scroll to top"
-        >
-          <ArrowUp className="w-5 h-5" />
-        </button>
-      )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4 sm:mb-0">
+              Browse Articles
+            </h2>
+
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-1 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-200"
+              >
+                <Filter className="h-4 w-4" />
+                <span className="hidden sm:inline">Filters</span>
+                {showFilters ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {showFilters && (
+            <div className="bg-blue-50 p-4 rounded-xl mb-2 border border-blue-100 animate-fadeIn">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3">Categories</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => handleCategoryChange(category)}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200 ${
+                          selectedCategory === category
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                        }`}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3">Sort By</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleSortChange("latest")}
+                      className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-1 transition-all duration-200 ${
+                        sortBy === "latest"
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                      }`}
+                    >
+                      <Clock className="h-3 w-3" /> Latest
+                    </button>
+                    <button
+                      onClick={() => handleSortChange("popular")}
+                      className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-1 transition-all duration-200 ${
+                        sortBy === "popular"
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                      }`}
+                    >
+                      <TrendingUp className="h-3 w-3" /> Popular
+                    </button>
+                    <button
+                      onClick={() => handleSortChange("comments")}
+                      className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-1 transition-all duration-200 ${
+                        sortBy === "comments"
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                      }`}
+                    >
+                      <MessageSquare className="h-3 w-3" /> Most Discussed
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-blue-200 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-gray-600">Active filters:</span>
+                {selectedCategory !== "All" && (
+                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full flex items-center">
+                    {selectedCategory}
+                    <button
+                      onClick={() => setSelectedCategory("All")}
+                      className="ml-1 hover:text-blue-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {sortBy !== "latest" && (
+                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full flex items-center">
+                    Sort: {sortBy}
+                    <button
+                      onClick={() => setSortBy("latest")}
+                      className="ml-1 hover:text-blue-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {searchTerm && (
+                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full flex items-center">
+                    Search: {searchTerm}
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="ml-1 hover:text-blue-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+
+                {(selectedCategory !== "All" ||
+                  sortBy !== "latest" ||
+                  searchTerm) && (
+                  <button
+                    onClick={resetFilters}
+                    className="text-xs px-2 py-1 text-blue-700 hover:text-blue-900 ml-auto"
+                  >
+                    Reset all
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {isLoading && (
+          <div className="flex flex-col justify-center items-center py-20">
+            <Loader2 className="h-12 w-12 text-blue-500 animate-spin mb-4" />
+            <span className="text-xl text-gray-600">
+              Loading the latest articles...
+            </span>
+          </div>
+        )}
+
+        {isError && (
+          <div className="bg-red-50 border-l-4 border-red-400 text-red-700 p-6 rounded-lg shadow-sm">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <X className="h-5 w-5 text-red-500" />
+              </div>
+              <div className="ml-3">
+                <p className="text-lg font-medium">Error loading articles</p>
+                <p className="mt-2">
+                  {(error as Error)?.message || "Please try again later."}
+                </p>
+                <button
+                  onClick={() => refetch()}
+                  className="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors duration-200"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!isLoading && !isError && data?.data && (
+          <>
+            <div className="mb-6 text-gray-600">
+              Showing {data.data.length} of{" "}
+              {data.pagination?.totalArticles || 0} articles
+              {selectedCategory !== "All" && ` in ${selectedCategory}`}
+              {searchTerm && ` matching "${searchTerm}"`}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {data.data.map((article) => (
+                <Link
+                  to={`/articels/read/${article.article_id}`}
+                  key={article.article_id}
+                >
+                  <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 group">
+                    <div className="h-52 overflow-hidden relative">
+                      <img
+                        src={
+                          article.featured_image || "/api/placeholder/600/300"
+                        }
+                        alt={article.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+
+                      <div className="absolute top-3 right-3 flex space-x-2">
+                        <button className="p-2 bg-white rounded-full hover:bg-blue-50 transition-colors duration-200 shadow-sm">
+                          <Bookmark className="h-4 w-4 text-blue-700" />
+                        </button>
+                        <button className="p-2 bg-white rounded-full hover:bg-blue-50 transition-colors duration-200 shadow-sm">
+                          <Share2 className="h-4 w-4 text-blue-700" />
+                        </button>
+                      </div>
+
+                      <div className="absolute top-3 left-3">
+                        <span className="text-xs font-medium px-3 py-1 rounded-full bg-blue-600 text-white shadow-sm">
+                          {article.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4 text-blue-500" />
+                          <span>{formatDate(article.created_at)}</span>
+                        </div>
+                        <span className="text-gray-300">•</span>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4 text-blue-500" />
+                          <span>
+                            {calculateReadTime(article.content)} min read
+                          </span>
+                        </div>
+                      </div>
+
+                      <h2 className="text-xl font-bold mb-3 line-clamp-2 group-hover:text-blue-700 transition-colors duration-200">
+                        {article.title}
+                      </h2>
+
+                      <p className="text-gray-600 mb-4 line-clamp-2">
+                        {article.excerpt}
+                      </p>
+
+                      <div className="mb-5 flex flex-wrap gap-1">
+                        {article.tags.slice(0, 3).map((tag, index) => (
+                          <span
+                            key={index}
+                            className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {article.tags.length > 3 && (
+                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                            +{article.tags.length - 3} more
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div className="flex items-center">
+                          <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center mr-2 text-blue-700">
+                            <User className="h-4 w-4" />
+                          </div>
+                          <span className="text-sm font-medium">
+                            {article.author.full_name}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <button className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors duration-200">
+                            <Heart className="h-4 w-4" />
+                          </button>
+                          <button className="flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors duration-200">
+                            <MessageSquare className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+
+        {!isLoading && data?.data?.length === 0 && (
+          <div className="text-center py-16 bg-white rounded-lg shadow-sm border border-gray-100">
+            <div className="mx-auto w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+              <Search className="h-10 w-10 text-blue-300" />
+            </div>
+            <h3 className="text-2xl font-medium text-gray-700 mb-3">
+              No articles found
+            </h3>
+            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              We couldn't find any articles that match your current filters. Try
+              adjusting your search criteria or browse our categories.
+            </p>
+            <button
+              onClick={resetFilters}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+            >
+              Reset All Filters
+            </button>
+          </div>
+        )}
+
+        {data?.pagination && data.pagination.totalPages > 1 && (
+          <div className="mt-12 flex justify-center">
+            <div className="inline-flex rounded-lg shadow-sm">
+              <button
+                onClick={() => handlePageChange(page - 1)}
+                disabled={!data.pagination.hasPrevPage}
+                className={`px-5 py-2 rounded-l-lg flex items-center gap-1 ${
+                  !data.pagination.hasPrevPage
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                }`}
+              >
+                Previous
+              </button>
+
+              {Array.from(
+                { length: data.pagination.totalPages },
+                (_, i) => i + 1
+              )
+                .filter(
+                  (p) =>
+                    p === 1 ||
+                    p === data.pagination.totalPages ||
+                    (p >= page - 1 && p <= page + 1)
+                )
+                .map((p, index, array) => {
+                  if (index > 0 && p > array[index - 1] + 1) {
+                    return (
+                      <div key={`ellipsis-${p}`} className="flex">
+                        <span className="px-4 py-2 border-x border-gray-200 bg-white text-gray-400">
+                          ...
+                        </span>
+                        <button
+                          key={p}
+                          onClick={() => handlePageChange(p)}
+                          className={`px-4 py-2 border-r border-gray-200 ${
+                            p === page
+                              ? "bg-blue-600 text-white font-medium"
+                              : "bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => handlePageChange(p)}
+                      className={`px-4 py-2 border-x border-gray-200 ${
+                        p === page
+                          ? "bg-blue-600 text-white font-medium"
+                          : "bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+
+              <button
+                onClick={() => handlePageChange(page + 1)}
+                disabled={!data.pagination.hasNextPage}
+                className={`px-5 py-2 rounded-r-lg flex items-center gap-1 ${
+                  !data.pagination.hasNextPage
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showBackToTop && (
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="fixed bottom-8 right-8 p-3 bg-blue-700 text-white rounded-full shadow-lg hover:bg-blue-800 transition-all duration-300 animate-fadeIn"
+            aria-label="Back to top"
+          >
+            <ArrowUp className="h-5 w-5" />
+          </button>
+        )}
+      </div>
     </div>
   );
 };

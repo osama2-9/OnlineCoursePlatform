@@ -16,6 +16,7 @@ import axios from "axios";
 import { API } from "../API/ApiBaseUrl";
 import { useGetCategories } from "../hooks/useGetCategories";
 import { useAuth } from "../hooks/useAuth";
+import toast from "react-hot-toast";
 
 const contentStatusOptions = ["draft", "published", "archived", "deleted"];
 const articleTypeOptions = [
@@ -69,6 +70,7 @@ const CreateArticel = () => {
     seo_keywords: [],
     content_blocks: [],
   });
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [categories, setCategories] = useState<
     { category_id: number; name: string }[]
@@ -240,6 +242,7 @@ const CreateArticel = () => {
     };
 
     try {
+      setLoading(true);
       const res = await axios.post(
         `${API}/articels/create-articel`,
         {
@@ -251,7 +254,8 @@ const CreateArticel = () => {
       );
 
       const data = await res.data;
-      if (data.message) {
+      if (data) {
+        toast.success("Article Created Successfully! ");
       }
     } catch (error: any) {
       console.error("Error creating article:", error);
@@ -260,6 +264,8 @@ const CreateArticel = () => {
       } else {
         alert("An error occurred while creating the article.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -902,7 +908,16 @@ const CreateArticel = () => {
                     type="submit"
                     className="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center"
                   >
-                    <Check size={18} className="mr-2" /> Publish Article
+                    <Check size={18} className="mr-2" />
+                    {loading ? (
+                      <Loader2
+                        className="animate-spin"
+                        size={15}
+                        color="#FFFFFF"
+                      />
+                    ) : (
+                      "Publish Article"
+                    )}
                   </button>
                 </div>
               </div>

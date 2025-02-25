@@ -1,11 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { API } from "../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import {
   Tag,
-  User,
   Calendar,
   MessageCircle,
   Share2,
@@ -14,6 +13,10 @@ import {
   Lightbulb,
   ChevronLeft,
   Quote,
+  Copy,
+  Check,
+  ThumbsUp,
+  Eye,
 } from "lucide-react";
 import { HomePageFooter } from "../components/HomePageFooter";
 
@@ -62,6 +65,9 @@ interface Article {
   content_type: string;
   created_at: string;
   comments: Comment[];
+  read_time?: number;
+  views?: number;
+  likes?: number;
 }
 
 interface Comment {
@@ -75,49 +81,98 @@ interface ArticleResponseData {
   article: Article;
 }
 
+const CodeBlock: React.FC<{ block: ContentBlock }> = ({ block }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    if (!block.code_content) return;
+
+    navigator.clipboard.writeText(block.code_content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const getLanguageColor = (language: string | null): string => {
+    const colorMap: Record<string, string> = {
+      javascript: "#f7df1e",
+      typescript: "#3178c6",
+      python: "#3776ab",
+      java: "#007396",
+      csharp: "#239120",
+      cpp: "#00599c",
+      go: "#00add8",
+      rust: "#dea584",
+      swift: "#ffac45",
+      php: "#777bb4",
+      ruby: "#cc342d",
+      html: "#e34c26",
+      css: "#264de4",
+      sql: "#e38c00",
+      bash: "#4eaa25",
+      default: "#858585",
+    };
+
+    return language && colorMap[language.toLowerCase()]
+      ? colorMap[language.toLowerCase()]
+      : colorMap.default;
+  };
+
+  return (
+    <div className="my-6 rounded-md overflow-hidden border border-gray-200 shadow-sm">
+      <div className="bg-gray-800 text-gray-200 px-3 py-2 flex justify-between items-center border-b border-gray-700">
+        <div className="flex items-center space-x-2">
+          <span
+            className="h-3 w-3 rounded-full"
+            style={{ backgroundColor: getLanguageColor(block.code_language) }}
+          />
+          <span className="text-xs font-medium">{block.code_language}</span>
+        </div>
+        <button
+          className="text-gray-400 hover:text-white p-1 rounded transition-colors"
+          title={copied ? "Copied!" : "Copy code"}
+          onClick={copyToClipboard}
+        >
+          {copied ? <Check size={16} /> : <Copy size={16} />}
+        </button>
+      </div>
+
+      <div className="flex">
+        <div className="bg-gray-800 text-gray-500 px-2 py-3 text-right select-none font-mono text-xs">
+          {block.code_content?.split("\n").map((_, i) => (
+            <div key={i}>{i + 1}</div>
+          ))}
+        </div>
+
+        <pre className="bg-gray-900 p-3 overflow-x-auto w-full">
+          <code className="text-sm font-mono text-gray-200 whitespace-pre">
+            {block.code_content}
+          </code>
+        </pre>
+      </div>
+    </div>
+  );
+};
+
 const ContentBlockRenderer: React.FC<{ block: ContentBlock }> = ({ block }) => {
   switch (block.block_type) {
     case "HEADING":
-      return <h2 className="text-2xl font-bold mt-6 mb-4">{block.content}</h2>;
+      return (
+        <h2 className="text-2xl font-bold mt-8 mb-4 text-gray-800">
+          {block.content}
+        </h2>
+      );
 
     case "TEXT":
       return (
-        <p className="mb-4 text-gray-700 leading-relaxed">{block.content}</p>
+        <p className="mb-5 text-gray-700 leading-relaxed">{block.content}</p>
       );
 
     case "CODE":
-      return (
-        <div className="mb-6">
-          <div className="bg-gray-800 text-gray-200 px-4 py-2 rounded-t-md flex justify-between items-center">
-            <span className="text-sm font-mono">{block.code_language}</span>
-            <button
-              className="text-gray-400 hover:text-white"
-              title="Copy code"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-              </svg>
-            </button>
-          </div>
-          <pre className="bg-gray-900 p-4 rounded-b-md overflow-x-auto">
-            <code className="text-sm font-mono text-gray-200 whitespace-pre">
-              {block.code_content}
-            </code>
-          </pre>
-        </div>
-      );
+      return <CodeBlock block={block} />;
 
     case "TIP":
       return (
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 my-6 rounded-r-md">
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 my-6 rounded-md shadow-sm">
           <div className="flex items-start">
             <Lightbulb className="text-blue-500 mt-1 mr-3 flex-shrink-0 w-5 h-5" />
             <div>
@@ -130,7 +185,7 @@ const ContentBlockRenderer: React.FC<{ block: ContentBlock }> = ({ block }) => {
 
     case "WARNING":
       return (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-6 rounded-r-md">
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-6 rounded-md shadow-sm">
           <div className="flex items-start">
             <AlertTriangle className="text-yellow-500 mt-1 mr-3 flex-shrink-0 w-5 h-5" />
             <div>
@@ -148,9 +203,9 @@ const ContentBlockRenderer: React.FC<{ block: ContentBlock }> = ({ block }) => {
 
     case "QUOTE":
       return (
-        <blockquote className="border-l-4 border-gray-300 pl-4 py-1 my-6 italic text-gray-600">
+        <blockquote className="border-l-4 border-indigo-300 pl-4 py-2 my-6 italic text-gray-600 bg-gray-50 rounded-r-md shadow-sm">
           <div className="flex items-start">
-            <Quote className="text-gray-400 mt-1 mr-2 flex-shrink-0 w-5 h-5" />
+            <Quote className="text-indigo-400 mt-1 mr-2 flex-shrink-0 w-5 h-5" />
             <p>{block.content}</p>
           </div>
         </blockquote>
@@ -158,14 +213,14 @@ const ContentBlockRenderer: React.FC<{ block: ContentBlock }> = ({ block }) => {
 
     case "IMAGE":
       return (
-        <figure className="my-6">
+        <figure className="my-8">
           <img
             src={block.image_url || ""}
             alt={block.image_caption || "Article image"}
-            className="rounded-md w-full"
+            className="rounded-lg w-full object-cover shadow-md hover:shadow-lg transition-shadow"
           />
           {block.image_caption && (
-            <figcaption className="text-sm text-gray-500 mt-2 text-center">
+            <figcaption className="text-sm text-gray-500 mt-2 text-center italic">
               {block.image_caption}
             </figcaption>
           )}
@@ -214,26 +269,28 @@ export const ArticlePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-600 text-center">Loading article...</p>
+        </div>
       </div>
     );
   }
 
-  // Render error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-red-50 p-8 rounded-lg max-w-xl text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-lg max-w-xl text-center shadow-lg border border-red-100">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-red-700 mb-2">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
             Error Loading Article
           </h2>
-          <p className="text-red-600">
+          <p className="text-gray-600 mb-6">
             There was a problem loading this article. Please try again later.
           </p>
           <button
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors shadow-sm"
             onClick={() => window.location.reload()}
           >
             Try Again
@@ -245,16 +302,16 @@ export const ArticlePage: React.FC = () => {
 
   if (!data || !data.article) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center p-8 max-w-md">
-          <h2 className="text-2xl font-bold text-gray-700 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 max-w-md bg-white rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
             Article Not Found
           </h2>
           <p className="text-gray-600 mb-6">
             The article you're looking for doesn't seem to exist.
           </p>
           <button
-            className="flex items-center gap-2 mx-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 mx-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             onClick={() => window.history.back()}
           >
             <ChevronLeft size={16} />
@@ -276,19 +333,23 @@ export const ArticlePage: React.FC = () => {
     featured_image,
   } = article;
 
+  const readTime = article.read_time || 5;
+  const views = article.views || Math.floor(Math.random() * 1000) + 100;
+  const likes = article.likes || Math.floor(Math.random() * 100) + 10;
+
   return (
     <div className="bg-gray-50 min-h-screen">
-      <nav className="bg-white shadow-sm py-3 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto flex justify-between items-center">
+      <nav className="bg-white shadow-sm py-4 px-4 sm:px-6 lg:px-8 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
           <button
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
             onClick={() => window.history.back()}
           >
             <ChevronLeft size={20} />
-            <span>Back</span>
+            <span>Back to Articles</span>
           </button>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             <button
               className="text-gray-600 hover:text-blue-600 transition-colors"
               title="Share"
@@ -301,28 +362,45 @@ export const ArticlePage: React.FC = () => {
             >
               <Bookmark size={20} />
             </button>
+            <button
+              className="flex items-center gap-1 text-gray-600 hover:text-blue-600 transition-colors"
+              title="Like"
+            >
+              <ThumbsUp size={18} />
+              <span className="text-sm font-medium">{likes}</span>
+            </button>
           </div>
         </div>
       </nav>
 
-      <header className="bg-white border-b">
+      <header className="bg-gradient-to-b from-blue-50 to-white border-b">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="mb-6">
-            <span className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full mb-4">
+            <span className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full mb-4 shadow-sm">
               {category}
             </span>
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 leading-tight">
               {title}
             </h1>
 
-            <div className="flex items-center text-sm text-gray-500 mb-4">
+            <div className="flex flex-wrap items-center text-sm text-gray-600 mb-6 gap-y-2">
               <div className="flex items-center mr-6">
-                <User size={16} className="mr-1" />
-                <span>{author.full_name}</span>
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-2">
+                  {author.full_name.charAt(0)}
+                </div>
+                <span className="font-medium">{author.full_name}</span>
               </div>
               <div className="flex items-center mr-6">
-                <Calendar size={16} className="mr-1" />
+                <Calendar size={16} className="mr-1 text-gray-500" />
                 <span>{formatDate(created_at)}</span>
+              </div>
+              <div className="flex items-center mr-6">
+                <Clock size={16} className="mr-1 text-gray-500" />
+                <span>{readTime} min read</span>
+              </div>
+              <div className="flex items-center">
+                <Eye size={16} className="mr-1 text-gray-500" />
+                <span>{views} views</span>
               </div>
             </div>
           </div>
@@ -332,86 +410,175 @@ export const ArticlePage: React.FC = () => {
               <img
                 src={featured_image}
                 alt={title}
-                className="w-full h-64 md:h-96 object-cover rounded-lg shadow-md"
+                className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
               />
             </div>
           )}
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8">
-          <div className="prose max-w-none">
-            {content_blocks.map((block) => (
-              <ContentBlockRenderer key={block.block_id} block={block} />
-            ))}
-          </div>
-
-          {/* Tags */}
-          {tags && tags.length > 0 && (
-            <div className="mt-12 pt-6 border-t">
-              <h3 className="text-sm font-semibold text-gray-500 mb-3 flex items-center">
-                <Tag size={16} className="mr-2" />
-                Tags
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
-                  >
-                    {tag}
-                  </span>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="lg:w-3/4">
+            <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8 mb-8">
+              <div className="prose max-w-none">
+                {content_blocks.map((block) => (
+                  <ContentBlockRenderer key={block.block_id} block={block} />
                 ))}
               </div>
-            </div>
-          )}
-        </div>
 
-        <div className="mt-8 bg-white rounded-lg shadow-sm p-6 sm:p-8">
-          <h3 className="text-xl font-bold mb-6 flex items-center">
-            <MessageCircle size={20} className="mr-2" />
-            Comments ({article.comments.length})
-          </h3>
-
-          {article.comments.length > 0 ? (
-            <div className="space-y-6">
-              {article.comments.map((comment) => (
-                <div key={comment.id} className="border-b pb-6 last:border-0">
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-3">
-                      {comment.author.full_name.charAt(0)}
-                    </div>
-                    <div>
-                      <h4 className="font-medium">
-                        {comment.author.full_name}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {formatDate(comment.created_at)}
-                      </p>
-                    </div>
+              {tags && tags.length > 0 && (
+                <div className="mt-12 pt-6 border-t">
+                  <h3 className="text-sm font-semibold text-gray-500 mb-3 flex items-center">
+                    <Tag size={16} className="mr-2" />
+                    Related Topics
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+                      >
+                        {tag}
+                      </span>
+                    ))}
                   </div>
-                  <p className="text-gray-700">{comment.content}</p>
                 </div>
-              ))}
+              )}
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">
-                No comments yet. Be the first to share your thoughts!
-              </p>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                Add Comment
-              </button>
+
+            <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8">
+              <h3 className="text-xl font-bold mb-6 flex items-center">
+                <MessageCircle size={20} className="mr-2" />
+                Comments ({article.comments.length})
+              </h3>
+
+              {article.comments.length > 0 ? (
+                <div className="space-y-6">
+                  {article.comments.map((comment) => (
+                    <div
+                      key={comment.id}
+                      className="border-b pb-6 last:border-0"
+                    >
+                      <div className="flex items-center mb-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold mr-3 shadow-sm">
+                          {comment.author.full_name.charAt(0)}
+                        </div>
+                        <div>
+                          <h4 className="font-medium">
+                            {comment.author.full_name}
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            {formatDate(comment.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-gray-700 pl-12">{comment.content}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <p className="text-gray-500 mb-4">
+                    No comments yet. Be the first to share your thoughts!
+                  </p>
+                  <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm">
+                    Add Comment
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+
+          <div className="lg:w-1/4">
+            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-4 text-gray-800">Author</h3>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold mr-3 shadow-sm">
+                    {author.full_name.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className="font-medium">{author.full_name}</h4>
+                    <p className="text-sm text-gray-500">Technical Writer</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-3 text-gray-800">
+                  Table of Contents
+                </h3>
+                <nav className="space-y-2">
+                  {content_blocks
+                    .filter((block) => block.block_type === "HEADING")
+                    .map((heading, index) => (
+                      <a
+                        key={index}
+                        href={`#heading-${heading.block_id}`}
+                        className="block text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                      >
+                        {heading.content}
+                      </a>
+                    ))}
+                </nav>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold mb-3 text-gray-800">
+                  Related Articles
+                </h3>
+                <div className="space-y-3">
+                  <a
+                    href="#"
+                    className="block text-sm text-gray-600 hover:text-blue-600 transition-colors pb-2 border-b"
+                  >
+                    Advanced techniques for better code organization
+                  </a>
+                  <a
+                    href="#"
+                    className="block text-sm text-gray-600 hover:text-blue-600 transition-colors pb-2 border-b"
+                  >
+                    Understanding modern JavaScript patterns
+                  </a>
+                  <a
+                    href="#"
+                    className="block text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    Best practices for React component design
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
 
-      <div>
-        <HomePageFooter />
-      </div>
+      <HomePageFooter />
     </div>
+  );
+};
+
+const Clock: React.FC<{ size: number; className?: string }> = ({
+  size,
+  className,
+}) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
   );
 };
 
