@@ -10,11 +10,11 @@ import { FaEllipsisV } from "react-icons/fa";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
 import ReactMarkdown from "react-markdown";
 import { ClipLoader } from "react-spinners";
+import { useQuery } from "@tanstack/react-query";
 
 export const ReviewQuiz = () => {
   const { courseId, quizId } = useParams();
   const [quizDetails, setQuizDetails] = useState<QuizDetails | null>(null);
-  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
@@ -26,7 +26,6 @@ export const ReviewQuiz = () => {
 
   const getQuizDetails = async () => {
     try {
-      setLoading(true);
       const res = await axios.get(
         `${API}/instructor/review-quiz/${quizId}/course/${courseId}/instructor/${user?.userId}`,
         {
@@ -37,22 +36,28 @@ export const ReviewQuiz = () => {
         }
       );
       const data = await res.data;
-      if (data) {
-        setQuizDetails(data);
-      }
+      return data;
     } catch (error: any) {
       console.log(error);
       toast.error(
         error?.response?.data?.error || "Failed to fetch quiz details"
       );
-    } finally {
-      setLoading(false);
     }
   };
 
+  const { data, isLoading } = useQuery({
+    queryKey: ["quiz_questions", quizId, courseId],
+    queryFn: getQuizDetails,
+    staleTime: 24 * 60 * 1000,
+    refetchInterval: 24 * 60 * 1000,
+    retry: 2,
+    enabled: !!user?.userId,
+    refetchOnWindowFocus: false,
+  });
+
   useEffect(() => {
-    getQuizDetails();
-  }, [courseId, quizId, user?.userId]);
+    setQuizDetails(data);
+  }, [data]);
 
   const toggleMenu = (questionId: number) => {
     setOpenMenuId(openMenuId === questionId ? null : questionId);
@@ -120,7 +125,7 @@ export const ReviewQuiz = () => {
             </p>
           </div>
 
-          {loading ? (
+          {isLoading ? (
             <div className="flex justify-center items-center ">
               <ClipLoader size={20} />
             </div>

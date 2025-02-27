@@ -1,31 +1,46 @@
 import { genreateQuestionAttempt } from "../openAI/openAi.js";
 import { prisma } from "../prisma/prismaClint.js";
-
 const isHavePermession = async (course_id, instructor_id) => {
-  const courseId = parseInt(course_id);
-  const instructorId = parseInt(instructor_id);
+  try {
+    const courseId = parseInt(course_id);
+    const instructorId = parseInt(instructor_id);
 
-  const course = await prisma.courses.findUnique({
-    where: {
-      course_id: courseId,
-      instructor_id: instructorId,
-    },
-  });
-  const userRole = await prisma.users.findUnique({
-    where: {
-      user_id: parseInt(instructor_id),
-    },
-  });
-  if (userRole && userRole.role === "admin") {
-    return true;
-  }
-  if (course) {
-    return true;
-  } else {
-    throw new Error("You don't have permission to handle this course");
+    console.log(`Parsed courseId: ${courseId}, instructorId: ${instructorId}`);
+
+    const course = await prisma.courses.findUnique({
+      where: {
+        course_id: courseId,
+        instructor_id: instructorId,
+      },
+    });
+
+    console.log("Course found:", course);
+
+    const userRole = await prisma.users.findUnique({
+      where: {
+        user_id: instructorId,
+      },
+    });
+
+    console.log("User role found:", userRole);
+
+    if (userRole && userRole.role === "admin") {
+      console.log("User is admin, permission granted.");
+      return true;
+    }
+
+    if (course) {
+      console.log("Course exists, permission granted.");
+      return true;
+    } else {
+      console.log("No course found, permission denied.");
+      throw new Error("You don't have permission to handle this course");
+    }
+  } catch (error) {
+    console.error("Error in isHavePermission:", error);
+    throw error;
   }
 };
-
 export const getInstructorCourses = async (req, res) => {
   try {
     const { instructorId } = req.params;

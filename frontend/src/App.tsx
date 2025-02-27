@@ -71,7 +71,7 @@ function App() {
         <Route path="/explore" element={<ExploreCoursesPage />} />
         <Route path="/forgot-password" element={<ResetPasswordRequest />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
-        <Route path="/feed" element={<Feed />} />
+        <Route path="/articels" element={<Feed />} />
         <Route path="/articels/create" element={<CreateArticle />} />
         <Route path="/articels/read/:articalId" element={<ArticlePage />} />
         <Route
@@ -166,7 +166,7 @@ function App() {
           element={<ProtectedInstractourRoute element={<CreateQuiz />} />}
         />
         <Route
-          path="/instructor/add-questions/:quizId/quiz/:quizname/c/:coursename"
+          path="/instructor/add-questions/:quizId/quiz/:quizname/c/:coursename/cid/:courseId"
           element={<ProtectedInstractourRoute element={<AddQuestions />} />}
         />
         <Route

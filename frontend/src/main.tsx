@@ -6,7 +6,7 @@ import { Provider } from "react-redux";
 import store from "./store/store.ts";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const qureyCline = new QueryClient({
+export const qureyClinet = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
@@ -17,7 +17,7 @@ const qureyCline = new QueryClient({
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <Provider store={store}>
-      <QueryClientProvider client={qureyCline}>
+      <QueryClientProvider client={qureyClinet}>
         <App />
       </QueryClientProvider>
     </Provider>

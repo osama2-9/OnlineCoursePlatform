@@ -21,6 +21,7 @@ import { API } from "../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useGetCategories } from "../hooks/useGetCategories";
 
 interface ContentBlock {
   block_id: number;
@@ -161,15 +162,9 @@ export const Feed = () => {
     setPage(1);
   };
 
-  const categories = [
-    "All",
-    "web-development",
-    "mobile-development",
-    "devops",
-    "data-science",
-    "machine-learning",
-    "ui-ux",
-  ];
+  const {categoriesOptions} = useGetCategories()
+
+  
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -185,7 +180,6 @@ export const Feed = () => {
                 development, AI, data science, and more.
               </p>
 
-              {/* Welcome message for admin/instructor */}
               {isAdminOrInstructor && (
                 <div className="mt-4 px-4 py-2 bg-blue-500 rounded-lg inline-block animate-pulse">
                   <p className="text-white font-medium">
@@ -255,17 +249,17 @@ export const Feed = () => {
                 <div>
                   <h3 className="font-medium text-gray-700 mb-3">Categories</h3>
                   <div className="flex flex-wrap gap-2">
-                    {categories.map((category) => (
+                    {categoriesOptions.map((category) => (
                       <button
-                        key={category}
-                        onClick={() => handleCategoryChange(category)}
+                        key={category.category_id}
+                        onClick={() => handleCategoryChange(category.name)}
                         className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200 ${
-                          selectedCategory === category
+                          selectedCategory === category.name
                             ? "bg-blue-600 text-white shadow-sm"
                             : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
                         }`}
                       >
-                        {category}
+                        {category.name}
                       </button>
                     ))}
                   </div>

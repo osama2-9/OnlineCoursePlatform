@@ -46,12 +46,12 @@ export const HomePageNavbar = () => {
 
         <div className="space-x-6 hidden md:flex items-center">
           <Link
-            to="/feed"
+            to="/articels"
             className="flex items-center hover:text-gray-700 transition-all duration-300 ease-in-out"
             aria-label="Articles"
           >
             <FiBookOpen className="mr-2" />
-            Feed
+            Articles
           </Link>
           {user ? (
             <>
@@ -114,7 +114,7 @@ export const HomePageNavbar = () => {
         }`}
       >
         <Link
-          to="/articles"
+          to="/articels"
           className="block py-2 px-4 text-gray-700 hover:bg-orange-100 rounded-md transition-all duration-300 ease-in-out"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-label="Articles"

@@ -53,7 +53,9 @@ export const Quizzes = () => {
     navigate(
       `/instructor/add-questions/${quizId}/quiz/${
         quizzes.find((q) => q.quiz_id === quizId)?.title
-      }/c/${quizzes.find((q) => q.quiz_id === quizId)?.course.title}`
+      }/c/${quizzes.find((q) => q.quiz_id === quizId)?.course.title}/cid/${
+        quizzes.find((q) => q.quiz_id == quizId)?.course?.course_id
+      }`
     );
   };
   const handleReviewClick = (quizId: number, courseId: number) => {
@@ -102,7 +104,6 @@ export const Quizzes = () => {
   if (!pagination) {
     return null;
   }
-  // Remove the pagination check that was causing the blank page
   return (
     <InstructorLayout>
       <div className="p-6 bg-gray-100 min-h-screen">

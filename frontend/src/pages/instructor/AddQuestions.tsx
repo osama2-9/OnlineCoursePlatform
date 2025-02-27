@@ -8,11 +8,14 @@ import { useAuth } from "../../hooks/useAuth";
 import ReactMarkdown from "react-markdown";
 
 export const AddQuestions = () => {
-  const { quizId, quizname ,coursename } = useParams<{
+  const { quizId, quizname, coursename, courseId } = useParams<{
     quizId: string;
     quizname: string;
     coursename: string;
+    courseId:string
   }>();
+
+  
   const [question, setQuestion] = useState("");
   const [questionType, setQuestionType] = useState<
     "mcq" | "truefalse" | "text"
@@ -24,7 +27,6 @@ export const AddQuestions = () => {
   const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
 
-  // Markdown formatting functions
   const formatText = (prefix: string, suffix: string = "") => {
     const textarea = document.getElementById(
       "question-textarea"
@@ -93,7 +95,7 @@ export const AddQuestions = () => {
       const res = await axios.post(
         `${API}/instructor/create-question`,
         {
-          courseId: 1, // Replace with dynamic courseId if needed
+          courseId: courseId,
           instructorId: user?.userId,
           quizId: quizId,
           question_text: question,
@@ -162,20 +164,16 @@ export const AddQuestions = () => {
       );
       const data = await res.data;
       if (data) {
-        // Set the question
         setQuestion(data.question);
-        
+
         if (questionType === "mcq") {
-          // Set the choices
           setChoices(data.options);
-          
-          // Directly use the correctAnswer index
+
           setCorrectAnswer(data.correctAnswer);
         } else if (questionType === "truefalse") {
-          // For true/false questions
           setCorrectAnswer(data.correctAnswer);
         }
-        
+
         toast.success("AI suggestion applied successfully!");
       }
     } catch (error: any) {
@@ -276,9 +274,24 @@ export const AddQuestions = () => {
                   >
                     {aiLoading ? (
                       <>
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
                         </svg>
                         Thinking...
                       </>

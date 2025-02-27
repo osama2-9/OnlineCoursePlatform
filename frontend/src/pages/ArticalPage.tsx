@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { API } from "../API/ApiBaseUrl";
@@ -10,15 +9,13 @@ import {
   Share2,
   Bookmark,
   AlertTriangle,
-  Lightbulb,
   ChevronLeft,
-  Quote,
-  Copy,
-  Check,
   ThumbsUp,
   Eye,
+  Loader2,
 } from "lucide-react";
 import { HomePageFooter } from "../components/HomePageFooter";
+import { ContentBlock } from "../components/ContentBlock";
 
 interface Author {
   full_name: string;
@@ -81,157 +78,6 @@ interface ArticleResponseData {
   article: Article;
 }
 
-const CodeBlock: React.FC<{ block: ContentBlock }> = ({ block }) => {
-  const [copied, setCopied] = useState(false);
-
-  const copyToClipboard = () => {
-    if (!block.code_content) return;
-
-    navigator.clipboard.writeText(block.code_content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const getLanguageColor = (language: string | null): string => {
-    const colorMap: Record<string, string> = {
-      javascript: "#f7df1e",
-      typescript: "#3178c6",
-      python: "#3776ab",
-      java: "#007396",
-      csharp: "#239120",
-      cpp: "#00599c",
-      go: "#00add8",
-      rust: "#dea584",
-      swift: "#ffac45",
-      php: "#777bb4",
-      ruby: "#cc342d",
-      html: "#e34c26",
-      css: "#264de4",
-      sql: "#e38c00",
-      bash: "#4eaa25",
-      default: "#858585",
-    };
-
-    return language && colorMap[language.toLowerCase()]
-      ? colorMap[language.toLowerCase()]
-      : colorMap.default;
-  };
-
-  return (
-    <div className="my-6 rounded-md overflow-hidden border border-gray-200 shadow-sm">
-      <div className="bg-gray-800 text-gray-200 px-3 py-2 flex justify-between items-center border-b border-gray-700">
-        <div className="flex items-center space-x-2">
-          <span
-            className="h-3 w-3 rounded-full"
-            style={{ backgroundColor: getLanguageColor(block.code_language) }}
-          />
-          <span className="text-xs font-medium">{block.code_language}</span>
-        </div>
-        <button
-          className="text-gray-400 hover:text-white p-1 rounded transition-colors"
-          title={copied ? "Copied!" : "Copy code"}
-          onClick={copyToClipboard}
-        >
-          {copied ? <Check size={16} /> : <Copy size={16} />}
-        </button>
-      </div>
-
-      <div className="flex">
-        <div className="bg-gray-800 text-gray-500 px-2 py-3 text-right select-none font-mono text-xs">
-          {block.code_content?.split("\n").map((_, i) => (
-            <div key={i}>{i + 1}</div>
-          ))}
-        </div>
-
-        <pre className="bg-gray-900 p-3 overflow-x-auto w-full">
-          <code className="text-sm font-mono text-gray-200 whitespace-pre">
-            {block.code_content}
-          </code>
-        </pre>
-      </div>
-    </div>
-  );
-};
-
-const ContentBlockRenderer: React.FC<{ block: ContentBlock }> = ({ block }) => {
-  switch (block.block_type) {
-    case "HEADING":
-      return (
-        <h2 className="text-2xl font-bold mt-8 mb-4 text-gray-800">
-          {block.content}
-        </h2>
-      );
-
-    case "TEXT":
-      return (
-        <p className="mb-5 text-gray-700 leading-relaxed">{block.content}</p>
-      );
-
-    case "CODE":
-      return <CodeBlock block={block} />;
-
-    case "TIP":
-      return (
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 my-6 rounded-md shadow-sm">
-          <div className="flex items-start">
-            <Lightbulb className="text-blue-500 mt-1 mr-3 flex-shrink-0 w-5 h-5" />
-            <div>
-              <h4 className="font-bold text-blue-700 mb-1">Tip</h4>
-              <p className="text-blue-800">{block.content}</p>
-            </div>
-          </div>
-        </div>
-      );
-
-    case "WARNING":
-      return (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-6 rounded-md shadow-sm">
-          <div className="flex items-start">
-            <AlertTriangle className="text-yellow-500 mt-1 mr-3 flex-shrink-0 w-5 h-5" />
-            <div>
-              <h4 className="font-bold text-yellow-700 mb-1">Warning</h4>
-              <div className="text-yellow-800 whitespace-pre-line">
-                {block.content}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-
-    case "DIVIDER":
-      return <hr className="my-8 border-gray-200" />;
-
-    case "QUOTE":
-      return (
-        <blockquote className="border-l-4 border-indigo-300 pl-4 py-2 my-6 italic text-gray-600 bg-gray-50 rounded-r-md shadow-sm">
-          <div className="flex items-start">
-            <Quote className="text-indigo-400 mt-1 mr-2 flex-shrink-0 w-5 h-5" />
-            <p>{block.content}</p>
-          </div>
-        </blockquote>
-      );
-
-    case "IMAGE":
-      return (
-        <figure className="my-8">
-          <img
-            src={block.image_url || ""}
-            alt={block.image_caption || "Article image"}
-            className="rounded-lg w-full object-cover shadow-md hover:shadow-lg transition-shadow"
-          />
-          {block.image_caption && (
-            <figcaption className="text-sm text-gray-500 mt-2 text-center italic">
-              {block.image_caption}
-            </figcaption>
-          )}
-        </figure>
-      );
-
-    default:
-      return <p className="text-gray-700">{block.content}</p>;
-  }
-};
-
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -271,7 +117,9 @@ export const ArticlePage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+          <div className="flex items-center text-center justify-center">
+            <Loader2 className="animate-spin" color="#2563eb " size={30} />
+          </div>
           <p className="mt-4 text-gray-600 text-center">Loading article...</p>
         </div>
       </div>
@@ -410,7 +258,7 @@ export const ArticlePage: React.FC = () => {
               <img
                 src={featured_image}
                 alt={title}
-                className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
+                className="w-full h-64 md:h-96  rounded-lg shadow-lg"
               />
             </div>
           )}
@@ -423,7 +271,7 @@ export const ArticlePage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8 mb-8">
               <div className="prose max-w-none">
                 {content_blocks.map((block) => (
-                  <ContentBlockRenderer key={block.block_id} block={block} />
+                  <ContentBlock key={block.block_id} block={block} />
                 ))}
               </div>
 
