@@ -35,7 +35,10 @@ model Users {
   subscriptions Subscriptions[]
   attempts      Attempt[]
   userProgress  UserProgress[]
-@@index([email])
+  likes         Like[]
+  bookmarks     Bookmark[]
+  seen          Seen[]
+  @@index([email])
   @@map("users")
   Article Article[]
 }
@@ -60,7 +63,8 @@ model Courses {
   quizzes           Quizzes[]
   payments          Payments[]
   userProgress      UserProgress[]
-
+  likes             Like[]
+  bookmarks         Bookmark[]
   @@map("courses")
 }
 
@@ -92,7 +96,6 @@ model InstructorsApplications {
   preferred_schedule   String?            
   preferred_course_type CourseType?       
   
-
   @@map("instructor_applications")
 }
 
@@ -122,6 +125,10 @@ model Article {
   comments         Comment[]
   categories       Category[]
   content_blocks   ContentBlock[]
+  likes            Like[]
+  bookmarks        Bookmark[]
+  seen             Seen[]
+  seen_count       Int             @default(0)
 
   @@index([slug], type: Hash)
   @@index([published_at])
@@ -144,6 +151,7 @@ enum ContentStatus {
   archived
   deleted
 }
+
 model Comment {
   comment_id     Int            @id @default(autoincrement())
   content        String
@@ -164,14 +172,11 @@ model Comment {
   @@map("comments")
 }
 
-
 enum CommentStatus {
   published
   hidden
   deleted
 }
-
-
 
 model ContentBlock {
   block_id      Int            @id @default(autoincrement())
@@ -351,22 +356,23 @@ model Reviews {
 
   @@map("reviews")
 }
+
 model Quizzes {
   quiz_id      Int            @id @default(autoincrement())
   course_id    Int
   title        String
   description  String?
-  duration     Int            @default(60) // Duration in minutes
-  max_attempts Int            @default(1) // Max attempts allowed
+  duration     Int            @default(60) 
+  max_attempts Int            @default(1) 
   is_published Boolean        @default(false)
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
 
   course       Courses        @relation(fields: [course_id], references: [course_id])
-  questions    Question[]     // Relation to questions
+  questions    Question[]     
+  Attempt      Attempt[]
 
   @@map("quizzes")
-  Attempt Attempt[]
 }
 
 model Question {
@@ -379,10 +385,10 @@ model Question {
   updated_at    DateTime       @updatedAt
 
   quiz          Quizzes        @relation(fields: [quiz_id], references: [quiz_id])
-  choices       Choice[]       // Relation to choices
+  choices       Choice[]       
+  Answer        Answer[]
 
   @@map("questions")
-  Answer Answer[]
 }
 
 enum QuestionType {
@@ -398,9 +404,9 @@ model Choice {
   is_correct   Boolean  @default(false)
 
   question     Question @relation(fields: [question_id], references: [question_id])
+  Answer       Answer[]
 
   @@map("choices")
-  Answer Answer[]
 }
 
 model Attempt {
@@ -412,7 +418,7 @@ model Attempt {
   score        Float         @default(0)
   user         Users         @relation(fields: [user_id], references: [user_id])
   quiz         Quizzes       @relation(fields: [quiz_id], references: [quiz_id])
-  answers      Answer[]      // Relation to answers
+  answers      Answer[]      
 
   @@map("quiz_attempts")
 }
@@ -431,3 +437,47 @@ model Answer {
   @@map("answers")
 }
 
+model Like {
+  like_id    Int      @id @default(autoincrement())
+  user_id    Int
+  article_id Int?
+  course_id  Int?
+  created_at DateTime @default(now())
+
+  user   Users   @relation(fields: [user_id], references: [user_id])
+  article Article? @relation(fields: [article_id], references: [article_id])
+  course  Courses? @relation(fields: [course_id], references: [course_id])
+
+  @@unique([user_id, article_id]) 
+  @@unique([user_id, course_id])  
+  @@map("likes")
+}
+
+model Bookmark {
+  bookmark_id Int      @id @default(autoincrement())
+  user_id     Int
+  article_id  Int?
+  course_id   Int?
+  created_at  DateTime @default(now())
+
+  user   Users   @relation(fields: [user_id], references: [user_id])
+  article Article? @relation(fields: [article_id], references: [article_id])
+  course  Courses? @relation(fields: [course_id], references: [course_id])
+
+  @@unique([user_id, article_id]) 
+  @@unique([user_id, course_id])  
+  @@map("bookmarks")
+}
+
+model Seen {
+  seen_id    Int      @id @default(autoincrement())
+  user_id    Int
+  article_id Int
+  seen_at    DateTime @default(now())
+
+  user   Users   @relation(fields: [user_id], references: [user_id])
+  article Article @relation(fields: [article_id], references: [article_id])
+
+  @@unique([user_id, article_id]) 
+  @@map("seen")
+}

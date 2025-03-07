@@ -13,9 +13,16 @@ import {
   ThumbsUp,
   Eye,
   Loader2,
+  Send,
+  X,
 } from "lucide-react";
+import { useState } from "react";
 import { HomePageFooter } from "../components/HomePageFooter";
 import { ContentBlock } from "../components/ContentBlock";
+import { Likes } from "../hooks/Likes";
+import { useAuth } from "../hooks/useAuth";
+import { useBookmark } from "../hooks/Bookmark";
+import toast from "react-hot-toast";
 
 interface Author {
   full_name: string;
@@ -64,7 +71,6 @@ interface Article {
   comments: Comment[];
   read_time?: number;
   views?: number;
-  likes?: number;
 }
 
 interface Comment {
@@ -76,6 +82,10 @@ interface Comment {
 
 interface ArticleResponseData {
   article: Article;
+  allowLike?: boolean;
+  likes_count?: number;
+  isBookmarked?: boolean;
+
 }
 
 const formatDate = (dateString: string): string => {
@@ -88,11 +98,34 @@ const formatDate = (dateString: string): string => {
 };
 
 export const ArticlePage: React.FC = () => {
+  const { user } = useAuth();
   const { articalId } = useParams<{ articalId: string }>();
+  let requestEndpoint = `${API}/articels/get-article/${articalId}/u/${user?.userId}`;
+
+  if(!user){
+    requestEndpoint = `${API}/articels/get-article/${articalId}/u/undefined`;
+  }else{
+    requestEndpoint = `${API}/articels/get-article/${articalId}/u/${user?.userId}`;
+   
+  }
+
+
+  const copyArticleUrl = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Article URL copied to clipboard");
+  }
+
+  
+  
+  
+  
+  const [showCommentForm, setShowCommentForm] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getArticleContent = async (): Promise<ArticleResponseData> => {
     try {
-      const res = await axios.get(`${API}/articels/get-article/${articalId}`, {
+      const res = await axios.get(`${requestEndpoint}`, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
@@ -103,7 +136,7 @@ export const ArticlePage: React.FC = () => {
     }
   };
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["article", articalId],
     queryFn: getArticleContent,
     staleTime: 24 * 1000 * 60,
@@ -113,6 +146,54 @@ export const ArticlePage: React.FC = () => {
     enabled: !!articalId,
   });
 
+  const handleAddComment = async () => {
+    if (!commentText.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      await axios.post(
+        `${API}/articles/add-comment/${articalId}`,
+        { content: commentText },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      await refetch();
+
+      setCommentText("");
+      setShowCommentForm(false);
+    } catch (error) {
+      console.error("Failed to add comment:", error);
+      alert("Failed to add comment. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  const { handleClickLike, handleClickUnlike, addLikeSuccess, removeLikeSuccess } = Likes(articalId, user?.userId);
+  const {addBookmarkSuccess, removeBookmarkSuccess, addBookmark, removeBookmark} = useBookmark(articalId ,user?.userId);
+  let likes = data?.likes_count || 0
+
+  
+  let allowLike = data && data.allowLike ? data?.allowLike : false;
+  if(addLikeSuccess){
+    likes++;
+    allowLike = false
+  }
+  if(removeLikeSuccess){
+    likes--;
+    allowLike = true;
+  }
+
+  let isBookmarked = data && data.isBookmarked ? data?.isBookmarked : false;
+  if(addBookmarkSuccess){
+    isBookmarked = true
+  }
+  if(removeBookmarkSuccess){
+    isBookmarked = false
+  }
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -183,7 +264,9 @@ export const ArticlePage: React.FC = () => {
 
   const readTime = article.read_time || 5;
   const views = article.views || Math.floor(Math.random() * 1000) + 100;
-  const likes = article.likes || Math.floor(Math.random() * 100) + 10;
+
+  let handleLikeRequest = allowLike ? handleClickLike : handleClickUnlike;
+  let handleBookmarkRequest = isBookmarked ? removeBookmark : addBookmark;
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -199,20 +282,26 @@ export const ArticlePage: React.FC = () => {
 
           <div className="flex items-center gap-5">
             <button
+            onClick={copyArticleUrl}
               className="text-gray-600 hover:text-blue-600 transition-colors"
               title="Share"
             >
               <Share2 size={20} />
             </button>
             <button
-              className="text-gray-600 hover:text-blue-600 transition-colors"
+            onClick={handleBookmarkRequest}
+              className={`text-gray-600 hover:text-blue-600 transition-colors ${ isBookmarked? 'text-yellow-600' : 'text-gray-600 hover:text-yellow-600'}`}
               title="Bookmark"
             >
               <Bookmark size={20} />
             </button>
             <button
-              className="flex items-center gap-1 text-gray-600 hover:text-blue-600 transition-colors"
-              title="Like"
+            onClick={handleLikeRequest}
+              className={`flex items-center gap-1 transition-colors ${
+                !allowLike ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'
+              }`}
+              title={allowLike ? "Like" : "Unlike"}
+              disabled={!user}
             >
               <ThumbsUp size={18} />
               <span className="text-sm font-medium">{likes}</span>
@@ -258,7 +347,7 @@ export const ArticlePage: React.FC = () => {
               <img
                 src={featured_image}
                 alt={title}
-                className="w-full h-64 md:h-96  rounded-lg shadow-lg"
+                className="w-full h-64 md:h-96 rounded-lg shadow-lg"
               />
             </div>
           )}
@@ -301,6 +390,44 @@ export const ArticlePage: React.FC = () => {
                 Comments ({article.comments.length})
               </h3>
 
+              {/* Comment Form */}
+              {showCommentForm && (
+                <div className="mb-8 bg-gray-50 p-4 rounded-lg">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-medium text-gray-800">
+                      Add Your Comment
+                    </h4>
+                    <button
+                      className="text-gray-500 hover:text-gray-700"
+                      onClick={() => setShowCommentForm(false)}
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    rows={4}
+                    placeholder="Share your thoughts..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                  ></textarea>
+                  <div className="flex justify-end mt-3">
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+                      onClick={handleAddComment}
+                      disabled={isSubmitting || !commentText.trim()}
+                    >
+                      {isSubmitting ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Send size={16} />
+                      )}
+                      Submit Comment
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {article.comments.length > 0 ? (
                 <div className="space-y-6">
                   {article.comments.map((comment) => (
@@ -330,7 +457,22 @@ export const ArticlePage: React.FC = () => {
                   <p className="text-gray-500 mb-4">
                     No comments yet. Be the first to share your thoughts!
                   </p>
-                  <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm">
+                  <button
+                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                    onClick={() => setShowCommentForm(true)}
+                  >
+                    Add Comment
+                  </button>
+                </div>
+              )}
+
+              {article.comments.length > 0 && !showCommentForm && (
+                <div className="mt-8 text-center">
+                  <button
+                    className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm mx-auto"
+                    onClick={() => setShowCommentForm(true)}
+                  >
+                    <MessageCircle size={18} />
                     Add Comment
                   </button>
                 </div>

@@ -7,6 +7,7 @@ interface User {
     role: string
     towFAStatus: boolean
     isActive: boolean
+    profile_image:string
 
 }
 

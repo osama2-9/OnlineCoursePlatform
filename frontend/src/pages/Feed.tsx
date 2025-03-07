@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Clock,
@@ -80,6 +80,7 @@ export const Feed = () => {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -89,6 +90,19 @@ export const Feed = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (showProfileMenu && !event.target.closest(".profile-menu-container")) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showProfileMenu]);
 
   const fetchArticles = async () => {
     try {
@@ -162,12 +176,12 @@ export const Feed = () => {
     setPage(1);
   };
 
-  const {categoriesOptions} = useGetCategories()
-
-  
+  const { categoriesOptions } = useGetCategories();
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      {/* Navbar */}
+
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 mb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center md:text-left md:flex md:justify-between md:items-center">
@@ -210,7 +224,7 @@ export const Feed = () => {
               {isAdminOrInstructor && (
                 <Link
                   to="/articels/create"
-                  className="mt-4 md:mt-3 inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-md transition-colors duration-200 font-medium text-sm"
+                  className="mt-4 md:mt-3 md:hidden inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-md transition-colors duration-200 font-medium text-sm"
                 >
                   <Plus className="h-4 w-4" /> Create New Article
                 </Link>

@@ -1,3 +1,4 @@
+import { response } from "express";
 import { prisma } from "../prisma/prismaClint.js";
 export const createCategory = async (req, res) => {
   try {
@@ -208,13 +209,15 @@ export const createArtical = async (req, res) => {
 };
 export const getArticalById = async (req, res) => {
   try {
-    const { articalId } = req.params;
+    const { articalId, userId } = req.params;
+
     const articalIdInt = parseInt(articalId);
-    if (!articalId) {
-      return res.status(400).json({
-        error: "Article Id is required",
-      });
+    let userIdInt = null;
+    
+    if (userId !== 'undefined') {
+      userIdInt = parseInt(userId);
     }
+
     const article = await prisma.article.findUnique({
       where: {
         article_id: articalIdInt,
@@ -241,13 +244,45 @@ export const getArticalById = async (req, res) => {
       },
     });
 
+    let allowLike = false;
+    if (userIdInt) {
+      const isUserLiked = await prisma.like.findFirst({
+        where: {
+          article_id: articalIdInt,
+          user_id: userIdInt,
+        },
+      });
+      allowLike = !isUserLiked;
+    }
+
+    let isBookmarked = false;
+    if(userId){
+      const isArticleBookmarked = await prisma.bookmark.findFirst({
+        where:{
+          user_id: userIdInt,
+          article_id: articalIdInt
+        }
+      })
+      isBookmarked = !!isArticleBookmarked;
+    }
+
+    const likes = await prisma.like.count({
+      where: {
+        article_id: articalIdInt,
+      },
+    });
+
     if (!article) {
-      return res.status(400).json({
-        error: "Articel not found",
+      return res.status(404).json({
+        error: "Article not found",
       });
     }
+
     return res.status(200).json({
       article,
+      likes_count: likes,
+      allowLike,
+      isBookmarked
     });
   } catch (error) {
     console.log(error);
@@ -256,6 +291,8 @@ export const getArticalById = async (req, res) => {
     });
   }
 };
+
+
 export const getArticles = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -303,7 +340,7 @@ export const getArticles = async (req, res) => {
         tags: true,
         title: true,
         comments: true,
-        author_id:true
+        author_id: true,
       },
       orderBy: {
         created_at: "desc",
@@ -338,3 +375,232 @@ export const getArticles = async (req, res) => {
     });
   }
 };
+
+export const addComment = async (req, res) => {
+  try {
+    const { userId, articleId, comment } = req.body;
+    if (!userId || !articleId || !comment) {
+      return res.status(400).json({
+        error: "Missing required inputs",
+      });
+    }
+    const article = await prisma.article.findUnique({
+      where: {
+        article_id: articleId,
+      },
+    });
+    if (!article) {
+      return res.status(400).json({
+        error: "No Article found",
+      });
+    }
+    const createComment = await prisma.comment.create({
+      data: {
+        article_id: articleId,
+        content: comment,
+        author_id: userId,
+      },
+    });
+
+    if (!createComment) {
+      return res.status(400).json({
+        error: "can't add comment please try again",
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+export const addLike = async (req, res) => {
+  try {
+    const { userId, articleId } = req.body;
+    if (!userId || !articleId) {
+      return res.status(400).json({
+        error: "Missing required data",
+      });
+    }
+    const article = await prisma.article.findUnique({
+      where: {
+        article_id: parseInt(articleId),
+      },
+    });
+
+    if (!article) {
+      return res.status(400).json({
+        error: "Article not found",
+      });
+    }
+    const addLike = await prisma.like.create({
+      data: {
+        article_id: parseInt(articleId),
+        user_id: parseInt(userId),
+      },
+    });
+
+    if (!addLike) {
+      return res.status(400).json({
+        error: "falied to add like ",
+      });
+    }
+
+    return res.status(201).json({
+      add_like_success: true,
+    });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+export const removeLike = async (req, res) => {
+  try {
+    const {articleId, userId} = req.params;
+    const articleIdInt = parseInt(articleId);
+    const userIdInt = parseInt(userId);
+    
+    if(!articleId || !userId) {
+      return res.status(400).json({
+        error: "Missing required fields"
+      });
+    }
+
+    const like = await prisma.like.findFirst({
+      where: {
+        article_id: articleIdInt,
+        user_id: userIdInt
+      }
+    });
+
+    if(!like) {
+      return res.status(400).json({
+        remove_like_success: false,
+      });
+    }
+
+    await prisma.like.deleteMany({
+      where: {
+        article_id: articleIdInt,
+        user_id: userIdInt
+      }
+    });
+
+    return res.status(200).json({
+      remove_like_success: true
+    });
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error"
+    });
+  }
+}; 
+
+export const addBookmark = async (req, res) => {
+  try {
+    const { articleId, userId } = req.body;
+    const articleIdInt = parseInt(articleId);
+    const userIdInt = parseInt(userId);
+    
+    if (!articleIdInt || !userIdInt) {
+      return res.status(400).json({
+        error: "Missing required fields",
+      });
+    }
+
+    const article = await prisma.article.findUnique({
+      where: {
+        article_id: articleIdInt,
+      },
+    });
+
+    if (!article) {
+      return res.status(400).json({
+        error: "Article not found",
+      });
+    }
+
+    const existingBookmark = await prisma.bookmark.findFirst({
+      where: {
+        article_id: articleIdInt,
+        user_id: userIdInt,
+      },
+    });
+
+    if (existingBookmark) {
+      return res.status(400).json({
+        error: "Article already bookmarked",
+      });
+    }
+
+    await prisma.bookmark.create({
+      data: {
+        article_id: articleIdInt,
+        user_id: userIdInt,
+      },
+    });
+
+    return res.status(201).json({
+      add_bookmark_success: true,
+      message: "Article bookmarked successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const removeBookmark = async (req, res) => {
+  try {
+    const { articleId, userId } = req.params;
+    const articleIdInt = parseInt(articleId);
+    const userIdInt = parseInt(userId);
+    
+    if (!articleIdInt || !userIdInt) {
+      return res.status(400).json({
+        error: "Missing required fields",
+      });
+    }
+
+    const bookmark = await prisma.bookmark.findFirst({
+      where: {
+        article_id: articleIdInt,
+        user_id: userIdInt,
+      },
+    });
+
+    if (!bookmark) {
+      return res.status(400).json({
+        remove_bookmark_success: false,
+        error: "Bookmark not found",
+      });
+    }
+
+    await prisma.bookmark.deleteMany({
+      where: {
+        article_id: articleIdInt,
+        user_id: userIdInt,
+      },
+    });
+
+    return res.status(200).json({
+      remove_bookmark_success: true,
+      message: "Bookmark removed successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+}; 
