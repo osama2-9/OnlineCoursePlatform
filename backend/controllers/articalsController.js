@@ -1,4 +1,3 @@
-import { response } from "express";
 import { prisma } from "../prisma/prismaClint.js";
 export const createCategory = async (req, res) => {
   try {
@@ -214,7 +213,7 @@ export const getArticalById = async (req, res) => {
     const articalIdInt = parseInt(articalId);
     let userIdInt = null;
     
-    if (userId !== 'undefined') {
+    if (userId && userId !== 'undefined') {
       userIdInt = parseInt(userId);
     }
 
@@ -245,6 +244,8 @@ export const getArticalById = async (req, res) => {
     });
 
     let allowLike = false;
+    let isBookmarked = false;
+
     if (userIdInt) {
       const isUserLiked = await prisma.like.findFirst({
         where: {
@@ -253,16 +254,13 @@ export const getArticalById = async (req, res) => {
         },
       });
       allowLike = !isUserLiked;
-    }
 
-    let isBookmarked = false;
-    if(userId){
       const isArticleBookmarked = await prisma.bookmark.findFirst({
-        where:{
+        where: {
+          article_id: articalIdInt,
           user_id: userIdInt,
-          article_id: articalIdInt
-        }
-      })
+        },
+      });
       isBookmarked = !!isArticleBookmarked;
     }
 
@@ -318,36 +316,50 @@ export const getArticles = async (req, res) => {
       ...searchFilter,
     };
 
-    const totalArticles = await prisma.article.count({ where });
-
-    const articles = await prisma.article.findMany({
-      where,
-      select: {
-        article_id: true,
-        categories: true,
-        category: true,
-        content_blocks: true,
-        created_at: true,
-        excerpt: true,
-        featured_image: true,
-        content_type: true,
-        content: true,
-        author: {
-          select: {
-            full_name: true,
+  
+    const [totalArticles, articles] = await Promise.all([
+      prisma.article.count({ where }),
+      prisma.article.findMany({
+        where,
+        select: {
+          article_id: true,
+          categories: true,
+          category: true,
+          content_blocks: true,
+          created_at: true,
+          excerpt: true,
+          featured_image: true,
+          content_type: true,
+          content: true,
+          author: {
+            select: {
+              full_name: true,
+            },
           },
+          tags: true,
+          title: true,
+          _count: {
+            select: {
+              comments: true,
+              likes: true
+            }
+          },
+          author_id: true,
         },
-        tags: true,
-        title: true,
-        comments: true,
-        author_id: true,
-      },
-      orderBy: {
-        created_at: "desc",
-      },
-      skip,
-      take: limit,
-    });
+        orderBy: {
+          created_at: "desc",
+        },
+        skip,
+        take: limit,
+      })
+    ]);
+
+    const articlesWithCounts = articles.map(article => ({
+      ...article,
+      likes_count: article._count.likes,
+      comments_count: article._count.comments,
+      _count: undefined
+    }));
 
     const totalPages = Math.ceil(totalArticles / limit);
     const hasNextPage = page < totalPages;
@@ -355,7 +367,7 @@ export const getArticles = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: articles,
+      data: articlesWithCounts,
       pagination: {
         totalArticles,
         totalPages,
@@ -370,8 +382,7 @@ export const getArticles = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: "Internal server error",
-      details:
-        process.env.NODE_ENV === "development" ? error.message : undefined,
+    
     });
   }
 };
@@ -604,3 +615,68 @@ export const removeBookmark = async (req, res) => {
     });
   }
 }; 
+
+export const getBookMarkedArticles = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const userIdInt = parseInt(userId);
+    
+    if (!userIdInt) {
+      return res.status(400).json({
+        error: "Missing required fields",
+      });
+    }
+
+    const bookmarks = await prisma.bookmark.findMany({
+      where:{
+        user_id: userIdInt
+      },
+      select: {
+        article_id: true
+      }
+    })
+
+
+    const articles = await prisma.article.findMany({
+      where: {
+        article_id: {
+          in: bookmarks.map(bookmark => bookmark.article_id)
+        }
+      
+      },
+      include:{
+        author:{
+          select:{
+            full_name:true
+          }
+        },
+      _count:{
+        select:{
+       likes:true,
+       comments:true
+        }
+      }
+      },
+      
+    })
+
+    const formattedArticle = articles.map((articles)=>{
+      return {
+        ...articles,
+        likes_count:articles._count.likes,
+        comments_count:articles._count.comments
+
+      }
+    })
+    return res.status(200).json({
+      success: true,
+      data: formattedArticle
+    })
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+}

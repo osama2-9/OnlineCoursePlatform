@@ -8,6 +8,7 @@ import {
   
   getArticalById,
   getArticles,
+  getBookMarkedArticles,
   getCategories,
   removeBookmark,
   removeLike,
@@ -30,5 +31,6 @@ articleRoute.post("/like", protectedRoute, addLike);
 articleRoute.delete("/remove-like/:articleId/:userId", protectedRoute, removeLike);
 articleRoute.post("/add-bookmark", protectedRoute, addBookmark);
 articleRoute.delete("/remove-bookmark/:articleId/:userId", protectedRoute, removeBookmark);
+articleRoute.get("/get-bookmarks/user/:userId", protectedRoute, getBookMarkedArticles);
 
 export default articleRoute;

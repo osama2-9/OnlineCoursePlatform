@@ -57,6 +57,7 @@ import { InstructorApplications } from "./pages/admin/InstructorApplications";
 import Feed from "./pages/Feed";
 import CreateArticle from "./pages/CreateArticle";
 import ArticlePage from "./pages/ArticalPage";
+import BookmarkedArticles from "./pages/BookmarkedArticles";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -72,6 +73,7 @@ function App() {
         <Route path="/forgot-password" element={<ResetPasswordRequest />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="/articels" element={<Feed />} />
+        <Route path="/bookmarks" element={<BookmarkedArticles />} />
         <Route path="/articels/create" element={<CreateArticle />} />
         <Route path="/articels/read/:articalId" element={<ArticlePage />} />
         <Route

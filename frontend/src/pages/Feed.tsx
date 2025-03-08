@@ -11,10 +11,10 @@ import {
   TrendingUp,
   Loader2,
   X,
-  Heart,
   Share2,
   Calendar,
   Plus,
+  ThumbsUp
 } from "lucide-react";
 import axios from "axios";
 import { API } from "../API/ApiBaseUrl";
@@ -22,6 +22,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useGetCategories } from "../hooks/useGetCategories";
+import toast from "react-hot-toast";
 
 interface ContentBlock {
   block_id: number;
@@ -61,6 +62,8 @@ interface Article {
   title: string;
   author_id: number;
   created_at: string;
+  comments_count:number,
+  likes_count:number
 }
 
 interface ArticleResponse {
@@ -178,9 +181,15 @@ export const Feed = () => {
 
   const { categoriesOptions } = useGetCategories();
 
+  const copyToClipboard = (articleId: number) => {
+    const baseURL = import.meta.env.VITE_BASE_URL_CLIENT
+    navigator.clipboard.writeText(`${baseURL}/articels/read/${articleId}`);
+    toast.success("Link copied to clipboard");
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Navbar */}
+     
 
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 mb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -204,22 +213,34 @@ export const Feed = () => {
             </div>
 
             <div className="w-full md:w-auto">
-              <form onSubmit={handleSearch} className="relative">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search articles..."
-                  className="pl-10 pr-4 py-3 rounded-full border-none w-full md:w-64 text-gray-800 shadow-lg focus:ring-2 focus:ring-blue-300 focus:outline-none"
-                />
-                <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-500" />
-                <button
-                  type="submit"
-                  className="absolute right-3 top-2 bg-blue-500 hover:bg-blue-600 rounded-full p-1.5 text-white transition-colors duration-200"
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              </form>
+              <div className="flex items-center gap-4 mb-4">
+                <form onSubmit={handleSearch} className="relative flex-1">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search articles..."
+                    className="pl-10 pr-4 py-3 rounded-full border-none w-full md:w-64 text-gray-800 shadow-lg focus:ring-2 focus:ring-blue-300 focus:outline-none"
+                  />
+                  <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-500" />
+                  <button
+                    type="submit"
+                    className="absolute right-3 top-2 bg-blue-500 hover:bg-blue-600 rounded-full p-1.5 text-white transition-colors duration-200"
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
+                </form>
+
+                {user && (
+                  <Link
+                    to="/bookmarks"
+                    className="p-3 bg-blue-500 hover:bg-blue-600 rounded-full shadow-lg transition-colors duration-200"
+                    title="View Bookmarked Articles"
+                  >
+                    <Bookmark className="h-5 w-5 text-white" />
+                  </Link>
+                )}
+              </div>
 
               {isAdminOrInstructor && (
                 <Link
@@ -424,10 +445,10 @@ export const Feed = () => {
                       />
 
                       <div className="absolute top-3 right-3 flex space-x-2">
-                        <button className="p-2 bg-white rounded-full hover:bg-blue-50 transition-colors duration-200 shadow-sm">
+                        <button  className="p-2 bg-white rounded-full hover:bg-blue-50 transition-colors duration-200 shadow-sm">
                           <Bookmark className="h-4 w-4 text-blue-700" />
                         </button>
-                        <button className="p-2 bg-white rounded-full hover:bg-blue-50 transition-colors duration-200 shadow-sm">
+                        <button onClick={()=>copyToClipboard(article?.article_id)}  className="p-2 bg-white rounded-full hover:bg-blue-50 transition-colors duration-200 shadow-sm">
                           <Share2 className="h-4 w-4 text-blue-700" />
                         </button>
                       </div>
@@ -489,11 +510,13 @@ export const Feed = () => {
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <button className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors duration-200">
-                            <Heart className="h-4 w-4" />
+                          <button className="flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors duration-200">
+                            <ThumbsUp className="h-4 w-4" />
+                            {article.likes_count}
                           </button>
                           <button className="flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors duration-200">
                             <MessageSquare className="h-4 w-4" />
+                            {article.comments_count}
                           </button>
                         </div>
                       </div>
