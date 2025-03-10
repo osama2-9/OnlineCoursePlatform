@@ -1,3 +1,4 @@
+import { response } from "express";
 import { prisma } from "../prisma/prismaClint.js";
 export const createCategory = async (req, res) => {
   try {
@@ -239,7 +240,19 @@ export const getArticalById = async (req, res) => {
         author_id: true,
         tags: true,
         title: true,
-        comments: true,
+        comments: {
+          select: {
+            content: true,
+            created_at: true,
+            comment_id: true,
+            author: {
+              select: {
+                user_id:true,
+                full_name: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -390,6 +403,7 @@ export const getArticles = async (req, res) => {
 export const addComment = async (req, res) => {
   try {
     const { userId, articleId, comment } = req.body;
+    const articleIdInt = parseInt(articleId);
     if (!userId || !articleId || !comment) {
       return res.status(400).json({
         error: "Missing required inputs",
@@ -397,7 +411,7 @@ export const addComment = async (req, res) => {
     }
     const article = await prisma.article.findUnique({
       where: {
-        article_id: articleId,
+        article_id: articleIdInt,
       },
     });
     if (!article) {
@@ -407,7 +421,7 @@ export const addComment = async (req, res) => {
     }
     const createComment = await prisma.comment.create({
       data: {
-        article_id: articleId,
+        article_id: articleIdInt,
         content: comment,
         author_id: userId,
       },
@@ -429,6 +443,137 @@ export const addComment = async (req, res) => {
     });
   }
 };
+
+export const deleteComment = async (req ,res)=>{
+  try{
+    const {userId,articleId,commentId} = req.params;
+    const articleIdInt = parseInt(articleId);
+    const commentIdInt = parseInt(commentId);
+    const userIdInt = parseInt(userId);
+    if(!userId || !articleId ||!commentId){
+      return res.status(400).json({
+        error:"Missing required fields"
+      })
+    }
+    const article = await prisma.article.findUnique({
+      where: {
+        article_id:articleIdInt
+
+      },
+      select:{
+        article_id:true
+      }
+    })
+    if(!article){
+      return res.status(404).json({
+        error:"Article not found"
+      })
+    }
+    const comment = await prisma.comment.findUnique({
+      where:{
+        comment_id:commentIdInt,
+        article_id:articleIdInt,
+        author_id:userIdInt
+      }
+    })
+    if(!comment){
+      return res.status(400).json({
+        error:"Comment not found"
+      })
+    }
+
+    const deleteComment = await prisma.comment.deleteMany({
+      where:{
+        comment_id:commentIdInt,
+        article_id:articleIdInt,
+        author_id:userIdInt
+      }
+    })
+if(!deleteComment){
+  return res.status(400).json({
+    success:false,
+    error:"Can't delete comment please try again"
+  })
+}
+
+return res.status(200).json({
+  success:true
+})
+
+
+  }catch(error){
+    console.log(error);
+    return res.status(500).json({
+      error:"Internal server error"
+    })
+    
+  }
+}
+
+export const updateComment = async (req ,res)=>{
+  try {
+    const {articalId ,userId ,commentId ,comment} =req.body
+    const articleIdInt = parseInt(articalId);
+    const commentIdInt = parseInt(commentId);
+    const userIdInt = parseInt(userId);
+    if(!userId || !articalId ||!commentId ||!comment){
+      return res.status(400).json({
+        error:"Missing required fields"
+      })
+    }
+
+    const article = await prisma.article.findUnique({
+      where:{
+        article_id:articleIdInt
+      },
+      select:{
+        article_id:true
+      }
+    })
+    if(!article){
+      return res.status(404).json({
+        error:"Article not found"
+      })
+    }
+    const findComment = await prisma.comment.findUnique({
+      where:{
+        comment_id:commentIdInt,
+        article_id:articleIdInt,
+        author_id:userIdInt
+      }
+    })
+    if(!findComment){
+      return res.status(400).json({
+        error:"Comment not found"
+      })
+    }
+    const updateComment = await prisma.comment.update({
+      where:{
+        comment_id:commentIdInt,
+        article_id:articleIdInt,
+        author_id:userIdInt
+      },
+      data:{
+        content:comment
+      }
+    })
+    if(!updateComment){
+      return res.status(400).json({
+        error:"Can't update comment please try again"
+      })
+    }
+    return res.status(200).json({
+      success:true
+    })
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error:"Internal server error"
+    })
+    
+    
+  }
+}
 export const addLike = async (req, res) => {
   try {
     const { userId, articleId } = req.body;

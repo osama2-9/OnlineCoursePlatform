@@ -245,7 +245,7 @@ export const Feed = () => {
               {isAdminOrInstructor && (
                 <Link
                   to="/articels/create"
-                  className="mt-4 md:mt-3 md:hidden inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-md transition-colors duration-200 font-medium text-sm"
+                  className="mt-4 md:mt-3  inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-md transition-colors duration-200 font-medium text-sm"
                 >
                   <Plus className="h-4 w-4" /> Create New Article
                 </Link>

@@ -189,7 +189,7 @@ export const BookmarkedArticles = () => {
               Start bookmarking articles you'd like to read later
             </p>
             <Link
-              to="/"
+              to="/articels"
               className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
             >
               Browse Articles

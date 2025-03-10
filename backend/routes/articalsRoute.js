@@ -5,13 +5,14 @@ import {
   addLike,
   createArtical,
   createCategory,
-  
+  deleteComment,
   getArticalById,
   getArticles,
   getBookMarkedArticles,
   getCategories,
   removeBookmark,
   removeLike,
+  updateComment,
 } from "../controllers/articalsController.js";
 import { checkRole } from "../middlewares/checkRole.js";
 import { protectedRoute } from "../middlewares/protectedRoute.js";
@@ -32,5 +33,6 @@ articleRoute.delete("/remove-like/:articleId/:userId", protectedRoute, removeLik
 articleRoute.post("/add-bookmark", protectedRoute, addBookmark);
 articleRoute.delete("/remove-bookmark/:articleId/:userId", protectedRoute, removeBookmark);
 articleRoute.get("/get-bookmarks/user/:userId", protectedRoute, getBookMarkedArticles);
-
+articleRoute.delete('/delete-comment/:articleId/:commentId/:userId', protectedRoute, deleteComment)
+articleRoute.put('/edit-comment', protectedRoute, updateComment)
 export default articleRoute;
