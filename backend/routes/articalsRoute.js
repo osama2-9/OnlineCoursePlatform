@@ -7,6 +7,7 @@ import {
   createCategory,
   deleteComment,
   getArticalById,
+  getArticleComments,
   getArticles,
   getBookMarkedArticles,
   getCategories,
@@ -35,4 +36,5 @@ articleRoute.delete("/remove-bookmark/:articleId/:userId", protectedRoute, remov
 articleRoute.get("/get-bookmarks/user/:userId", protectedRoute, getBookMarkedArticles);
 articleRoute.delete('/delete-comment/:articleId/:commentId/:userId', protectedRoute, deleteComment)
 articleRoute.put('/edit-comment', protectedRoute, updateComment)
+articleRoute.get('/get-article-comments/:articleId', getArticleComments)
 export default articleRoute;

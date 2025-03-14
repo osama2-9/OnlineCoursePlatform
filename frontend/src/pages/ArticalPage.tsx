@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Tag,
   Calendar,
-  MessageCircle,
   Share2,
   Bookmark,
   AlertTriangle,
@@ -13,19 +12,15 @@ import {
   ThumbsUp,
   Eye,
   Loader2,
-  Send,
-  X,
-  Delete,
-  Edit,
 } from "lucide-react";
-import { useState } from "react";
+
 import { HomePageFooter } from "../components/HomePageFooter";
 import { ContentBlock } from "../components/ContentBlock";
 import { Likes } from "../hooks/Likes";
 import { useAuth } from "../hooks/useAuth";
 import { useBookmark } from "../hooks/Bookmark";
 import toast from "react-hot-toast";
-import { useHandleComments } from "../hooks/useHandleComments";
+
 
 interface Author {
   full_name: string;
@@ -72,17 +67,10 @@ interface Article {
   tags: string[];
   content_type: string;
   created_at: Date;
-  comments: Comment[];
   read_time?: number;
   views?: number;
 }
 
-interface Comment {
-  comment_id:number,
-  content: string;
-  author: Author;
-  created_at: Date;
-}
 
 interface ArticleResponseData {
   article: Article;
@@ -96,59 +84,16 @@ interface ArticleResponseData {
 export const ArticlePage: React.FC = () => {
   const { user } = useAuth();
   const { articalId } = useParams<{ articalId: string }>();
-
-  const [isSubmitting ,setIsSubmitting] = useState<boolean>(false)
   let requestEndpoint = `${API}/articels/get-article/${articalId}/u/${user?.userId}`;
-
   if(!user){
     requestEndpoint = `${API}/articels/get-article/${articalId}/u/undefined`;
   }else{
     requestEndpoint = `${API}/articels/get-article/${articalId}/u/${user?.userId}`;
-   
   }
-
-
   const copyArticleUrl = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Article URL copied to clipboard");
   }
-
-  const handleComment =async ()=>{
-    setIsSubmitting(true)
-    try {
-      const res = await axios.post(`${API}/articels/comment`, { comment: commentText , articleId: articalId ,userId: user?.userId }, {
-        headers:{
-          "Content-Type":"application/json",
-        },
-        withCredentials:true
-      })
-
-      const data = await res.data
-      if(data && data.success){
-        toast.success("Comment added successfully");
-
-      }
-      setCommentText("");
-      setShowCommentForm(false);
-    } catch (error:any) {
-      console.log(error);
-      toast.error("Failed to add comment");
-      
-      
-    }finally{
-      setIsSubmitting(false)
-    }
-  }
-
-  
-  
-  
-  
-  const [showCommentForm, setShowCommentForm] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
-  const [editCommentText, setEditCommentText] = useState("");
-
   const getArticleContent = async (): Promise<ArticleResponseData> => {
     try {
       const res = await axios.get(`${requestEndpoint}`, {
@@ -161,7 +106,6 @@ export const ArticlePage: React.FC = () => {
       throw new Error("Failed to fetch article");
     }
   };
-
   const { data, isLoading, error } = useQuery({
     queryKey: ["article", articalId],
     queryFn: getArticleContent,
@@ -171,18 +115,9 @@ export const ArticlePage: React.FC = () => {
     retry: 2,
     enabled: !!articalId,
   });
-
-
   const { handleClickLike, handleClickUnlike, addLikeSuccess, removeLikeSuccess } = Likes(articalId, user?.userId);
   const {addBookmarkSuccess, removeBookmarkSuccess, addBookmark, removeBookmark} = useBookmark(articalId ,user?.userId);
-
-  const {handleDeleteComment, isDeleting, isEditing, handleEditComment ,setComment} = useHandleComments({
-    articleId: Number(articalId), 
-    userId: Number(user?.userId ?? 0)
-  })
   let likes = data?.likes_count || 0
-
-  
   let allowLike = data && data.allowLike ? data?.allowLike : false;
   if(addLikeSuccess){
     likes++;
@@ -200,17 +135,6 @@ export const ArticlePage: React.FC = () => {
   if(removeBookmarkSuccess){
     isBookmarked = false
   }
-  
-  const startEditing = (commentId: number, currentContent: string) => {
-    setEditingCommentId(commentId);
-    setEditCommentText(currentContent);
-    setComment(currentContent);
-  };
-
-  const cancelEditing = () => {
-    setEditingCommentId(null);
-    setEditCommentText("");
-  };
 
   if (isLoading) {
     return (
@@ -402,149 +326,7 @@ export const ArticlePage: React.FC = () => {
               )}
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8">
-              <h3 className="text-xl font-bold mb-6 flex items-center">
-                <MessageCircle size={20} className="mr-2" />
-                Comments ({article.comments.length})
-              </h3>
-
-              {showCommentForm && (
-                <div className="mb-8 bg-gray-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-medium text-gray-800">
-                      Add Your Comment
-                    </h4>
-                    <button
-                      className="text-gray-500 hover:text-gray-700"
-                      onClick={() => setShowCommentForm(false)}
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-                  <textarea
-                    className="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    rows={4}
-                    placeholder="Share your thoughts..."
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                  ></textarea>
-                  <div className="flex justify-end mt-3">
-                    <button
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-300"
-                      onClick={handleComment}
-                      disabled={isSubmitting || !commentText.trim()}
-                    >
-                      {isSubmitting ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        <Send size={16} />
-                      )}
-                      Submit Comment
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {article.comments.length > 0 ? (
-                <div className="space-y-6">
-                  {article.comments.map((comment ,index) => (
-                    <div
-                      key={index}
-                      className="border-b pb-6 last:border-0"
-                    >
-                      <div className="flex flex-center flex-reverse justify-between">
-                      <div className=" flex items-center  mb-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold mr-3 shadow-sm">
-                          {comment.author.full_name.charAt(0)}
-                        </div>
-                        <div>
-                          <h4 className="font-medium">
-                            {comment.author.full_name}
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            {comment.created_at && new Date(comment.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-
-                      {comment.author.user_id == user?.userId && (
-                        <div className="flex items-center">
-                          {isDeleting ? <Loader2 size={15} className="animate-spin" /> : (
-                            <Delete size={16} onClick={()=>handleDeleteComment(comment.comment_id)} className="text-gray-500 cursor-pointer hover:text-red-700 m-2" />
-                          )}
-                          {editingCommentId === comment.comment_id ? (
-                            <X size={16} onClick={cancelEditing} className="text-gray-500 cursor-pointer hover:text-red-700 m-2" />
-                          ) : (
-                            
-                            <Edit size={16} onClick={() => startEditing(comment.comment_id, comment.content)} className="text-gray-500 cursor-pointer hover:text-blue-700 m-2" />
-                          )}
-                        </div>
-                      )}
-                 
-                      </div>
-
-                      {editingCommentId === comment.comment_id ? (
-                        <div className="pl-12">
-                          <textarea
-                            className="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-2"
-                            rows={3}
-                            value={editCommentText}
-                            onChange={(e) => {
-                              setEditCommentText(e.target.value);
-                              setComment(e.target.value);
-                            }}
-                          />
-                          <div className="flex justify-end gap-2">
-                            <button
-                              className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
-                              onClick={cancelEditing}
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-1"
-                              onClick={() => {
-                                handleEditComment(comment.comment_id);
-                                setEditingCommentId(null);
-                              }}
-                              disabled={isEditing}
-                            >
-                              {isEditing ? <Loader2 size={14} className="animate-spin" /> : "Save"}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-gray-700 pl-12">{comment.content}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500 mb-4">
-                    No comments yet. Be the first to share your thoughts!
-                  </p>
-                  <button
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
-                    onClick={() => setShowCommentForm(true)}
-                  >
-                    Add Comment
-                  </button>
-                </div>
-              )}
-
-              {article.comments.length > 0 && !showCommentForm && (
-                <div className="mt-8 text-center">
-                  <button
-                    className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm mx-auto"
-                    onClick={() => setShowCommentForm(true)}
-                  >
-                    <MessageCircle size={18} />
-                    Add Comment
-                  </button>
-                </div>
-              )}
-            </div>
+           
           </div>
 
           <div className="lg:w-1/4">

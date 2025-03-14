@@ -1,17 +1,26 @@
 export interface Article {
-  title: string;
-  slug: string;
-  excerpt: string;
-  status: ContentStatus;
-  content_type: ArticleType;
-  category?: string; 
-  categories: Category[];
-  tags: string[];
-  featured_image: string;
-  seo_title: string;
-  seo_description: string;
-  seo_keywords: string[];
+  article_id: number;
+  categories: any[];
+  category: string;
   content_blocks: ContentBlock[];
+  excerpt: string;
+  featured_image: string;
+  content_type: string;
+  content: string;
+  author: {
+    full_name: string;
+  };
+  tags: string[];
+  title: string;
+  author_id: number;
+  created_at: string;
+  comments_count: number;
+  likes_count: number;
+  slug?: string;
+  status?: string;
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string[];
 }
 
 export interface Category {
@@ -21,14 +30,16 @@ export interface Category {
 }
 
 export interface ContentBlock {
-  id: number;
-  block_type: BlockType;
-  content?: string;
-  code_language?: string;
-  code_content?: string;
-  image_url?: string;
-  image_caption?: string;
+  block_id: number;
+  article_id: number;
   order: number;
+  block_type: string;
+  content: string | null;
+  code_language: string | null;
+  code_content: string | null;
+  image_url: string | null;
+  image_caption: string | null;
+  video_url: string | null;
 }
 
 export type ContentStatus = 'draft' | 'published' | 'archived' | 'deleted';

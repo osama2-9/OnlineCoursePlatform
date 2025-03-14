@@ -240,19 +240,7 @@ export const getArticalById = async (req, res) => {
         author_id: true,
         tags: true,
         title: true,
-        comments: {
-          select: {
-            content: true,
-            created_at: true,
-            comment_id: true,
-            author: {
-              select: {
-                user_id:true,
-                full_name: true,
-              },
-            },
-          },
-        },
+       
       },
     });
 
@@ -302,6 +290,43 @@ export const getArticalById = async (req, res) => {
     });
   }
 };
+
+export const getArticleComments = async (req ,res)=>{
+  try {
+    const {articleId} = req.params
+    const comments = await prisma.comment.findMany({
+      where: {
+        article_id: parseInt(articleId),
+      },
+      select:{
+        comment_id: true,
+        content: true,
+        author: {
+          select: {
+            full_name: true,
+            user_id: true
+          },
+        },
+        created_at: true,
+      }
+    })
+    if(!comments){
+      return res.status(404).json({
+        error: "Comments not found",
+      })
+    }
+    return res.status(200).json({
+      comments
+    })
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+    
+  }
+}
 
 
 export const getArticles = async (req, res) => {

@@ -343,56 +343,52 @@ export const getInstructors = async (req, res) => {
     });
   }
 };
+
 export const searchAboutUser = async (req, res) => {
   try {
-    const { full_name, email, userId } = req.query;
-
-    const where = {};
-
-    // Apply filter for full_name if provided
-    if (full_name) {
-      where.full_name = { contains: full_name, mode: "insensitive" };
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
     }
 
-    // Apply filter for email if provided
-    if (email) {
-      where.email = email;
-    }
-
-    // Apply filter for userId if provided (ensure it's a number)
-    if (userId) {
-      const parsedUserId = parseInt(userId);
-      if (!isNaN(parsedUserId)) {
-        where.user_id = parsedUserId;
-      }
-    }
-
-    const users = await prisma.users.findMany({
-      where,
+    const user = await prisma.users.findUnique({
+      where: {
+        email: email,
+      },
       select: {
         user_id: true,
         full_name: true,
-        role: true,
         email: true,
-        is_active: true,
+        role: true,
         created_at: true,
-      },
+        is_active: true,
+      }
     });
 
-    res.status(200).json({
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
       success: true,
-      data: users,
+      data: user
     });
+    
   } catch (error) {
-    console.error("Error searching for users:", error);
-    res.status(500).json({
+    console.log(error);
+    return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      error: "Internal server error"
     });
-  } finally {
-    await prisma.$disconnect();
   }
 };
+
 export const getQuizzes = async (req, res) => {
   try {
     const { userId } = req.params;

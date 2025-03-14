@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -7,6 +7,8 @@ import { Loading } from "../../components/Loading";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
 import { UpdateUser } from "../../components/admin/UpdateUser";
 import { BsThreeDots } from "react-icons/bs";
+import { Loader2, X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface User {
   user_id: number;
@@ -39,22 +41,15 @@ export const ShowUsers = () => {
     pageSize: 10,
   });
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [loading, setIsLoading] = useState<boolean>(false);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
-
-  const cache = useRef<{ [key: number]: User[] }>({});
+  const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
 
   const fetchUsers = async (page: number, pageSize: number) => {
-    if (cache.current[page]) {
-      setUsers(cache.current[page]);
-      return;
-    }
-
     try {
-      setIsLoading(true);
       const res = await axios.get<FetchUsersResponse>(
         `${API}/admin/get-users`,
         {
@@ -68,32 +63,27 @@ export const ShowUsers = () => {
 
       const data = res.data;
 
-      const paginationData = data.pagination || {
-        totalUsers: 0,
-        totalPages: 0,
-        currentPage: 1,
-        pageSize: 10,
-      };
-
-      setUsers(data.users);
-      setPagination(paginationData);
-      cache.current[page] = data.users;
+      return data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error || "Failed to fetch users");
     } finally {
-      setIsLoading(false);
     }
   };
 
+  const { data, isLoading } = useQuery({
+    queryKey: ["users", pagination.currentPage, pagination.pageSize],
+    queryFn: () => fetchUsers(pagination.currentPage, pagination.pageSize),
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 24 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
   const search = async () => {
     try {
+      setIsSearching(true);
       const res = await axios.get(`${API}/admin/search`, {
         params: {
-          userId:
-            searchQuery && !isNaN(Number(searchQuery))
-              ? searchQuery
-              : undefined,
+          email: searchQuery.trim(),
         },
         headers: {
           "Content-Type": "application/json",
@@ -103,37 +93,59 @@ export const ShowUsers = () => {
 
       const data = res.data;
 
-      if (data) {
-        setUsers(data.data);
+      if (data.success) {
+        setUsers([data.data]);
         setPagination({
-          totalUsers: data.data.length,
+          totalUsers: 1,
           totalPages: 1,
           currentPage: 1,
           pageSize: 10,
         });
+        setIsSearchActive(true);
+      } else {
+        toast.error(data.message || "No user found");
+        setUsers([]);
       }
     } catch (error: any) {
       console.log(error);
       toast.error(error.response?.data?.message || "Failed to search users");
+      setUsers([]);
+    } finally {
+      setIsSearching(false);
     }
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
     setSearchQuery(query);
+    if (!query) {
+      resetSearch();
+    }
   };
 
   const handleSearchClick = () => {
     if (searchQuery) {
       search();
-    } else {
-      fetchUsers(pagination.currentPage, pagination.pageSize);
     }
   };
 
+  const resetSearch = () => {
+    setSearchQuery("");
+    setIsSearchActive(false);
+    fetchUsers(1, pagination.pageSize);
+  };
+
   useEffect(() => {
-    fetchUsers(pagination.currentPage, pagination.pageSize);
-  }, [pagination.currentPage, pagination.pageSize]);
+    if (data) {
+      setUsers(data.users);
+      setPagination({
+        totalUsers: data.pagination.totalUsers,
+        totalPages: data.pagination.totalPages,
+        currentPage: data.pagination.currentPage,
+        pageSize: data.pagination.pageSize,
+      });
+    }
+  }, [data]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -218,7 +230,7 @@ export const ShowUsers = () => {
 
   return (
     <AdminLayout>
-      {loading ? (
+      {isLoading ? (
         <Loading />
       ) : (
         <div className="mt-5">
@@ -228,19 +240,30 @@ export const ShowUsers = () => {
                 htmlFor="searchQuery"
                 className="font-semibold text-gray-700"
               >
-                Search:
+                {isSearching ? <Loader2 className="animate-spin" size={15}  /> : "Search"}
               </label>
-              <input
-                id="searchQuery"
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 w-80"
-                placeholder="Search by name, email, or role"
-              />
+              <div className="relative">
+                <input
+                  id="searchQuery"
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 w-80"
+                  placeholder="Search by email"
+                />
+                {isSearchActive && (
+                  <button
+                    onClick={resetSearch}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
               <button
                 onClick={handleSearchClick}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-indigo-800 focus:bg-indigo-500"
+                disabled={!searchQuery}
               >
                 Search
               </button>
