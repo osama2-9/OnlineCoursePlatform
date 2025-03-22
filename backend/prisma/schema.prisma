@@ -38,9 +38,13 @@ model Users {
   likes         Like[]
   bookmarks     Bookmark[]
   seen          Seen[]
+  assignments         Assignments[]          @relation("InstructorAssignments")
+  submissions         AssignmentSubmission[] @relation("StudentSubmissions")
+  Article Article[]
   @@index([email])
   @@map("users")
-  Article Article[]
+  AssignmentSubmission AssignmentSubmission[]
+  Assignments Assignments[]
 }
 
 model Courses {
@@ -65,6 +69,7 @@ model Courses {
   userProgress      UserProgress[]
   likes             Like[]
   bookmarks         Bookmark[]
+  assignments       Assignments[]
   @@map("courses")
 }
 
@@ -480,4 +485,40 @@ model Seen {
 
   @@unique([user_id, article_id]) 
   @@map("seen")
+}
+
+model Assignments {
+  assignment_id    Int       @id @default(autoincrement())
+  course_id       Int
+  instructor_id   Int
+  title           String
+  description     String
+  start_date      DateTime
+  points          Int
+  end_date        DateTime
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  course          Courses   @relation(fields: [course_id], references: [course_id])
+  instructor      Users     @relation(fields: [instructor_id], references: [user_id])
+  submissions     AssignmentSubmission[]
+
+  @@map("assignments")
+  Users Users[] @relation("InstructorAssignments")
+}
+
+model AssignmentSubmission {
+  submission_id   Int       @id @default(autoincrement())
+  assignment_id   Int
+  student_id      Int
+  file_url        String
+  submitted_at    DateTime  @default(now())
+  grade          Float?
+  feedback       String?
+
+  assignment      Assignments @relation(fields: [assignment_id], references: [assignment_id])
+  student         Users       @relation(fields: [student_id], references: [user_id])
+
+  @@map("assignment_submissions")
+  Users Users[] @relation("StudentSubmissions")
 }

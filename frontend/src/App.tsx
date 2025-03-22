@@ -25,7 +25,6 @@ import { MyPayments } from "./pages/learner/MyPayments";
 import Progress from "./pages/learner/Progress";
 import ProtectedInstractourRoute from "./components/instrctor/ProtectedInstrctorRoute";
 import { InstructorDashboard } from "./pages/instructor/InstrctorDashboard";
-import { ShowInstractourCourses } from "./pages/instructor/ShowCourses";
 import { ShowEnrolledLearners } from "./pages/instructor/ShowEnrolledLearners";
 import { Analystic } from "./pages/instructor/Analystic";
 import { Quizzes } from "./pages/instructor/Quizzes";
@@ -58,6 +57,11 @@ import Feed from "./pages/Feed";
 import CreateArticle from "./pages/CreateArticle";
 import ArticlePage from "./pages/ArticalPage";
 import BookmarkedArticles from "./pages/BookmarkedArticles";
+import ShowAssignments from "./pages/instructor/ShowAssignments";
+import { ShowInstractourCourses } from "./pages/instructor/ShowCourses";
+import CreateAssignment from "./pages/instructor/CreateAssignment";
+import AssignmentSubmissionPage from "./pages/learner/AssignmentSubmissionPage";
+import GetSubmittiedAssignments from "./pages/instructor/GetSubmittiedAssignments";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -150,6 +154,23 @@ function App() {
         <Route
           path="/instructor/quizess"
           element={<ProtectedInstractourRoute element={<Quizzes />} />}
+        />
+
+        <Route
+        path="/instructor/courses/:courseId/assignments"
+        element={<ProtectedInstractourRoute element={<ShowAssignments />} />}
+        />
+        <Route
+        path="/instructor/assignments/create"
+        element={<ProtectedInstractourRoute element={<CreateAssignment />} />}
+        />
+        <Route
+        path="/learner/assignments/submission/:assignmentId/"
+        element={<ProtectLearnerRoute element={<AssignmentSubmissionPage />} />}
+        />
+        <Route
+        path="/instructor/assignments/submissions/:assignmentId/:courseId/:courseTitle"
+        element={<ProtectedInstractourRoute element={<GetSubmittiedAssignments />} />}
         />
         <Route
           path="/instructor/update-quiz"

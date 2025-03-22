@@ -11,6 +11,7 @@ import {
   FaGraduationCap,
   FaRegClock,
 } from "react-icons/fa";
+import MyAssignments from "../../components/learnre/MyAssignments";
 
 export const LearnerDashboard = () => {
   const { user } = useAuth();
@@ -46,7 +47,6 @@ export const LearnerDashboard = () => {
   return (
     <LearnerLayout>
       <div className="min-h-screen bg-gray-50 p-6">
-        {/* Welcome Section */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -66,7 +66,6 @@ export const LearnerDashboard = () => {
           </div>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {stats.map((stat, index) => (
             <div key={index} className="bg-white p-6 rounded-xl shadow-sm">
@@ -84,11 +83,10 @@ export const LearnerDashboard = () => {
           ))}
         </div>
 
-        {/* Main Content Tabs */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="border-b border-gray-200">
             <nav className="flex">
-              {["overview", "courses", "quizzes", "payments"].map((tab) => (
+              {["overview", "courses", "quizzes", "payments" ,'assignments'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -146,6 +144,14 @@ export const LearnerDashboard = () => {
                   Payment History
                 </h2>
                 <PaymentsHistory userId={user?.userId} />
+              </div>
+            )}
+            {activeTab === "assignments" && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                  My Assignments
+                </h2>
+                <MyAssignments userId={user?.userId} />
               </div>
             )}
           </div>

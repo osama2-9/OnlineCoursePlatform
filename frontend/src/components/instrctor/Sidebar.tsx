@@ -7,17 +7,17 @@ import {
   FaUsers,
   FaBars,
 } from "react-icons/fa";
+import { MdAssignmentAdd } from "react-icons/md";
+
 import { NavLink } from "react-router-dom";
 
 export const InstructorSidebar = () => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
-  // Toggle sidebar visibility
   const toggleSidebar = () => {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
-  // Close sidebar when clicking outside
   const closeSidebar = () => {
     if (isSidebarVisible) {
       setIsSidebarVisible(false);
@@ -26,7 +26,6 @@ export const InstructorSidebar = () => {
 
   return (
     <>
-      {/* Menu Icon for Small Screens */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={toggleSidebar}
@@ -36,7 +35,6 @@ export const InstructorSidebar = () => {
         </button>
       </div>
 
-      {/* Overlay for Small Screens */}
       {isSidebarVisible && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -44,7 +42,6 @@ export const InstructorSidebar = () => {
         ></div>
       )}
 
-      {/* Sidebar */}
       <div
         className={`fixed lg:relative inset-y-0 left-0 w-64 p-6 bg-white h-full shadow-lg transform transition-transform duration-300 ease-in-out ${
           isSidebarVisible
@@ -107,6 +104,22 @@ export const InstructorSidebar = () => {
               >
                 <FaBook className="w-5 h-5" />
                 <span>Quizess</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/instructor/assignments"
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`
+                }
+                onClick={closeSidebar}
+              >
+                <MdAssignmentAdd className="w-5 h-5" />
+                <span>Assignments</span>
               </NavLink>
             </li>
 
