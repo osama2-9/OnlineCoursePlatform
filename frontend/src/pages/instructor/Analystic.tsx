@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
+import { qureyClinet } from "../../main";
 
 interface StudentProgress {
   user_id: number;
@@ -132,6 +133,22 @@ export const Analystic = () => {
       toast.error(error?.response?.data?.error);
     }
   };
+
+  useEffect(()=>{
+    qureyClinet.prefetchQuery({
+      queryKey: ["instructorAnalystic", user?.userId],
+      queryFn: getCourseProgressAnalystic,
+      staleTime: 10 * 60 * 1000,
+      retry: 2,
+    })
+
+    qureyClinet.prefetchQuery({
+      queryKey: ["instructorAnalystic", user?.userId],
+      queryFn: handleGetLearnersOverview,
+      staleTime: 10 * 60 * 1000,
+      retry: 2,
+    })
+  }, [user?.userId])
 
   useEffect(() => {
     getCourseProgressAnalystic();

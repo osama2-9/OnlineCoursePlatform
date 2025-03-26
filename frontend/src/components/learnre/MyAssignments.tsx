@@ -4,8 +4,17 @@ import { API } from "../../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Clock, FileText, GraduationCap, Loader2, AlertCircle, ChevronRight } from "lucide-react";
+import { 
+  Calendar, 
+  Clock, 
+  FileText, 
+  GraduationCap, 
+  Loader2, 
+  AlertCircle, 
+  ChevronRight 
+} from "lucide-react";
 import { format, isAfter, isBefore } from "date-fns";
+import { qureyClinet } from "../../main";
 
 interface Assignment {
   assignment_id: number;
@@ -21,10 +30,10 @@ interface Assignment {
 }
 
 const MyAssignments = ({ userId }: { userId: any }) => {
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "all">("upcoming");
   const navigate = useNavigate();
 
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const getAssignments = async () => {
     try {
       const res = await axios.get(`${API}/assignments/get-assignments`, {
@@ -36,33 +45,43 @@ const MyAssignments = ({ userId }: { userId: any }) => {
         },
         withCredentials: true,
       });
-      const data = await res.data;
-      if (data) {
-        return data;
-      }
+      return res.data?.data || [];
     } catch (error: any) {
-      console.log(error);
-      toast.error(error?.response?.data?.error);
+      console.error("Failed to fetch assignments", error);
+      toast.error(error?.response?.data?.error || "Failed to load assignments");
+      return [];
     }
   };
+
+  useEffect(() => {
+    if (userId) {
+      qureyClinet.prefetchQuery({
+        queryKey: ["assignments", userId],
+        queryFn: getAssignments,
+        staleTime: 12 * 60 * 60 * 1000, 
+        gcTime: 24 * 60 * 60 * 1000, 
+      });
+    }
+  }, [userId]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["assignments", userId],
     queryFn: getAssignments,
-    refetchInterval: 12 * 1000 * 60 * 60,
-    staleTime: 12 * 1000 * 60 * 60,
+    enabled: !!userId,
+    staleTime: 12 * 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
     retry: 2,
   });
 
   useEffect(() => {
     if (data) {
-      setAssignments(data.data);
+      setAssignments(data);
     }
   }, [data]);
 
   const navigateToSubmission = (assignment: Assignment) => {
-    navigate(`/learner/assignments/submission/${assignment.assignment_id}` ,{
-      state:{
+    navigate(`/learner/assignments/submission/${assignment.assignment_id}`, {
+      state: {
         assignment
       }
     });
@@ -94,7 +113,10 @@ const MyAssignments = ({ userId }: { userId: any }) => {
     }
   };
 
+  // Filter assignments based on active tab
   const getFilteredAssignments = () => {
+    if (!assignments) return [];
+
     const now = new Date();
     
     switch (activeTab) {
@@ -117,42 +139,24 @@ const MyAssignments = ({ userId }: { userId: any }) => {
   const filteredAssignments = getFilteredAssignments();
 
   return (
-    
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">My Assignments</h1>
       <p className="text-gray-600 mb-6">View and manage all your course assignments</p>
 
       <div className="flex space-x-4 mb-6 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab("upcoming")}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
-            activeTab === "upcoming"
-              ? "text-gray-900 border-b-2 border-gray-900"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Upcoming
-        </button>
-        <button
-          onClick={() => setActiveTab("past")}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
-            activeTab === "past"
-              ? "text-gray-900 border-b-2 border-gray-900"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Past
-        </button>
-        <button
-          onClick={() => setActiveTab("all")}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
-            activeTab === "all"
-              ? "text-gray-900 border-b-2 border-gray-900"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          All
-        </button>
+        {["upcoming", "past", "all"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab as "upcoming" | "past" | "all")}
+            className={`px-4 py-2 font-medium text-sm transition-colors ${
+              activeTab === tab
+                ? "text-gray-900 border-b-2 border-gray-900"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
@@ -195,8 +199,12 @@ const MyAssignments = ({ userId }: { userId: any }) => {
                   </div>
                   
                   <div className="mb-3">
-                    <p className="text-gray-500 mb-1 text-sm">Course: <span className="text-gray-800">{assignment.course.title}</span></p>
-                    <p className="text-gray-500 text-sm line-clamp-2">{assignment.description}</p>
+                    <p className="text-gray-500 mb-1 text-sm">
+                      Course: <span className="text-gray-800">{assignment.course.title}</span>
+                    </p>
+                    <p className="text-gray-500 text-sm line-clamp-2">
+                      {assignment.description}
+                    </p>
                   </div>
                   
                   <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">

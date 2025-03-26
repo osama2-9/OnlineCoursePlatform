@@ -7,7 +7,6 @@ import {
   FaUsers,
   FaBars,
 } from "react-icons/fa";
-import { MdAssignmentAdd } from "react-icons/md";
 
 import { NavLink } from "react-router-dom";
 
@@ -106,23 +105,7 @@ export const InstructorSidebar = () => {
                 <span>Quizess</span>
               </NavLink>
             </li>
-            <li>
-              <NavLink
-                to="/instructor/assignments"
-                className={({ isActive }) =>
-                  `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`
-                }
-                onClick={closeSidebar}
-              >
-                <MdAssignmentAdd className="w-5 h-5" />
-                <span>Assignments</span>
-              </NavLink>
-            </li>
-
+          
             <li>
               <NavLink
                 to="/instructor/quizzes/attempts"

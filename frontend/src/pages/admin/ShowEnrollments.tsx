@@ -6,6 +6,8 @@ import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/Loading";
 import { UpdateEnrollment } from "../../components/admin/UpdateEnrollment";
 import { useQuery } from "@tanstack/react-query";
+import { qureyClinet } from "../../main";
+import { useAuth } from "../../hooks/useAuth";
 
 interface Enrollment {
   enrollment_id: number;
@@ -33,6 +35,7 @@ interface EnrollmentResponse {
 }
 
 export const ShowEnrollments = () => {
+  const { user } = useAuth();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -94,6 +97,16 @@ export const ShowEnrollments = () => {
     retry: 2,
   });
 
+
+  useEffect(()=>{
+    qureyClinet.prefetchQuery({
+      queryKey: ["enrollmentsData", currentPage],
+      queryFn: getEnrollments,
+      staleTime: 15 * 60 * 1000,
+      retry: 2,
+    })
+  }, [user?.userId, currentPage]);
+
   useEffect(() => {
     if (data) {
       setEnrollments(data.enrollments || []);
@@ -136,8 +149,8 @@ export const ShowEnrollments = () => {
       );
       if (res.data) {
         toast.success(res.data?.message);
-        getEnrollments(); // Refresh the list
-        onClickCancel(); // Close the modal
+        getEnrollments();
+        onClickCancel(); 
       }
     } catch (error: any) {
       console.log(error);

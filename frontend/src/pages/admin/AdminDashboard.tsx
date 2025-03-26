@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
 import toast from "react-hot-toast";
+import { useEffect } from "react";
+import { qureyClinet } from "../../main";
 
 interface Cards {
   totalLearners: number;
@@ -61,11 +63,20 @@ export const AdminDashboard = () => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["adminDashboard"],
     queryFn: fetchDashboardData,
-    staleTime: 10 * 60 * 1000,
-    refetchInterval: 10 * 60 * 1000,
+    staleTime: 12 * 60 * 60 * 1000,
+    refetchInterval: 12 * 60 * 60 * 1000,
     retry: 2,
   });
 
+
+  useEffect(()=>{
+    qureyClinet.prefetchQuery({
+      queryKey: ["adminDashboard"],
+      queryFn: fetchDashboardData,
+      staleTime: 12 * 60 *60* 1000,
+      retry: 2,
+    })
+  }, [user?.userId]);
   if (isError) {
     return (
       <AdminLayout>
@@ -94,7 +105,6 @@ export const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md">
           <div className="flex items-center justify-between">
@@ -143,13 +153,11 @@ export const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Enrollments & Payments Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-6">
           Recent Activity
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Enrollments Table */}
           <div className="bg-white rounded-xl border border-gray-100 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Latest Enrollments
@@ -211,7 +219,6 @@ export const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* Payments Table */}
           <div className="bg-white rounded-xl border border-gray-100 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Latest Payments

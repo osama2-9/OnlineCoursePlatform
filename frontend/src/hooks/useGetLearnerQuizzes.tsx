@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { API } from "../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
+import { qureyClinet } from "../main";
 interface Quizzes {
   quiz_id: number;
   course_id: number;
@@ -46,13 +47,24 @@ export const useGetLearnerQuizzes = () => {
     }
   };
 
+  useEffect(() => {
+  qureyClinet.prefetchQuery({
+    queryKey: ["userquizzes"],
+    queryFn: getQuizzes,
+    staleTime: 12 *60* 60 * 1000, 
+    retry: 2,
+  })
+  }, [user?.userId]);
+
   const { data } = useQuery({
     queryKey: ["userquizzes"],
     queryFn: getQuizzes,
-    staleTime: 10 * 60 * 1000,
-    refetchInterval: 10 * 60 * 1000,
+    staleTime: 12 *60* 60 * 1000,
+    refetchInterval: 12 *60* 60 * 1000,
     retry: 2,
   });
+
+  
 
   useEffect(() => {
     if (data) {

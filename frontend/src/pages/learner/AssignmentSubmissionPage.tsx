@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, Award, BookOpen } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, isAfter } from 'date-fns';
 import { LearnerLayout } from '../../layouts/LearnerLayout';
 import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -10,7 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 
 const AssignmentSubmissionPage = () => {
   const { assignment } = useLocation().state;
-const {user} = useAuth()
+  const { user } = useAuth()
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -27,6 +27,9 @@ const {user} = useAuth()
   const daysRemaining = () => {
     const today = new Date();
     const end = new Date(assignment.end_date);
+    if (isAfter(today, end)) {
+      return 0;
+    }
     return differenceInDays(end, today);
   };
 
@@ -37,46 +40,50 @@ const {user} = useAuth()
   };
 
   const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if(!e.target.value.startsWith('https://')){
-      setLink('https://'+e.target.value);
-    }else{
+    if (!e.target.value.startsWith('https://')) {
+      setLink('https://' + e.target.value);
+    } else {
 
       setLink(e.target.value);
     }
   };
 
 
-  const handleSubmit = async ()=>{
+  const handleSubmit = async () => {
     try {
       setIsUploading(true)
-      if(!selectedFile && !link){
+      if (!selectedFile && !link) {
         toast.error("Please select a file or provide a link");
         return;
       }
-      const res =await axios.post(`${API}/assignments/submit-assignment` ,{
+      const res = await axios.post(`${API}/assignments/submit-assignment`, {
         assignment_id: assignment.assignment_id,
         file_url: selectedFile ? selectedFile.name : link,
-        student_id:  user?.userId
-      } ,{
+        student_id: user?.userId
+      }, {
         headers: {
           "Content-Type": "application/json",
         },
         withCredentials: true
       })
-      if(res.data){
+      if (res.data) {
         toast.success(res.data.message);
         setSubmitted(true);
       }
-    
-    } catch (error:any) {
+
+    } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error);
-      
-      
-    }finally{
+
+
+    } finally {
       setIsUploading(false)
     }
   }
+
+  const isAllowSubmission = new Date(assignment.end_date) < new Date();
+
+  console.log(isAllowSubmission);
 
   return (
     <LearnerLayout>
@@ -130,7 +137,9 @@ const {user} = useAuth()
         {!submitted ? (
           <div className="bg-white p-6 border border-gray-200 rounded-lg">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">Submit Your Assignment</h2>
-
+            {isAllowSubmission ? (
+              <p className="text-red-500 mb-4">Assignment submission deadline passed</p>
+            ) : null}
             <div className="mb-6">
               <label className="block text-gray-700 font-medium mb-2">Upload File</label>
               <div className="border-2 border-dashed border-gray-300 p-6 rounded-md text-center bg-gray-50">
@@ -153,7 +162,7 @@ const {user} = useAuth()
                     <p className="text-gray-600 mb-2">Drag and drop your file here, or</p>
                     <label className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md cursor-pointer hover:bg-gray-300 transition-colors">
                       Browse Files
-                      <input type="file" className="hidden" onChange={handleFileSelect} />
+                      <input type="file" disabled={isAllowSubmission} readOnly={isAllowSubmission} className={`hidden ${isAllowSubmission ? 'opacity-50 cursor-not-allowed' : ''}`} onChange={handleFileSelect} />
                     </label>
                     <p className="mt-2 text-sm text-gray-500">
                       Supported file types: PDF, DOCX, ZIP (Max 25MB)
@@ -166,8 +175,11 @@ const {user} = useAuth()
                 or add a link for your project here (github, gitlab, etc.)
               </p>
               <input
+                readOnly={isAllowSubmission}
+                disabled={isAllowSubmission}
                 type="text"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-200"
+
+                className={`w-full ${isAllowSubmission ? 'opacity-50 cursor-not-allowed' : ''} px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-200`}
                 placeholder="Enter project link"
                 value={link}
                 onChange={handleLinkChange}
@@ -186,15 +198,16 @@ const {user} = useAuth()
 
             <div className="flex justify-end">
               <button
-                className={`px-6 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors ${
-                  !selectedFile && !link ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-                disabled={!selectedFile && !link || isUploading}
+                className={`px-6 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors ${!selectedFile && !link ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                disabled={!selectedFile && !link || isUploading || isAllowSubmission}
+                title={isAllowSubmission ? 'Assignment submission deadline passed' : 'submit'}
                 onClick={handleSubmit}
               >
                 {isUploading ? 'Uploading...' : 'Submit Assignment'}
               </button>
             </div>
+
           </div>
         ) : (
           <div className="bg-gray-50 p-6 border border-gray-200 rounded-lg text-center">

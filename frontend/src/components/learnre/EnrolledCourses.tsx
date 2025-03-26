@@ -5,6 +5,8 @@ import { Link } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa";
 import { Loading } from "../Loading";
 import { useQuery } from "@tanstack/react-query";
+import { qureyClinet } from "../../main";
+import { useEffect } from "react";
 
 interface EnrolledCourses {
   enrollment_id: number;
@@ -41,15 +43,20 @@ export const EnrolledCourses = ({ userId }: any) => {
       toast.error(error?.response?.data?.error);
     }
   };
-
   const { data: enrolledCourses, isLoading } = useQuery({
     queryKey: ["userenrollmentdata", userId],
     queryFn: getEnrolledInCourses,
-    staleTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 15 * 60 * 1000, 
     enabled: !!userId,
     retry: 2,
   });
 
+  useEffect(() => {
+    qureyClinet.prefetchQuery({
+      queryKey: ["userenrollmentdata", userId],
+      queryFn: getEnrolledInCourses,
+    });
+  }, [userId]);
   return (
     <div>
       {isLoading ? (

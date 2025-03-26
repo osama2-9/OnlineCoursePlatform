@@ -18,6 +18,8 @@ import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { qureyClinet } from "../../main";
 
 ChartJS.register(
   CategoryScale,
@@ -84,6 +86,16 @@ export const AdminAnalystic = () => {
     refetchOnWindowFocus: false,
     retry: 2,
   });
+
+
+  useEffect(()=>{
+    qureyClinet.prefetchQuery({
+      queryKey: ["adminanalystics", user?.userId],
+      queryFn: getAnalaytics,
+      staleTime: 10 * 60 * 1000,
+      retry: 2,
+    })
+  }, [user?.userId]);
 
   const cardsData = {
     totalSuccessedPayments: data?.totalSuccessedPayments || 0,

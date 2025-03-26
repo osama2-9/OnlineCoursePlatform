@@ -896,3 +896,43 @@ export const cardsOverview = async (req, res) => {
     });
   }
 };
+
+export const getCourseAssignmentsQuizzesById = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    if (!courseId) {
+      return res.status(400).json({
+        error: "Missing required data",
+      });
+    }
+    const quizzes = await prisma.quizzes.findMany({
+      where: {
+        course_id: parseInt(courseId),
+      },
+    });
+    if (!quizzes) {
+      return res.status(404).json({
+        error: "No quizzes found for this course",
+      });
+    }
+    const assignments = await prisma.assignments.findMany({
+      where: {
+        course_id: parseInt(courseId),
+      },
+    });
+    if (!assignments) {
+      return res.status(404).json({
+        error: "No assignments found for this course",
+      });
+    }
+    return res.status(200).json({
+      quizzes,
+      assignments,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};

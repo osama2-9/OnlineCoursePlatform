@@ -6,6 +6,8 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { VideoPlayer } from "../../components/VideoPlayer";
 import { Loading } from "../../components/Loading";
+import MyAssignments from "../../components/learnre/MyAssignments";
+import { Quizzes } from "../../components/learnre/Quizzes";
 
 interface Lessons {
   title: string;
@@ -196,7 +198,6 @@ const CoursePracticePage = () => {
       ) : (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Course Progress Header */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -307,7 +308,7 @@ const CoursePracticePage = () => {
                 </div>
               </div>
 
-              {/* Main Content: Selected Lesson */}
+
               <div className="lg:col-span-3">
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                   {selectedLesson ? (
@@ -424,7 +425,9 @@ const CoursePracticePage = () => {
               </div>
             </div>
           </div>
+          <MyAssignments userId={user?.userId} />
         </div>
+
       )}
     </>
   );

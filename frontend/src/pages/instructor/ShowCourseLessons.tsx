@@ -13,6 +13,7 @@ import { Lesson } from "../../types/Lesson";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import { qureyClinet } from "../../main";
 
 interface Response {
   lessons: Lesson[];
@@ -57,6 +58,16 @@ export const ShowCourseLessons = () => {
     refetchInterval: 15 * 1000 * 60,
     retry: 2,
   });
+
+
+  useEffect(()=>{
+    qureyClinet.prefetchQuery({
+      queryKey: ["lessons", user?.userId, courseId],
+      queryFn: getLessons,
+      staleTime: 15 * 1000 * 60,
+      retry: 2,
+    })
+  }, [user?.userId, courseId])
 
   useEffect(() => {
     setLessons(data && data.lessons ? data.lessons : []);

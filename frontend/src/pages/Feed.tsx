@@ -9,6 +9,7 @@ import { useGetCategories } from "../hooks/useGetCategories";
 import toast from "react-hot-toast";
 import ArticleFilters from "../components/ArticleFilters";
 import ArticleCard from "../components/ArticleCard";
+import { qureyClinet } from "../main";
 
 interface ContentBlock {
   block_id: number;
@@ -122,6 +123,15 @@ export const Feed = () => {
     retry: 2,
     refetchOnWindowFocus: false,
   });
+
+  useEffect(()=>{
+    qureyClinet.prefetchQuery({
+      queryKey: ["articles", page, selectedCategory, sortBy, searchTerm],
+      queryFn: fetchArticles,
+      staleTime: 24 * 1000 * 60,
+      retry: 2,
+    })
+  }, [user?.userId]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);

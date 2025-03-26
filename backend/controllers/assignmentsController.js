@@ -250,6 +250,11 @@ export const submitAssignment = async (req, res) => {
         error:"Assignment already submitted"
       })
     }
+    if(Date.now() > new Date(findAssignment.end_date).getTime()){
+      return res.status(400).json({
+        error:"Assignment submission deadline passed"
+      })
+    }
     const newSubmission = await prisma.assignmentSubmission.create({
       data:{
         assignment_id: Number(assignment_id),
@@ -374,3 +379,92 @@ export const submitReview = async (req, res) => {
     message: "Review submitted successfully"
   });
 };
+
+export const deleteAssignment = async (req, res) => {
+  const { assignment_id } = req.params;
+  const {course_id , instructor_id} = req.query;
+  const courseIdInt = Number(course_id);
+  const instructorIdInt = Number(instructor_id);
+  if (!assignment_id || !course_id || !instructor_id) {
+    return res.status(400).json({
+      error: "Missing required fields"
+    });
+  }
+  const isCourseAssignedToInstructorResult = await isCourseAssigndToInstructor(courseIdInt, instructorIdInt);
+  if (!isCourseAssignedToInstructorResult) {
+    return res.status(400).json({
+      error: "You can't handle this course"
+    });
+  }
+  const assignment = await prisma.assignments.findUnique({
+    where: {
+      assignment_id: Number(assignment_id)
+    }
+  });
+  if (!assignment) {
+    return res.status(400).json({
+      error: "Assignment not found"
+    });
+  }
+  const deletedAssignment = await prisma.assignments.delete({
+    where: {
+      assignment_id: Number(assignment_id)
+    }
+  });
+  if (!deletedAssignment) {
+    return res.status(400).json({
+      error: "Failed to delete assignment"
+    });
+  }
+  return res.status(200).json({
+    message: "Assignment deleted successfully"
+  });
+}
+
+export const updateAssignment = async (req, res) => {
+  const {assignment_id} = req.params;
+  const {title , description , start_date , end_date , points ,instructor_id ,course_id} = req.body;
+  const courseIdInt = Number(course_id);
+  const instructorIdInt = Number(instructor_id);
+  if (!assignment_id || !course_id || !instructor_id) {
+    return res.status(400).json({
+      error: "Missing required fields"
+    });
+  }
+  const isCourseAssignedToInstructorResult = await isCourseAssigndToInstructor(courseIdInt, instructorIdInt);
+  if (!isCourseAssignedToInstructorResult) {
+    return res.status(400).json({
+      error: "You can't handle this course"
+    });
+  }
+  const assignment = await prisma.assignments.findUnique({
+    where: {
+      assignment_id: Number(assignment_id)
+    }
+  });
+  if (!assignment) {
+    return res.status(400).json({
+      error: "Assignment not found"
+    });
+  }
+  const updatedAssignment = await prisma.assignments.update({
+    where: {
+      assignment_id: Number(assignment_id)
+    },
+    data: {
+      title: title,
+      description: description,
+      start_date: new Date(start_date),
+      end_date: new Date(end_date),
+      points: Number(points)
+    }
+  });
+  if (!updatedAssignment) {
+    return res.status(400).json({
+      error: "Failed to update assignment"
+    });
+  }
+  return res.status(200).json({
+    message: "Assignment updated successfully"
+  });
+}

@@ -36,13 +36,13 @@ export const formatDate = (date: Date | string) => {
         };
       } else if (daysRemaining <= 3) {
         return {
-          label: `${daysRemaining} days left`,
+          label: `${daysRemaining} DL`,
           color: "bg-red-100 text-red-800",
           textColor: "text-red-500",
         };
       } else if (daysRemaining <= 7) {
         return {
-          label: `${daysRemaining} days left`,
+          label: `${daysRemaining} DL`,
           color: "bg-yellow-100 text-yellow-800",
           textColor: "text-yellow-600",
         };
