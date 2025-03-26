@@ -6,8 +6,6 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { VideoPlayer } from "../../components/VideoPlayer";
 import { Loading } from "../../components/Loading";
-import MyAssignments from "../../components/learnre/MyAssignments";
-import { Quizzes } from "../../components/learnre/Quizzes";
 
 interface Lessons {
   title: string;
@@ -425,7 +423,6 @@ const CoursePracticePage = () => {
               </div>
             </div>
           </div>
-          <MyAssignments userId={user?.userId} />
         </div>
 
       )}
