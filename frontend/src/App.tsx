@@ -62,6 +62,10 @@ import { ShowInstractourCourses } from "./pages/instructor/ShowCourses";
 import CreateAssignment from "./pages/instructor/CreateAssignment";
 import AssignmentSubmissionPage from "./pages/learner/AssignmentSubmissionPage";
 import GetSubmittiedAssignments from "./pages/instructor/GetSubmittiedAssignments";
+import SupportPage from "./pages/SupportPage";
+import SupportDashboard from "./pages/support/SupportDashboard";
+import ProtectedSupportRoute from "./pages/support/ProtectedSupportRoute";
+import UsersChatPage from "./pages/support/UsersChatPage";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -72,6 +76,7 @@ function App() {
         <Route path="/*" element={<NotFound />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/support" element={<SupportPage />} />
         <Route path="/become-an-instractour" element={<BecomeMentor />} />
         <Route path="/explore" element={<ExploreCoursesPage />} />
         <Route path="/forgot-password" element={<ResetPasswordRequest />} />
@@ -261,6 +266,16 @@ function App() {
         <Route
           path="/admin/settings/account"
           element={<ProtectAdminRoute element={<AccountSetting />} />}
+        />
+
+
+        <Route
+          path="/support/dashboard"
+          element={<ProtectedSupportRoute element={<SupportDashboard />} />}
+        />
+        <Route
+          path="/support/users/chat"
+          element={<UsersChatPage />}
         />
         <Route path="/course-page/:course_id" element={<CoursePage />} />
         <Route path="/payment/success" element={<SuccessPayment />} />

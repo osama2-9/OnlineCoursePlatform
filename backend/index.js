@@ -1,6 +1,8 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import {Server} from "socket.io";
+import http from "http";
 import authRoute from "./routes/authRoute.js";
 import adminRoute from "./routes/adminRoute.js";
 import courseRoute from "./routes/courseRoute.js";
@@ -15,9 +17,20 @@ import instructorRoute from "./routes/instructorRoute.js";
 import applicationsRoute from "./routes/applicationRoute.js";
 import articleRoute from "./routes/articalsRoute.js";
 import assignmentsRoute from "./routes/assignmentsRoute.js";
+import supportRoute from "./routes/supportRoute.js";
+
 dotenv.config();
 
 const app = express();
+const server= http.createServer(app);
+const io = new Server(server ,{
+  cors: {
+    origin: ["http://localhost:5173", "https://uplearn-website.vercel.app"],
+    credentials: true,
+  },
+});
+
+
 const stripe = new Stripe(process.env.STRIPE_SECRET);
 app.use(
   cors({
@@ -46,10 +59,15 @@ app.use("/api/instructor", instructorRoute);
 app.use("/api/application", applicationsRoute);
 app.use("/api/articels", articleRoute);
 app.use("/api/assignments", assignmentsRoute);
+app.use("/api/support", supportRoute);
 
-app.listen(process.env.PORT, () => {
+io.on("connection", (socket) => {
+console.log("a user connected",socket.id);
+socket.emit("receive_message", "we are live now");
+});
+server.listen(process.env.PORT, () => {
   console.log("server work");
 });
 
 export default app;
-export { stripe };
+export { stripe ,io};

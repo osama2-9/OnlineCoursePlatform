@@ -45,6 +45,9 @@ model Users {
   @@map("users")
   AssignmentSubmission AssignmentSubmission[]
   Assignments Assignments[]
+  SupportTicket SupportTicket[]
+  SupportTicketMessage SupportTicketMessage[]
+  SupportTicketAccessToken SupportTicketAccessToken[]
 }
 
 model Courses {
@@ -239,6 +242,7 @@ enum Role {
   learner
   admin
   instructor
+  support
 }
 
 model Lessons {
@@ -521,4 +525,55 @@ model AssignmentSubmission {
 
   @@map("assignment_submissions")
   Users Users[] @relation("StudentSubmissions")
+}
+model SupportTicketAccessToken {
+  id          Int      @id @default(autoincrement())
+  token       String   @unique
+  ticket_id   Int
+  user_id     Int
+  expires_at  DateTime
+  is_used     Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  ticket      SupportTicket @relation(fields: [ticket_id], references: [ticket_id])
+  user        Users @relation(fields: [user_id], references: [user_id])
+
+  @@map("support_ticket_access_tokens")
+}
+
+model SupportTicket {
+  ticket_id     Int      @id @default(autoincrement())
+  user_id       Int
+  assign_to     Int? 
+  title         String
+  description   String
+  status        SupportStatus @default(open)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  user Users @relation(fields: [user_id], references: [user_id])
+  accessTokens SupportTicketAccessToken[]
+
+  @@map("support_tickets")
+  SupportTicketMessage SupportTicketMessage[]
+}
+
+enum SupportStatus {
+  open
+  closed
+  in_progress
+}
+
+model SupportTicketMessage {
+  message_id    Int      @id @default(autoincrement())
+  ticket_id     Int
+  user_id       Int
+  is_read       Boolean  @default(false)
+  message       String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  ticket SupportTicket @relation(fields: [ticket_id], references: [ticket_id])
+  user Users @relation(fields: [user_id], references: [user_id])
+
+  @@map("support_ticket_messages")
 }
