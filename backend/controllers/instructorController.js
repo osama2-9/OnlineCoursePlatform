@@ -1,3 +1,4 @@
+import sendMail from "../emails/sendMail.js";
 import { genreateQuestionAttempt } from "../openAI/openAi.js";
 import { prisma } from "../prisma/prismaClint.js";
 const isHavePermession = async (course_id, instructor_id) => {
@@ -1427,6 +1428,26 @@ export const updateQuizInformations = async (req, res) => {
     }
     return res.status(200).json({
       message: "Quiz updated successfully ",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const sendEmail = async (req, res) => {
+  try {
+    const { userEmail, subject, text } = req.body;
+    if (!userEmail || !subject || !text) {
+      return res.status(400).json({
+        error: "Missing required data",
+      });
+    }
+    await sendMail(userEmail, subject, text);
+    return res.status(200).json({
+      success: true,
     });
   } catch (error) {
     console.log(error);

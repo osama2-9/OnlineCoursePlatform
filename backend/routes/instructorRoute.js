@@ -13,6 +13,7 @@ import {
   getUserAnswers,
   getUsersAttempts,
   reviewQuiz,
+  sendEmail,
   toggleQuizPublish,
   updateAttemptScore,
   updateMyCourse,
@@ -117,5 +118,11 @@ instructorRoute.put(
   "/update-quiz",
   checkRole("instructor"),
   updateQuizInformations
+);
+
+instructorRoute.post(
+  "/send-email",
+  checkRole(['instructor' ,'admin']),
+  sendEmail
 );
 export default instructorRoute;

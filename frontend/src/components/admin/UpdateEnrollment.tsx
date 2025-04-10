@@ -32,11 +32,9 @@ export const UpdateEnrollment = ({
 
   return (
     <div>
-      {/* Modal */}
       {isOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg w-96 p-6">
-            {/* Modal Header */}
             <div className="flex justify-between items-center border-b pb-3">
               <h2 className="text-xl font-semibold">
                 Update Enrollment Status
@@ -49,9 +47,7 @@ export const UpdateEnrollment = ({
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="mt-4 space-y-6">
-              {/* Status Selection */}
               <div>
                 <p className="text-gray-600 mb-2">Select Enrollment Status:</p>
                 <div className="space-y-3">
@@ -82,7 +78,6 @@ export const UpdateEnrollment = ({
                 </div>
               </div>
 
-              {/* Access Granted Switch */}
               <div>
                 <p className="text-gray-600 mb-2">Access Granted:</p>
                 <label className="flex items-center space-x-3">
@@ -101,10 +96,9 @@ export const UpdateEnrollment = ({
                   </div>
                   <span className="text-gray-700">Yes</span>
                 </label>
-              </div>
+            </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"

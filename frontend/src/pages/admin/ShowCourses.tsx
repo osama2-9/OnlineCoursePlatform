@@ -305,7 +305,7 @@ export const ShowCourses = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Total Courses
               </h3>
-              <p className="text-3xl font-bold text-indigo-600">
+              <p className="text-3xl font-bold text-black">
                 {pagination.totalCourses}
               </p>
             </div>
@@ -313,7 +313,7 @@ export const ShowCourses = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Published
               </h3>
-              <p className="text-3xl font-bold text-green-600">
+              <p className="text-3xl font-bold text-black">
                 {courses?.filter((c) => c.is_published).length}
               </p>
             </div>
@@ -321,7 +321,7 @@ export const ShowCourses = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Unpublished
               </h3>
-              <p className="text-3xl font-bold text-yellow-600">
+              <p className="text-3xl font-bold text-black">
                 {courses?.filter((c) => !c.is_published).length}
               </p>
             </div>
@@ -329,7 +329,7 @@ export const ShowCourses = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Categories
               </h3>
-              <p className="text-3xl font-bold text-purple-600">
+              <p className="text-3xl font-bold text-black">
                 {categories.length}
               </p>
             </div>

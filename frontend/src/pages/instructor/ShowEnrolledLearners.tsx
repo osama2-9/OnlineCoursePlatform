@@ -3,6 +3,10 @@ import { useGetInstructorEnrollments } from "../../hooks/useGetInstructorEnrollm
 import { InstructorLayout } from "../../layouts/InstructorLayout";
 import { EnrollmentsData } from "../../hooks/useGetInstructorEnrollments";
 import { Loading } from "../../components/Loading";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { API } from "../../API/ApiBaseUrl";
+import { Loader2 } from "lucide-react";
 export const ShowEnrolledLearners = () => {
   const { enrollments, enrollmentsLoading, pagintion } =
     useGetInstructorEnrollments();
@@ -10,24 +14,53 @@ export const ShowEnrolledLearners = () => {
   const [selectedEnrollment, setSelectedEnrollment] =
     useState<EnrollmentsData | null>(null);
   const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
+  const [text, setText] = useState("");
+  const [isSendEmailLoading, setIsSendEmailLoading] = useState<boolean>(false);
 
   const handleSendEmailClick = (enrollment: EnrollmentsData) => {
     setSelectedEnrollment(enrollment);
     setIsModalOpen(true);
   };
 
-  const handleSendEmail = () => {
-    if (selectedEnrollment) {
-      const mailtoLink = `mailto:${
-        selectedEnrollment.user.email
-      }?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-        message
-      )}`;
-      window.location.href = mailtoLink;
-      setIsModalOpen(false);
+  const sendEmail = async ()=>{
+    setIsSendEmailLoading(true);
+    try {
+      const res= await axios.post(`${API}/instructor/send-email` ,{
+        userEmail:selectedEnrollment?.user.email,
+        subject,
+        text,
+      } ,{
+        headers:{
+          "Content-Type":"application/json"
+        },
+        withCredentials:true
+      })
+      if(res.data.success){
+        setIsModalOpen(false);
+        toast.success('Email sent successfully' ,{
+          duration: 5000,
+          position: "top-right",
+          ariaProps: {
+            role: "status",
+            "aria-live": "assertive",
+          },
+          
+        })
+      }
+      setSubject("");
+      setText("");
+    } catch (error:any) {
+      console.log(error);
+      toast.error(error?.resposne?.data?.error)
+      
+    }finally{
+      setIsSendEmailLoading(false);
     }
-  };
+  }
+
+      
+    
+
 
   return (
     <InstructorLayout>
@@ -96,8 +129,8 @@ export const ShowEnrolledLearners = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        className="text-blue-600 hover:text-blue-900"
                         onClick={() => handleSendEmailClick(enrollment)}
+                        className="text-blue-600 hover:text-blue-900"
                       >
                         Send Email
                       </button>
@@ -132,7 +165,7 @@ export const ShowEnrolledLearners = () => {
         )}
 
         {isModalOpen && selectedEnrollment && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="fixed inset-0 flex z-50 items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
               <h2 className="text-xl font-bold mb-4">Send Email</h2>
 
@@ -189,8 +222,8 @@ export const ShowEnrolledLearners = () => {
                     Message
                   </label>
                   <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     rows={4}
                   />
@@ -205,10 +238,10 @@ export const ShowEnrolledLearners = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={handleSendEmail}
+                onClick={sendEmail}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
-                  Send
+                 {isSendEmailLoading ? <Loader2 className="animate-spin" size={15}  color="white"/> : "Send"}
                 </button>
               </div>
             </div>
