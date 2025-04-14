@@ -10,7 +10,7 @@ import {
   FaHammer,
   FaUsers,
 } from "react-icons/fa";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useState } from "react";
 import { TbDeviceAnalytics } from "react-icons/tb";
 
@@ -330,7 +330,6 @@ export const AdminSidebar = () => {
           </ul>
         </nav>
 
-        {/* Settings Section */}
         <div className="mt-8">
           <button
             className="flex items-center space-x-3 p-3 w-full text-left rounded-lg transition-colors text-gray-700 hover:bg-gray-100"
@@ -374,6 +373,15 @@ export const AdminSidebar = () => {
               </NavLink>
             </div>
           )}
+          <li>
+            <Link
+              to="/support"
+              className="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <span>🛠️</span>
+              <span>Support</span>
+            </Link>
+          </li>
         </div>
       </div>
     </>

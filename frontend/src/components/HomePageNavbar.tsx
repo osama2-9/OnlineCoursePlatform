@@ -25,7 +25,7 @@ export const HomePageNavbar = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
-   
+
     if (showProfileMenu) setShowProfileMenu(false);
   };
 
@@ -40,10 +40,11 @@ export const HomePageNavbar = () => {
       navigate("/instructor/dashboard");
     } else if (user?.role === "admin") {
       navigate("/admin/dashboard");
+    } else if (user?.role === "support") {
+      navigate("/support/dashboard");
     }
   };
 
- 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -63,7 +64,6 @@ export const HomePageNavbar = () => {
   return (
     <nav className="bg-white text-orange-500 py-4 px-8 shadow-sm fixed w-full top-0 z-50">
       <div className="flex items-center justify-between">
-       
         <Link to={"/"}>
           <div className="flex items-center space-x-4">
             <img src="/uplearn.png" alt="Logo" className="h-10" />
@@ -104,7 +104,6 @@ export const HomePageNavbar = () => {
                   <FiChevronDown className="h-4 w-4" />
                 </button>
 
-               
                 {showProfileMenu && (
                   <div className="absolute right-0 w-48 mt-2 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
                     <div className="px-4 py-2 border-b border-gray-100">
@@ -167,7 +166,6 @@ export const HomePageNavbar = () => {
           )}
         </div>
 
-       
         <div className="md:hidden flex items-center">
           <button
             className="text-orange-500"
@@ -179,7 +177,6 @@ export const HomePageNavbar = () => {
         </div>
       </div>
 
-      
       <div
         className={`md:hidden mt-4 space-y-4 ${
           isMobileMenuOpen ? "block" : "hidden"

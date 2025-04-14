@@ -1,5 +1,5 @@
-import { FaHome, FaBook, FaChartLine, FaBell, FaStar } from "react-icons/fa"; // Import icons from react-icons
-import { Link, NavLink } from "react-router-dom"; // For active link highlighting
+import { FaHome, FaBook, FaChartLine, FaStar } from "react-icons/fa";
+import { Link, NavLink } from "react-router-dom";
 
 export const Sidebar = () => {
   return (
@@ -71,25 +71,9 @@ export const Sidebar = () => {
               <span>Review</span>
             </NavLink>
           </li>
-          <li>
-            <NavLink
-              to="/notifications"
-              className={({ isActive }) =>
-                `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                  isActive
-                    ? "bg-orange-50 text-orange-600"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`
-              }
-            >
-              <FaBell className="w-5 h-5" />
-              <span>Notifications</span>
-            </NavLink>
-          </li>
         </ul>
       </nav>
 
-      {/* Optional: Collapsible Sections */}
       <div className="mt-8">
         <h3 className="text-sm font-semibold text-gray-500 mb-3">More</h3>
         <ul className="space-y-3">
@@ -103,13 +87,13 @@ export const Sidebar = () => {
             </Link>
           </li>
           <li>
-            <a
-              href="#"
+            <Link
+              to="/support"
               className="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
             >
               <span>🛠️</span>
               <span>Support</span>
-            </a>
+            </Link>
           </li>
         </ul>
       </div>

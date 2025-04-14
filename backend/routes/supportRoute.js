@@ -1,6 +1,6 @@
 import express from 'express'
 import {protectedRoute} from '../middlewares/protectedRoute.js'
-import { createSupportTicket, getSupportTickets, getTicketData, sendMessage,verifyChatAccessToken } from '../controllers/supportController.js'
+import { createSupportTicket, getSupportTickets, getTicketData, sendMessage,verifyChatAccessToken ,updateTicketStatus} from '../controllers/supportController.js'
 import { checkRole } from '../middlewares/checkRole.js'
 const supportRoute = express.Router()
 
@@ -9,5 +9,10 @@ supportRoute.get('/get-support-tickets',checkRole(['support','admin']) ,getSuppo
 supportRoute.post('/send-message' ,sendMessage)
 supportRoute.get('/verify-access-token',verifyChatAccessToken)
 supportRoute.get('/get-ticket',getTicketData)
+supportRoute.put(
+  "/change-ticket-status",
+  checkRole(["support", "admin"]),
+  updateTicketStatus
+);
 
 export default supportRoute

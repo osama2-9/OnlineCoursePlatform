@@ -3,12 +3,11 @@ import {
   FaHome,
   FaBook,
   FaChartLine,
-  FaBell,
   FaUsers,
   FaBars,
 } from "react-icons/fa";
 
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 export const InstructorSidebar = () => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
@@ -105,7 +104,7 @@ export const InstructorSidebar = () => {
                 <span>Quizess</span>
               </NavLink>
             </li>
-          
+
             <li>
               <NavLink
                 to="/instructor/quizzes/attempts"
@@ -156,23 +155,6 @@ export const InstructorSidebar = () => {
                 <span>Analytics</span>
               </NavLink>
             </li>
-
-            <li>
-              <NavLink
-                to="/instructor/notifications"
-                className={({ isActive }) =>
-                  `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`
-                }
-                onClick={closeSidebar}
-              >
-                <FaBell className="w-5 h-5" />
-                <span>Notifications</span>
-              </NavLink>
-            </li>
           </ul>
         </nav>
 
@@ -194,6 +176,15 @@ export const InstructorSidebar = () => {
                 <span>⚙️</span>
                 <span>Settings</span>
               </NavLink>
+            </li>
+            <li>
+              <Link
+                to="/support"
+                className="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <span>🛠️</span>
+                <span>Support</span>
+              </Link>
             </li>
           </ul>
         </div>
