@@ -21,7 +21,6 @@ const generateAuthUrl = (req, res) => {
     ],
     prompt: "consent"
   });
-  console.log("Generated Auth URL:", authUrl);
   return res.json({ url: authUrl });
 };
 
@@ -47,7 +46,6 @@ const handleGoogleCallback = async (req, res) => {
       try {
         const token = req.cookies.auth;
 
-        console.error("Token:", token);
         
         if (!token) {
           return res.status(401).json({ 
