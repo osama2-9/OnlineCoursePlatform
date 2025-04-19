@@ -67,6 +67,7 @@ import SupportDashboard from "./pages/support/SupportDashboard";
 import ProtectedSupportRoute from "./pages/support/ProtectedSupportRoute";
 import UsersChatPage from "./pages/support/UsersChatPage";
 import { GoogleAuth } from "./pages/GoogleAuth";
+import Privacy from "./pages/Privecy";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -282,6 +283,7 @@ function App() {
         <Route path="/course-page/:course_id" element={<CoursePage />} />
         <Route path="/payment/success" element={<SuccessPayment />} />
         <Route path="/payment/cancel" element={<CancelPayment />} />
+        <Route path="/privacy" element={<Privacy />} />
       </Routes>
       <Toaster position="top-center" />
     </>
