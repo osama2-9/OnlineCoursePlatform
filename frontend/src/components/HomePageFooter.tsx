@@ -16,10 +16,10 @@ export const HomePageFooter = () => {
           <div className="space-y-3 sm:space-y-4">
             <h3 className="text-lg sm:text-xl font-bold">Quick Links</h3>
             <ul className="space-y-2 sm:space-y-3">
-              {["Home", "Courses", "About Us", "Contact"].map((link) => (
+              {["Home", "Courses", "About Us", "Contact", "Privacy"].map((link) => (
                 <li key={link}>
                   <a
-                    href="#"
+                    href={`/${link.toLowerCase()}`}
                     className="text-sm sm:text-base text-gray-400 hover:text-orange-500 transition-colors duration-200"
                   >
                     {link}
