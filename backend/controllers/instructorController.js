@@ -6,7 +6,6 @@ const isHavePermession = async (course_id, instructor_id) => {
     const courseId = parseInt(course_id);
     const instructorId = parseInt(instructor_id);
 
-    console.log(`Parsed courseId: ${courseId}, instructorId: ${instructorId}`);
 
     const course = await prisma.courses.findUnique({
       where: {

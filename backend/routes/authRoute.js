@@ -17,8 +17,10 @@ import {
   verifyEmail,
 } from "../controllers/authController.js";
 import protectedRoute from "../middlewares/protectedRoute.js";
+import { generateAuthUrl, handleGoogleCallback } from "../googleAuth/google.js";
 
 const authRoute = express.Router();
+
 authRoute.get("/check-auth", isAuthenticated);
 authRoute.post("/signup", signup);
 authRoute.post("/login", login);
@@ -34,5 +36,9 @@ authRoute.post("/enable2FA", protectedRoute, towFAEnable);
 authRoute.post("/verify-2fa", verify2FA);
 authRoute.post("/disable2FA", protectedRoute, towFADisable);
 authRoute.post("/change-password", protectedRoute, changePassword);
+
+authRoute.get("/google-auth-url", generateAuthUrl);
+
+authRoute.get("/google/callback", handleGoogleCallback);
 
 export default authRoute;

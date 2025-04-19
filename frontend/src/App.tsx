@@ -66,6 +66,7 @@ import SupportPage from "./pages/SupportPage";
 import SupportDashboard from "./pages/support/SupportDashboard";
 import ProtectedSupportRoute from "./pages/support/ProtectedSupportRoute";
 import UsersChatPage from "./pages/support/UsersChatPage";
+import { GoogleAuth } from "./pages/GoogleAuth";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -75,6 +76,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/*" element={<NotFound />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/auth/google" element={<GoogleAuth />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/become-an-instractour" element={<BecomeMentor />} />

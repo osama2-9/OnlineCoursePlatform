@@ -11,7 +11,7 @@ export const generateTokenAndSetCookies = (userId, role, res) => {
     if (token) {
       res.cookie("auth", token, {
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24,
+        maxAge: 1000 * 60 * 60 * 72,
         secure: true,
         sameSite: "None",
       });

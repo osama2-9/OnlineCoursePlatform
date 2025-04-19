@@ -10,7 +10,7 @@ datasource db {
 model Users {
   user_id                    Int       @id @default(autoincrement())
   full_name                  String
-  password_hash              String
+  password_hash              String?   // Made optional for OAuth users
   email                      String    @unique
   role                       Role      @default(learner)
   created_at                 DateTime  @default(now())
@@ -27,6 +27,13 @@ model Users {
   is_2fa_enabled             Boolean   @default(false)  
   two_fa_secret              String?  
   backup_codes               String[]  
+  
+  googleId                   String?   @unique
+  googleAccessToken          String?
+  googleRefreshToken         String?
+  googleProfile              Json?    
+  authProvider               String?  
+  
   courses       Courses[]
   enrollments   Enrollments[]
   payments      Payments[]
@@ -42,6 +49,7 @@ model Users {
   submissions         AssignmentSubmission[] @relation("StudentSubmissions")
   Article Article[]
   @@index([email])
+  @@index([googleId]) // Add index for googleId lookups
   @@map("users")
   AssignmentSubmission AssignmentSubmission[]
   Assignments Assignments[]

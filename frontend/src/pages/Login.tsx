@@ -1,26 +1,38 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { API } from "../API/ApiBaseUrl";
 import { HomePageLayout } from "../layouts/HomePageLayout";
 import { setUser } from "../store/userSlice";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { FcGoogle } from "react-icons/fc";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [is2FARequired, setIs2FARequired] = useState(false);
   const [twoFACode, setTwoFACode] = useState("");
   const [error, setError] = useState<string>("");
   const dispatch = useDispatch();
-  const navigator = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const errorParam = queryParams.get('error');
+    if (errorParam === 'google_auth_failed') {
+      setError('Google authentication failed. Please try again.');
+    }
+  }, [location]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setIsLoading(true);
+      setError("");
       const res = await axios.post(
         `${API}/auth/login`,
         { email, password },
@@ -35,7 +47,7 @@ export const Login = () => {
           setIs2FARequired(true);
         } else {
           dispatch(setUser(data));
-          navigator("/");
+          navigate("/");
         }
       }
     } catch (error: any) {
@@ -45,7 +57,7 @@ export const Login = () => {
       ) {
         setError(error?.response?.data?.error);
       } else {
-        setError(error?.response?.data?.error);
+        setError(error?.response?.data?.error || "Login failed");
       }
     } finally {
       setIsLoading(false);
@@ -56,6 +68,7 @@ export const Login = () => {
     e.preventDefault();
     try {
       setIsLoading(true);
+      setError("");
       const res = await axios.post(
         `${API}/auth/verify-2fa`,
         { email, token: twoFACode },
@@ -67,19 +80,39 @@ export const Login = () => {
       const data = res.data;
       if (data) {
         dispatch(setUser(data));
-        navigator("/");
+        navigate("/");
       }
     } catch (error: any) {
       console.error(error);
-      setError(error?.response?.data?.error);
+      setError(error?.response?.data?.error || "Verification failed");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleGoogleLogin = async() => {
+    try {
+      setGoogleLoading(true)
+      const res = await axios.get(`${API}/auth/google-auth-url` ,{
+        withCredentials: true,
+      });
+      const data = await res.data
+      if(data){
+        window.location.replace(data.url);
+      }
+    } catch (error) {
+      console.log(error);
+      setError("Failed to login with Google");
+    }finally{
+      setGoogleLoading(false)
+    }
+  
+  };
+
   const activeLink = () => {
     return (
       <Link to={"/active-account-request"} className="text-green-600 font-semibold">
-        Reactive Your accout
+        Reactivate your account
       </Link>
     );
   };
@@ -87,34 +120,34 @@ export const Login = () => {
   return (
     <HomePageLayout>
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="flex flex-col lg:flex-row w-full max-w-6xl bg-white lg:shadow-xl lg:rounded-xl overflow-hidden transform transition-all duration-300">
-          <div className="hidden lg:flex items-center justify-center w-full lg:w-1/2 bg-gradient-to-br from-gray-50 to-gray-100 p-12">
+        <div className="flex flex-col lg:flex-row w-full max-w-5xl bg-white lg:shadow-lg lg:rounded-lg overflow-hidden">
+          <div className="hidden lg:flex items-center justify-center w-full lg:w-1/2 bg-gradient-to-br from-gray-50 to-gray-100 p-8">
             <img
               src={"/login.png"}
               alt="Login Illustration"
-              className="w-3/4 h-auto transform transition-transform duration-300"
+              className="w-3/4 h-auto"
             />
           </div>
 
-          <div className="flex flex-col justify-center w-full lg:w-1/2 p-8 lg:p-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-8 animate-fade-in">
+          <div className="flex flex-col justify-center w-full lg:w-1/2 p-6 lg:p-8">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 text-center mb-4">
               Welcome Back! 👋
             </h2>
-            <p className="text-gray-600 text-center mb-8">
+            <p className="text-sm text-gray-600 text-center mb-6">
               Log in to continue your learning journey
             </p>
 
             <form
               onSubmit={is2FARequired ? handle2FAVerification : handleLogin}
-              className="space-y-6"
+              className="space-y-4"
             >
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {!is2FARequired && (
                   <>
-                    <div className="relative">
+                    <div>
                       <label
                         htmlFor="email"
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className="block text-xs font-medium text-gray-700 mb-1"
                       >
                         Email Address
                       </label>
@@ -124,15 +157,15 @@ export const Login = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="example@gmail.com"
-                        className="block w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 hover:border-orange-300"
+                        className="block w-full p-2.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent transition-all"
                         required
                       />
                     </div>
 
-                    <div className="relative">
+                    <div>
                       <label
                         htmlFor="password"
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className="block text-xs font-medium text-gray-700 mb-1"
                       >
                         Password
                       </label>
@@ -143,13 +176,13 @@ export const Login = () => {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="********"
-                          className="block w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 hover:border-orange-300"
+                          className="block w-full p-2.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent transition-all"
                           required
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-700"
                         >
                           {showPassword ? "Hide" : "Show"}
                         </button>
@@ -159,10 +192,10 @@ export const Login = () => {
                 )}
 
                 {is2FARequired && (
-                  <div className="relative">
+                  <div>
                     <label
                       htmlFor="2fa-code"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-xs font-medium text-gray-700 mb-1"
                     >
                       2FA Code
                     </label>
@@ -172,7 +205,7 @@ export const Login = () => {
                       value={twoFACode}
                       onChange={(e) => setTwoFACode(e.target.value)}
                       placeholder="Enter 2FA code"
-                      className="block w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 hover:border-orange-300"
+                      className="block w-full p-2.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent transition-all"
                       required
                     />
                   </div>
@@ -180,7 +213,7 @@ export const Login = () => {
               </div>
 
               {error && (
-                <div className="text-red-500 text-sm mt-2 text-center">
+                <div className="text-red-500 text-xs mt-1 text-center">
                   {error === "This Account has been deactivated" ? (
                     <>
                       {error} <br />
@@ -194,7 +227,7 @@ export const Login = () => {
 
               <button
                 type="submit"
-                className={`w-full py-4 bg-orange-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:translate-y-[-1px] hover:shadow-lg ${
+                className={`w-full py-2.5 text-sm bg-orange-600 text-white font-medium rounded-md transition-all ${
                   isLoading
                     ? "bg-gray-400 cursor-not-allowed"
                     : "hover:bg-orange-700"
@@ -204,7 +237,7 @@ export const Login = () => {
                 {isLoading ? (
                   <span className="flex items-center justify-center">
                     <svg
-                      className="animate-spin h-5 w-5 mr-3"
+                      className="animate-spin h-4 w-4 mr-2"
                       viewBox="0 0 24 24"
                     >
                       <circle
@@ -232,8 +265,53 @@ export const Login = () => {
               </button>
             </form>
 
-            <div className="text-center space-y-4 mt-8">
-              <p className="text-sm text-gray-600">
+            <div className="flex items-center my-4">
+              <div className="flex-grow border-t border-gray-200"></div>
+              <span className="mx-2 text-xs text-gray-400">OR</span>
+              <div className="flex-grow border-t border-gray-200"></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading}
+              className={`w-full py-2.5 text-sm bg-white text-gray-700 font-medium rounded-md border border-gray-300 transition-all flex items-center justify-center space-x-2 ${
+                googleLoading ? "cursor-not-allowed opacity-70" : "hover:bg-gray-50"
+              }`}
+            >
+              {googleLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin h-4 w-4 mr-2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                <>
+                  <FcGoogle className="text-lg" />
+                  <span>Continue with Google</span>
+                </>
+              )}
+            </button>
+
+            <div className="text-center space-y-2 mt-4">
+              <p className="text-xs text-gray-600">
                 Don't have an account?{" "}
                 <Link
                   to="/signup"
@@ -244,7 +322,7 @@ export const Login = () => {
               </p>
               <Link
                 to="/forgot-password"
-                className="block text-sm text-orange-600 hover:text-orange-700 font-medium hover:underline transition-colors"
+                className="block text-xs text-orange-600 hover:text-orange-700 font-medium hover:underline transition-colors"
               >
                 Forgot password?
               </Link>
