@@ -23,7 +23,7 @@ export const Login = () => {
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const errorParam = queryParams.get('error');
-    if (errorParam === 'google_auth_failed') {
+    if (errorParam === 'google_auth_failed' || errorParam === 'auth_verification_failed') {
       setError('Google authentication failed. Please try again.');
     }
   }, [location]);

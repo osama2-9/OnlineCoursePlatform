@@ -1,6 +1,33 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client'
+import dotenv from 'dotenv'
+dotenv.config();
+let prisma;
 
-const prisma = new PrismaClient();
+if (process.env.NODE_ENV === 'production') {
+  prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
+    log: ['query', 'info', 'warn', 'error'],
+    connection: {
+      pool: {
+        min: 4,
+        max: 15,
+        idle: 100000 
+      },
+      connectTimeout: 30000 
+    },
+  })
+} else {
+  if (!global.prisma) {
+    global.prisma = new PrismaClient()
+  }
+  prisma = global.prisma
+}
+
+
 
 async function testConnection() {
   try {

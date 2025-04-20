@@ -1,9 +1,8 @@
 import { OAuth2Client } from "google-auth-library";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../prisma/prismaClint.js";
 dotenv.config();
-const prisma = new PrismaClient();
 
 const oauth2Client = new OAuth2Client({
   clientId: process.env.OAUTH_GOOGLE_CLIENT,
@@ -45,6 +44,8 @@ const handleGoogleCallback = async (req, res) => {
     if (!code) {
       try {
         const token = req.cookies.auth;
+        console.error(token);
+        
 
         
         if (!token) {
