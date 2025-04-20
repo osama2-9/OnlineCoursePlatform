@@ -145,9 +145,9 @@ const handleGoogleCallback = async (req, res) => {
     
     res.cookie("auth", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       maxAge: 48 * 60 * 60 * 1000,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+      sameSite: 'None'
     });
     
     return res.redirect(`${process.env.BASE_URL}/auth/google`);
