@@ -145,6 +145,9 @@ export const getUsers = async (req, res) => {
           created_at: true,
           lastLogin: true,
           is_active: true,
+          authProvider: true
+
+
         },
       }),
       prisma.users.count(),

@@ -118,6 +118,7 @@ const handleGoogleCallback = async (req, res) => {
           googleProfile: googleUserInfo,
           authProvider: "google",
           isEmailVerified: true,
+          password_hash: "GOOGLE_AUTH_USER",
           lastLogin: currentTime,
           is_active: true
         }

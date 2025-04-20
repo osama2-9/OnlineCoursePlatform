@@ -7,7 +7,7 @@ import { Loading } from "../../components/Loading";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
 import { UpdateUser } from "../../components/admin/UpdateUser";
 import { BsThreeDots } from "react-icons/bs";
-import { Loader2, X } from "lucide-react";
+import { Loader2, Search, X, Filter } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 interface User {
@@ -18,6 +18,7 @@ interface User {
   created_at: string;
   lastLogin: string;
   is_active: boolean;
+  authProvider: "google" | null;
 }
 
 interface Pagination {
@@ -33,12 +34,13 @@ interface FetchUsersResponse {
 }
 
 export const ShowUsers = () => {
-  const [users, setUsers] = useState<User[] | null>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     totalUsers: 0,
     totalPages: 0,
     currentPage: 1,
-    pageSize: 10,
+    pageSize: 15,
   });
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
@@ -47,6 +49,7 @@ export const ShowUsers = () => {
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
   const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [googleUsersOnly, setGoogleUsersOnly] = useState<boolean>(false);
 
   const fetchUsers = async (page: number, pageSize: number) => {
     try {
@@ -60,27 +63,54 @@ export const ShowUsers = () => {
           withCredentials: true,
         }
       );
-
-      const data = res.data;
-
-      return data;
+      return res.data;
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error || "Failed to fetch users");
-    } finally {
+      throw error;
     }
   };
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["users", pagination.currentPage, pagination.pageSize],
     queryFn: () => fetchUsers(pagination.currentPage, pagination.pageSize),
     staleTime: 5 * 60 * 1000,
     refetchInterval: 24 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (data) {
+      setAllUsers(data.users);
+      setPagination({
+        totalUsers: data.pagination.totalUsers,
+        totalPages: data.pagination.totalPages,
+        currentPage: data.pagination.currentPage,
+        pageSize: data.pagination.pageSize,
+      });
+    }
+  }, [data]);
+
+  useEffect(() => {
+    let result = [...allUsers];
+    
+    if (googleUsersOnly) {
+      result = result.filter(user => user.authProvider === 'google');
+    }
+    
+    if (isSearchActive && searchQuery) {
+      result = result.filter(user => 
+        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredUsers(result);
+  }, [allUsers, googleUsersOnly, isSearchActive, searchQuery]);
+
   const search = async () => {
     try {
       setIsSearching(true);
+      setIsSearchActive(true);
       const res = await axios.get(`${API}/admin/search`, {
         params: {
           email: searchQuery.trim(),
@@ -94,22 +124,16 @@ export const ShowUsers = () => {
       const data = res.data;
 
       if (data.success) {
-        setUsers([data.data]);
-        setPagination({
-          totalUsers: 1,
-          totalPages: 1,
-          currentPage: 1,
-          pageSize: 10,
-        });
+        setAllUsers([data.data]);
         setIsSearchActive(true);
       } else {
         toast.error(data.message || "No user found");
-        setUsers([]);
+        setAllUsers([]);
       }
     } catch (error: any) {
       console.log(error);
       toast.error(error.response?.data?.message || "Failed to search users");
-      setUsers([]);
+      setAllUsers([]);
     } finally {
       setIsSearching(false);
     }
@@ -132,20 +156,12 @@ export const ShowUsers = () => {
   const resetSearch = () => {
     setSearchQuery("");
     setIsSearchActive(false);
-    fetchUsers(1, pagination.pageSize);
+    refetch();
   };
 
-  useEffect(() => {
-    if (data) {
-      setUsers(data.users);
-      setPagination({
-        totalUsers: data.pagination.totalUsers,
-        totalPages: data.pagination.totalPages,
-        currentPage: data.pagination.currentPage,
-        pageSize: data.pagination.pageSize,
-      });
-    }
-  }, [data]);
+  const handleGoogleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setGoogleUsersOnly(e.target.checked);
+  };
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -153,9 +169,7 @@ export const ShowUsers = () => {
     }
   };
 
-  const handlePageSizeChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
+  const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newPageSize = parseInt(event.target.value, 10);
     setPagination((prev) => ({
       ...prev,
@@ -181,7 +195,7 @@ export const ShowUsers = () => {
           withCredentials: true,
         });
         toast.success("User deleted successfully");
-        fetchUsers(pagination.currentPage, pagination.pageSize);
+        refetch();
       } catch (error) {
         toast.error("Failed to delete user");
       } finally {
@@ -208,7 +222,7 @@ export const ShowUsers = () => {
           user.is_active ? "inactive" : "active"
         }`
       );
-      fetchUsers(pagination.currentPage, pagination.pageSize);
+      refetch();
     } catch (error) {
       toast.error("Failed to toggle user status");
     }
@@ -217,6 +231,7 @@ export const ShowUsers = () => {
   const toggleDropdown = (userId: number) => {
     setOpenDropdownId((prevId) => (prevId === userId ? null : userId));
   };
+
   const onCancelUpdate = () => {
     setShowUpdateModal(false);
     setSelectedUser(null);
@@ -225,7 +240,7 @@ export const ShowUsers = () => {
   const onConfirmUpdate = async () => {
     setSelectedUser(null);
     setShowUpdateModal(false);
-    await fetchUsers(pagination.currentPage, pagination.pageSize);
+    refetch();
   };
 
   return (
@@ -233,164 +248,214 @@ export const ShowUsers = () => {
       {isLoading ? (
         <Loading />
       ) : (
-        <div className="mt-5">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-4">
-              <label
-                htmlFor="searchQuery"
-                className="font-semibold text-gray-700"
-              >
-                {isSearching ? <Loader2 className="animate-spin" size={15}  /> : "Search"}
-              </label>
-              <div className="relative">
-                <input
-                  id="searchQuery"
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 w-80"
-                  placeholder="Search by email"
-                />
-                {isSearchActive && (
+        <div className="mt-4">
+          <div className="bg-white shadow-md rounded-lg p-4">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Users Management</h2>
+              
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      id="searchQuery"
+                      type="text"
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      className="pl-10 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-64"
+                      placeholder="Search by email"
+                    />
+                    {isSearchActive && (
+                      <button
+                        onClick={resetSearch}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" color="black" />
+                      </button>
+                    )}
+                  </div>
                   <button
-                    onClick={resetSearch}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={handleSearchClick}
+                    className="py-1.5 px-3 bg-gray-400 text-white text-sm rounded-md hover:bg-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                    disabled={!searchQuery}
                   >
-                    <X className="h-5 w-5" />
+                    {isSearching ? (
+                      <Loader2 className="animate-spin h-4 w-4" />
+                    ) : (
+                      "Search"
+                    )}
                   </button>
-                )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className={`flex items-center text-sm gap-1 px-3 py-1.5 rounded-md border transition-colors ${
+                    googleUsersOnly 
+                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
+                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={googleUsersOnly}
+                      onChange={handleGoogleFilterChange}
+                      className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 mr-2"
+                      id="googleFilter"
+                    />
+                    <label htmlFor="googleFilter" className="flex items-center cursor-pointer">
+                      <img 
+                        src="https://www.google.com/favicon.ico" 
+                        alt="Google" 
+                        className="h-4 w-4 mr-1.5" 
+                      />
+                      Google users only
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <span className="text-xs text-gray-600">Show:</span>
+                    <select
+                      id="pageSize"
+                      value={pagination.pageSize}
+                      onChange={handlePageSizeChange}
+                      className="p-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={15}>15</option>
+                      <option value={20}>20</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={handleSearchClick}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-indigo-800 focus:bg-indigo-500"
-                disabled={!searchQuery}
-              >
-                Search
-              </button>
             </div>
-
-            <div className="flex items-center space-x-4">
-              <label htmlFor="pageSize" className="font-semibold text-gray-700">
-                Show:
-              </label>
-              <select
-                id="pageSize"
-                value={pagination.pageSize}
-                onChange={handlePageSizeChange}
-                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-              </select>
-              <span className="text-gray-700">per page</span>
-            </div>
-          </div>
-
-          <div className="bg-white shadow-lg rounded-lg p-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Users</h2>
 
             <div className="overflow-x-auto w-full">
-              <table className="min-w-full table-auto border-collapse">
+              <table className="min-w-full table-auto border-collapse text-sm">
                 <thead>
-                  <tr>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      #
+                  <tr className="bg-gray-50">
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      ID
                     </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Full Name
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      Name
                     </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                       Email
                     </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                       Role
                     </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Is Account Active
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      Status
                     </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Join Date
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      Auth
                     </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      Joined
+                    </th>
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                       Last Login
                     </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
+                    <th className="py-2 px-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {users?.length === 0 ? (
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredUsers.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={8}
-                        className="py-4 px-4 text-center text-gray-500"
+                        colSpan={9}
+                        className="py-3 px-3 text-center text-sm text-gray-500"
                       >
                         No users found
                       </td>
                     </tr>
                   ) : (
-                    users?.map((user) => (
-                      <tr key={user.user_id} className="hover:bg-gray-50">
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          {user.user_id}
+                    filteredUsers.map((user) => (
+                      <tr 
+                        key={user.user_id} 
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="py-2 px-3 text-xs text-gray-500">
+                          #{user.user_id}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
+                        <td className="py-2 px-3 text-sm font-medium text-gray-800">
                           {user.full_name}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
+                        <td className="py-2 px-3 text-xs text-gray-500">
                           {user.email}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          {user.role}
+                        <td className="py-2 px-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            user.role === 'admin' 
+                              ? 'bg-purple-100 text-purple-800' 
+                              : user.role === 'moderator'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {user.role}
+                          </span>
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
+                        <td className="py-2 px-3">
                           {user.is_active ? (
-                            <span className="text-green-600 bg-green-50 p-1 rounded-lg">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800">
                               Active
                             </span>
                           ) : (
-                            <span className="text-red-600 bg-red-50 p-1 rounded-lg">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">
                               Inactive
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
+                        <td className="py-2 px-3">
+                          {user.authProvider === 'google' ? (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                              Google
+                            </span>
+                          ) : (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                              Email
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3 text-xs text-gray-500">
                           {new Date(user.created_at).toLocaleDateString()}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
+                        <td className="py-2 px-3 text-xs text-gray-500">
                           {user.lastLogin
                             ? new Date(user.lastLogin).toLocaleDateString()
-                            : "-"}
+                            : "—"}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b relative">
+                        <td className="py-2 px-3 text-right relative">
                           <button
                             onClick={() => toggleDropdown(user.user_id)}
-                            className="p-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                            className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
                           >
-                            <BsThreeDots size={20} />
+                            <BsThreeDots size={16} />
                           </button>
 
                           {openDropdownId === user.user_id && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                            <div className="absolute right-2 mt-1 w-36 bg-white border border-gray-200 rounded-md shadow-lg z-10 text-xs">
                               <button
                                 onClick={() => handleEdit(user)}
-                                className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                                className="block w-full px-3 py-1.5 text-left text-gray-700 hover:bg-gray-50 border-b border-gray-100"
                               >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDelete(user)}
-                                className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                              >
-                                Delete
+                                Edit User
                               </button>
                               <button
                                 onClick={() => handleToggleActive(user)}
-                                className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                                className="block w-full px-3 py-1.5 text-left text-gray-700 hover:bg-gray-50 border-b border-gray-100"
                               >
                                 {user.is_active ? "Deactivate" : "Activate"}
+                              </button>
+                              <button
+                                onClick={() => handleDelete(user)}
+                                className="block w-full px-3 py-1.5 text-left text-red-600 hover:bg-red-50"
+                              >
+                                Delete User
                               </button>
                             </div>
                           )}
@@ -402,24 +467,36 @@ export const ShowUsers = () => {
               </table>
             </div>
 
-            <div className="flex justify-between items-center mt-6">
-              <button
-                className="px-4 py-2 bg-gray-300 text-sm rounded-md hover:bg-gray-400 focus:outline-none"
-                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                disabled={pagination.currentPage <= 1}
-              >
-                Previous
-              </button>
-              <span className="text-lg text-gray-700">
-                Page {pagination.currentPage} of {pagination.totalPages}
-              </span>
-              <button
-                className="px-4 py-2 bg-gray-300 text-sm rounded-md hover:bg-gray-400 focus:outline-none"
-                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                disabled={pagination.currentPage >= pagination.totalPages}
-              >
-                Next
-              </button>
+            <div className="flex justify-between items-center mt-4 text-sm">
+              <div className="text-xs text-gray-500">
+                {googleUsersOnly && (
+                  <span className="inline-flex items-center mr-2 px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    <Filter className="h-3 w-3 mr-1" />
+                    Google users only ({filteredUsers.length} shown)
+                  </span>
+                )}
+                Showing {filteredUsers.length} of {pagination.totalUsers} users
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <button
+                  className="px-3 py-1 bg-white border border-gray-300 rounded text-xs text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage <= 1}
+                >
+                  Previous
+                </button>
+                <span className="text-xs font-medium text-gray-700">
+                  Page {pagination.currentPage} of {pagination.totalPages}
+                </span>
+                <button
+                  className="px-3 py-1 bg-white border border-gray-300 rounded text-xs text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage >= pagination.totalPages}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
 
