@@ -63,6 +63,7 @@ export const useGetCourses = (
     retry: 1,
   });
 
+
   return {
     courses: data?.courses || [],
     pagination: data?.pagination || null,

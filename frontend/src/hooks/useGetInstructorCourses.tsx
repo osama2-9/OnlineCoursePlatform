@@ -65,8 +65,8 @@ export const useGetInstructorCourses = () => {
       pagination.totalPages,
     ],
     queryFn: getInstructorCourses,
-    staleTime: 1 * 1000 * 60,
-    refetchInterval: 1 * 1000 * 60,
+    staleTime: 24*60*60*1000 , 
+    refetchInterval: 24*60*60*1000,
     retry: 2,
   });
 
@@ -79,3 +79,4 @@ export const useGetInstructorCourses = () => {
 
   return { courses, isLoading, pagination };
 };
+   

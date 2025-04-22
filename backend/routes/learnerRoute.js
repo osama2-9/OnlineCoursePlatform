@@ -8,6 +8,7 @@ import {
   getCoursesProgress,
   getEnrolledCourseContent,
   getEnrolledInCourses,
+  getNotifications,
   getPaymentsHistory,
   getQuizQuestions,
   markLessonsAsCompleted,
@@ -71,4 +72,5 @@ learnerRoute.get(
   getCourseReviews
 );
 learnerRoute.post("/submit-review", checkRole("learner"), submitReview);
+learnerRoute.get("/get-notifications", checkRole("learner"), getNotifications);
 export default learnerRoute;

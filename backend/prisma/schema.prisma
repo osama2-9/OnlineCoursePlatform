@@ -49,7 +49,7 @@ model Users {
   submissions         AssignmentSubmission[] @relation("StudentSubmissions")
   Article Article[]
   @@index([email])
-  @@index([googleId]) // Add index for googleId lookups
+  @@index([googleId])
   @@map("users")
   AssignmentSubmission AssignmentSubmission[]
   Assignments Assignments[]
@@ -82,6 +82,7 @@ model Courses {
   bookmarks         Bookmark[]
   assignments       Assignments[]
   @@map("courses")
+  Notifications Notifications[]
 }
 
 model InstructorsApplications {
@@ -584,4 +585,21 @@ model SupportTicketMessage {
   user Users @relation(fields: [user_id], references: [user_id])
 
   @@map("support_ticket_messages")
+}
+model Notifications {
+  notification_id Int @id @default(autoincrement())
+  message String @default("")
+  type NotificationType 
+  is_read Boolean @default(false)
+  course_with_id Int 
+  created_at DateTime @default(now())
+  course Courses @relation(fields: [course_with_id], references: [course_id])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  ASSIGNMENT_NEW
+  ASSIGNMENT_DEADLINE
+  QUIZ_NEW
+  QUIZ_ENDING
 }

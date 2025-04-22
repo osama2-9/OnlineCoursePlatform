@@ -1,4 +1,5 @@
 import { prisma } from "../prisma/prismaClint.js";
+import { newAssignmentNotification } from "../services/notifications.js";
 
 const isCourseAssigndToInstructor = async (course_id, instructor_id) => {
   try {
@@ -21,13 +22,17 @@ const isCourseAssigndToInstructor = async (course_id, instructor_id) => {
 export const createAssignment = async (req, res) => {
   try {
     const { course_id, instructor_id, title, description, start_date, end_date, points } = req.body;
+    
     if (!course_id || !instructor_id || !title || !description || !start_date || !end_date || !points) {
-      return res.status(400).json({ message: "Please fill all inputs" })
+      return res.status(400).json({ message: "Please fill all inputs" });
     }
+    
     const isCourseAssigndToInstructorResult = await isCourseAssigndToInstructor(course_id, instructor_id);
+    
     if (!isCourseAssigndToInstructorResult) {
-      return res.status(400).json({ message: "You can't handle this course" })
+      return res.status(400).json({ message: "You can't handle this course" });
     }
+    
     const newAssignment = await prisma.assignments.create({
       data: {
         course_id: Number(course_id),
@@ -38,17 +43,28 @@ export const createAssignment = async (req, res) => {
         end_date: new Date(end_date),
         points: Number(points)
       }
-    })
+    });
+    
     if (!newAssignment) {
-      return res.status(400).json({ message: "Failed to create assignment" })
+      return res.status(400).json({ message: "Failed to create assignment" });
     }
-    return res.status(201).json({ message: "Assignment created successfully" })
+    
+    res.status(201).json({ message: "Assignment created successfully" });
+    
+    try {
+      await newAssignmentNotification(course_id);
+    } catch (notificationError) {
+      console.error("Failed to send assignment notification:", notificationError);
+    
+    }
+    
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal Server Error" });
-
   }
-}
+};
+
+
 export const getCourseAssignments = async (req, res) => {
   try {
     const { course_id, instructor_id } = req.query;

@@ -936,3 +936,50 @@ export const getCourseAssignmentsQuizzesById = async (req, res) => {
     });
   }
 };
+
+export const getNotifications = async (req ,res)=>{
+  try{
+    const {userId} = req.query;
+    if(!userId){
+      return res.status(400).json({
+        error:"Missing required data"
+      })
+    }
+    const userCourses = await prisma.enrollments.findMany({
+      where:{
+        user_id:parseInt(userId)
+      },
+      select:{
+        course_id: true,
+      }
+    })
+
+    const coursesIds = userCourses.map((course) => course.course_id);
+    const notifications = await prisma.notifications.findMany({
+      where:{
+        course_with_id: { in: coursesIds },
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+      select:{
+        notification_id:true,
+        message:true,
+        type:true,
+        created_at:true
+      }
+    })
+
+    if(notifications.length == 0 || !notifications){
+      return res.status(200).json([]);
+    }
+    return res.status(200).json({
+      data:notifications
+    })
+  }catch(error){
+    console.log(error);
+    return res.status(500).json({
+      error:"Internal server error"
+    })
+  }
+}

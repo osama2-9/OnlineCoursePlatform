@@ -5,44 +5,39 @@ import { Quizzes } from "../../components/learnre/Quizzes";
 import { useAuth } from "../../hooks/useAuth";
 import { LearnerLayout } from "../../layouts/LearnerLayout";
 import {
-  FaBook,
-  FaChartLine,
-  FaClock,
-  FaGraduationCap,
   FaRegClock,
+  FaBell,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
 import MyAssignments from "../../components/learnre/MyAssignments";
+import useGetLearnerNotifications from "../../hooks/useGetLearnerNotifications";
+import { Loader2 } from "lucide-react";
 
 export const LearnerDashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const { notifications, isLoading } = useGetLearnerNotifications();
 
-  const stats = [
-    {
-      title: "Courses in Progress",
-      value: "4",
-      icon: FaBook,
-      change: "+2 this month",
-    },
-    {
-      title: "Hours Learned",
-      value: "26",
-      icon: FaClock,
-      change: "+5 this week",
-    },
-    {
-      title: "Completed Courses",
-      value: "8",
-      icon: FaGraduationCap,
-      change: "+1 this month",
-    },
-    {
-      title: "Average Score",
-      value: "92%",
-      icon: FaChartLine,
-      change: "+3% improvement",
-    },
-  ];
+
+
+  const toggleNotifications = () => {
+    setNotificationsOpen(!notificationsOpen);
+  };
+
+  const getNotificationIcon = (type: any) => {
+    switch (type) {
+      case "ASSIGNMENT_NEW":
+        return <FaBell className="text-blue-500" />;
+      case "QUIZ_NEW":
+        return <FaBell className="text-blue-500" />;
+      case "ASSIGNMENT_DEADLINE":
+        return <FaBell className="text-blue-500" />;
+      default:
+        return <FaBell className="text-gray-500" />;
+    }
+  };
 
   return (
     <LearnerLayout>
@@ -66,35 +61,80 @@ export const LearnerDashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          {stats.map((stat, index) => (
-            <div key={index} className="bg-white p-6 rounded-xl shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <stat.icon className="w-6 h-6 text-gray-700" />
-                </div>
-                <span className="text-sm text-gray-500">{stat.change}</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                {stat.value}
-              </h3>
-              <p className="text-sm text-gray-600">{stat.title}</p>
+
+        <div className="bg-white rounded-xl shadow-sm mb-6 overflow-hidden">
+          <div
+            className="flex items-center justify-between p-4 cursor-pointer border-b"
+            onClick={toggleNotifications}
+          >
+            <div className="flex items-center space-x-2">
+              <FaBell className="text-gray-700" />
+              <h2 className="font-semibold text-gray-900">Recent Updates</h2>
+              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                {notifications.filter((notification) => new Date(notification.created_at).getDay() == new Date().getDay()).length} notifications
+              </span>
             </div>
-          ))}
+            {notificationsOpen ? (
+              <FaChevronUp className="text-gray-600" />
+            ) : (
+              <FaChevronDown className="text-gray-600" />
+            )}
+          </div>
+
+          {notificationsOpen && (
+            <div className="divide-y divide-gray-100">
+              {isLoading ? (<>
+                <div className="flex items-center justify-center p-4">
+                  <Loader2 className="text-orange-600 animate-spin" size={20} />
+                </div>
+              </>)
+                : (<>
+                  {notifications.map((notification, index) => (
+                    <div
+                      key={index}
+                      className={`p-4 flex items-start space-x-4 ${new Date(notification.created_at).getDay() == new Date().getDay() ? "bg-blue-50" : ""
+                        }`}
+                    >
+                      <div className="p-2 bg-gray-50 rounded-lg">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <p className="text-gray-900">{notification.message}</p>
+                          <span className="text-sm text-gray-500">
+                            {new Date(notification.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {new Date(notification.created_at) == new Date() && (
+                          <span className="text-xs font-medium text-blue-600">
+                            New
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}</>)}
+
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="border-b border-gray-200">
             <nav className="flex">
-              {["overview", "courses", "quizzes", "payments" ,'assignments'].map((tab) => (
+              {[
+                "overview",
+                "courses",
+                "quizzes",
+                "payments",
+                "assignments",
+              ].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-4 text-sm font-medium transition-colors relative ${
-                    activeTab === tab
-                      ? "text-gray-900"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-6 py-4 text-sm font-medium transition-colors relative ${activeTab === tab
+                    ? "text-gray-900"
+                    : "text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   {activeTab === tab && (

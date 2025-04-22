@@ -1,1 +1,1 @@
-export const API = `${"https://ocp-api.vercel.app/api"}`;
+export const API = import.meta.env.VITE_BASE_API_URL;

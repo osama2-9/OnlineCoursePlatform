@@ -590,9 +590,17 @@ export const createQuiz = async (req, res) => {
         error: "Feild to create this quiz",
       });
     }
+    try {
+      await newQuizNotification(courseId);
+    } catch (notificationError) {
+      console.error("Failed to send quiz notification:", notificationError);
+    }
     return res.status(201).json({
       message: "Quiz created successfully",
     });
+
+
+    
   } catch (error) {
     console.log(error);
     return res.status(500).json({
