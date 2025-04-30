@@ -117,6 +117,9 @@ export const UpdateUser: React.FC<UpdateModalProps> = ({
                 <option value="learner">Learner</option>
                 <option value="instructor">Instructor</option>
                 <option value="admin">Admin</option>
+                <option value="moderator">Moderator</option>
+                <option value="support">Support</option>
+
               </select>
             </div>
 

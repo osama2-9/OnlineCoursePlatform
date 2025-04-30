@@ -10,9 +10,11 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiCheckCircle,
+  FiHelpCircle,
 } from "react-icons/fi";
 import { ClipLoader } from "react-spinners";
 import axios from "axios";
+import { Loader2 } from "lucide-react";
 
 interface QuizPageInterface {
   quiz: {
@@ -233,7 +235,7 @@ export const QuizPage = () => {
 
       queryClient.removeQueries({ queryKey: ["quiz", quizId] });
 
-      navigate("/quiz-completed");
+      navigate("/learner/dashboard");
     },
     onError: (error: any) => {
       console.error(error);
@@ -375,8 +377,8 @@ export const QuizPage = () => {
   };
 
   const getTimeColor = () => {
-    if (timeLeft < 60) return "text-red-600";
-    if (timeLeft < 300) return "text-amber-600";
+    if (timeLeft < 60) return "text-red-500";
+    if (timeLeft < 300) return "text-amber-500";
     return "text-gray-700";
   };
 
@@ -385,257 +387,308 @@ export const QuizPage = () => {
     (answeredCount / pagination.totalQuestions) * 100
   );
 
+  if (isQuestionsLoading) {
+    return (<>
+
+      <div className="flex justify-center items-center h-screen">
+        <div className="flex flex-col items-center">
+          <Loader2 className="animate-spin text-blue-500" size={24} />
+          <p className="mt-2 text-gray-600">Loading questions...</p>
+        </div>
+      </div>
+
+
+
+    </>)
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-        <div className="p-4 md:p-6 bg-gray-100 border-b border-gray-200">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-800">
-                {quizTitle}
-              </h1>
-              <div className="mt-2 text-sm text-gray-600">
-                <span>
-                  {answeredCount} of {pagination.totalQuestions} questions
-                  answered
-                </span>
-                <div className="w-full h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
+    <>
+
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+          <div className="p-6 bg-white border-b border-gray-100">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold text-gray-800">{quizTitle}</h1>
+                <div className="mt-2 flex items-center text-sm text-gray-600">
+                  <span className="flex items-center">
+                    <FiCheckCircle className="mr-2 h-4 w-4 text-blue-500" />
+                    {answeredCount} of {pagination.totalQuestions} questions answered
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-gray-100 rounded-full mt-3 overflow-hidden">
                   <div
-                    className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                    className="h-full bg-blue-500 rounded-full transition-all duration-300"
                     style={{ width: `${progressPercentage}%` }}
                   ></div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 bg-gray-200 px-4 py-2 rounded-md">
-              <FiClock className={`h-5 w-5 ${getTimeColor()}`} />
-              <span className={`text-lg font-medium ${getTimeColor()}`}>
-                {formatTime(timeLeft)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {isQuestionsLoading || submitQuizMutation.isPending ? (
-          <div className="flex items-center justify-center p-12">
-            <ClipLoader size={40} color="#4B5563" />
-            <span className="ml-3 text-gray-600">
-              {submitQuizMutation.isPending
-                ? "Submitting your answers..."
-                : "Loading questions..."}
-            </span>
-          </div>
-        ) : (
-          <div className="flex flex-col lg:flex-row p-4 md:p-6 gap-6">
-            <div className="lg:w-1/4">
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 sticky top-6">
-                <h2 className="text-sm font-medium text-gray-700 mb-3">
-                  Questions ({pagination.totalQuestions})
-                </h2>
-                <div className="grid grid-cols-5 lg:grid-cols-3 gap-2">
-                  {Array.from({ length: pagination.totalQuestions }, (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleQuestionNavigation(i)}
-                      className={`relative h-8 rounded-md flex items-center justify-center text-sm transition-colors
-                          ${
-                            currentQuestionIndex === i
-                              ? "bg-blue-600 text-white"
-                              : selectedAnswers[i + 1]
-                              ? "bg-blue-100 text-blue-700 border border-blue-300"
-                              : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-300"
-                          }`}
-                    >
-                      {i + 1}
-                      {selectedAnswers[i + 1] && (
-                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></span>
-                      )}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex items-center gap-3 bg-blue-50 px-5 py-3 rounded-lg shadow-sm">
+                <FiClock className={`h-5 w-5 ${getTimeColor()}`} />
+                <span className={`text-xl font-semibold ${getTimeColor()}`}>
+                  {formatTime(timeLeft)}
+                </span>
               </div>
             </div>
+          </div>
 
-            <div className="lg:w-3/4 space-y-6">
-              {questions.map((question, index) => (
-                <div
-                  id={`question-${question.question_id}`}
-                  key={question.question_id}
-                  className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm transition-all hover:shadow-md"
-                >
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-blue-800">
-                          {currentQuestionIndex + index + 1}
-                        </span>
-                      </div>
+          {isQuestionsLoading || submitQuizMutation.isPending ? (
+            <div className="flex flex-col items-center justify-center p-16">
+              <Loader2 size={30} color="#3B82F6" className="animate-spin" />
+              <span className="mt-4 text-gray-600 font-medium">
+                {submitQuizMutation.isPending
+                  ? "Submitting your answers..."
+                  : "Loading questions..."}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col lg:flex-row gap-8 p-6">
+              <div className="lg:w-1/4 order-2 lg:order-1">
+                <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm sticky top-6">
+                  <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center">
+                    <span className="w-2 h-5 bg-blue-500 rounded-sm mr-2"></span>
+                    Questions Navigator
+                  </h2>
+                  <div className="grid grid-cols-5 md:grid-cols-4 lg:grid-cols-3 gap-2">
+                    {Array.from({ length: pagination.totalQuestions }, (_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleQuestionNavigation(i)}
+                        className={`relative h-10 w-10 rounded-md flex items-center justify-center text-sm font-medium transition-all duration-200
+                          ${currentQuestionIndex === i
+                            ? "bg-blue-600 text-white shadow-md"
+                            : selectedAnswers[i + 1]
+                              ? "bg-blue-50 text-blue-600 border border-blue-200"
+                              : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                          }`}
+                      >
+                        {i + 1}
+                        {selectedAnswers[i + 1] && (
+                          <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+                      <span>Quiz Progress</span>
+                      <span className="font-medium">{progressPercentage}%</span>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="prose max-w-none text-gray-800">
-                          <ReactMarkdown>
-                            {question.question_text}
-                          </ReactMarkdown>
-                        </div>
-                        <span className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-md font-medium">
-                          {question.marks}{" "}
-                          {question.marks === 1 ? "point" : "points"}
-                        </span>
-                      </div>
-
-                      {question.question_type === "mcq" && (
-                        <div className="space-y-2 mt-4">
-                          {question.choices.map((choice) => (
-                            <label
-                              key={choice.choice_id}
-                              className={`flex items-center p-3 rounded-md cursor-pointer transition-all
-                              ${
-                                selectedAnswers[question.question_id]
-                                  ?.answer_id === choice.choice_id
-                                  ? "bg-blue-50 border border-blue-300 shadow-sm"
-                                  : "hover:bg-gray-50 border border-gray-200"
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name={`question-${question.question_id}`}
-                                className="form-radio h-4 w-4 text-blue-600 border-gray-400 focus:ring-blue-500"
-                                checked={
-                                  selectedAnswers[question.question_id]
-                                    ?.answer_id === choice.choice_id
-                                }
-                                onChange={() =>
-                                  handleAnswerSelect(
-                                    question.question_id,
-                                    choice.choice_id,
-                                    choice.choice_text
-                                  )
-                                }
-                              />
-                              <span className="ml-3 text-gray-700">
-                                {choice.choice_text}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-
-                      {question.question_type === "truefalse" && (
-                        <div className="grid grid-cols-2 gap-3 mt-4">
-                          {["True", "False"].map((option, i) => (
-                            <label
-                              key={i}
-                              className={`flex items-center justify-center p-3 rounded-md cursor-pointer transition-all
-                              ${
-                                selectedAnswers[question.question_id]
-                                  ?.answer_text === option
-                                  ? "bg-blue-50 border border-blue-300 shadow-sm"
-                                  : "hover:bg-gray-50 border border-gray-200"
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name={`question-${question.question_id}`}
-                                className="form-radio h-4 w-4 text-blue-600 border-gray-400 focus:ring-blue-500"
-                                checked={
-                                  selectedAnswers[question.question_id]
-                                    ?.answer_text === option
-                                }
-                                onChange={() =>
-                                  handleAnswerSelect(
-                                    question.question_id,
-                                    i,
-                                    option
-                                  )
-                                }
-                              />
-                              <span className="ml-2 text-gray-700 font-medium">
-                                {option}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-
-                      {question.question_type === "text" && (
-                        <div className="relative mt-4">
-                          <textarea
-                            className="w-full p-3 bg-gray-50 rounded-md focus:ring-2 focus:ring-blue-400 focus:outline-none
-                              border border-gray-300 placeholder-gray-400 text-gray-700"
-                            rows={4}
-                            placeholder="Type your answer here..."
-                            value={
-                              selectedAnswers[question.question_id]
-                                ?.answer_text || ""
-                            }
-                            onChange={(e) =>
-                              handleAnswerSelect(
-                                question.question_id,
-                                undefined,
-                                e.target.value
-                              )
-                            }
-                          />
-                          {selectedAnswers[question.question_id]
-                            ?.answer_text && (
-                            <FiCheckCircle className="absolute bottom-3 right-3 h-5 w-5 text-green-500" />
-                          )}
-                        </div>
-                      )}
+                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                        style={{ width: `${progressPercentage}%` }}
+                      ></div>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
 
-              <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 sticky bottom-0 bg-white p-4 border-t border-gray-200 rounded-b-lg shadow-md">
-                <button
-                  onClick={handlePreviousQuestion}
-                  disabled={pagination.currentPage === 1}
-                  className="flex items-center gap-2 px-5 py-2 bg-white text-gray-700 rounded-md
-                    disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors
-                    border border-gray-300 text-sm font-medium"
-                >
-                  <FiChevronLeft className="h-4 w-4" />
-                  Previous
-                </button>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  {pagination.currentPage < pagination.totalPages && (
-                    <button
-                      onClick={handleNextQuestion}
-                      className="flex items-center gap-2 px-5 py-2 bg-white text-gray-700 rounded-md
-                        hover:bg-gray-50 transition-colors border border-gray-300 text-sm font-medium"
-                    >
-                      Next
-                      <FiChevronRight className="h-4 w-4" />
-                    </button>
-                  )}
-
-                  <button
-                    onClick={handleSubmitQuiz}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
-                      transition-colors shadow-sm text-sm font-medium flex items-center justify-center gap-2"
-                    disabled={submitQuizMutation.isPending}
+              <div className="lg:w-3/4 order-1 lg:order-2 space-y-8">
+                {questions.map((question, index) => (
+                  <div
+                    id={`question-${question.question_id}`}
+                    key={question.question_id}
+                    className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm transition-all hover:shadow-md"
                   >
-                    {submitQuizMutation.isPending ? (
-                      <>
-                        <ClipLoader size={18} color="#FFFFFF" />
-                        <span>Submitting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FiCheckCircle className="h-4 w-4" />
-                        Submit Quiz
-                      </>
-                    )}
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center shadow-sm">
+                          <span className="text-base font-semibold text-blue-600">
+                            {index + 1}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="prose max-w-none text-gray-800">
+                            <ReactMarkdown>
+                              {question.question_text}
+                            </ReactMarkdown>
+                          </div>
+                          <span className="bg-blue-50 text-blue-600 text-xs px-3 py-1.5 rounded-full font-medium ml-4 whitespace-nowrap">
+                            {question.marks} {question.marks === 1 ? "point" : "points"}
+                          </span>
+                        </div>
+
+                        {question.question_type === "mcq" && (
+                          <div className="space-y-3 mt-5">
+                            {question.choices.map((choice) => (
+                              <label
+                                key={choice.choice_id}
+                                className={`flex items-center p-4 rounded-lg cursor-pointer transition-all
+                                ${selectedAnswers[question.question_id]
+                                    ?.answer_id === choice.choice_id
+                                    ? "bg-blue-50 border border-blue-200 shadow-sm"
+                                    : "hover:bg-gray-50 border border-gray-100 hover:border-gray-200"
+                                  }`}
+                              >
+                                <div className={`w-5 h-5 flex items-center justify-center rounded-full border ${selectedAnswers[question.question_id]?.answer_id === choice.choice_id
+                                  ? "border-blue-500"
+                                  : "border-gray-300"
+                                  }`}>
+                                  {selectedAnswers[question.question_id]?.answer_id === choice.choice_id && (
+                                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                  )}
+                                </div>
+                                <input
+                                  type="radio"
+                                  name={`question-${question.question_id}`}
+                                  className="sr-only"
+                                  checked={
+                                    selectedAnswers[question.question_id]
+                                      ?.answer_id === choice.choice_id
+                                  }
+                                  onChange={() =>
+                                    handleAnswerSelect(
+                                      question.question_id,
+                                      choice.choice_id,
+                                      choice.choice_text
+                                    )
+                                  }
+                                />
+                                <span className="ml-3 text-gray-700">
+                                  {choice.choice_text}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+
+                        {question.question_type === "truefalse" && (
+                          <div className="grid grid-cols-2 gap-4 mt-5">
+                            {["True", "False"].map((option, i) => (
+                              <label
+                                key={i}
+                                className={`flex items-center justify-center p-4 rounded-lg cursor-pointer transition-all
+                              ${selectedAnswers[question.question_id]
+                                    ?.answer_text === option
+                                    ? "bg-blue-50 border border-blue-200 shadow-sm"
+                                    : "hover:bg-gray-50 border border-gray-100 hover:border-gray-200"
+                                  }`}
+                              >
+                                <div className={`w-5 h-5 flex items-center justify-center rounded-full border ${selectedAnswers[question.question_id]?.answer_text === option
+                                  ? "border-blue-500"
+                                  : "border-gray-300"
+                                  }`}>
+                                  {selectedAnswers[question.question_id]?.answer_text === option && (
+                                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                  )}
+                                </div>
+                                <input
+                                  type="radio"
+                                  name={`question-${question.question_id}`}
+                                  className="sr-only"
+                                  checked={
+                                    selectedAnswers[question.question_id]
+                                      ?.answer_text === option
+                                  }
+                                  onChange={() =>
+                                    handleAnswerSelect(
+                                      question.question_id,
+                                      i,
+                                      option
+                                    )
+                                  }
+                                />
+                                <span className="ml-3 text-gray-700 font-medium">
+                                  {option}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+
+                        {question.question_type === "text" && (
+                          <div className="relative mt-5">
+                            <textarea
+                              className="w-full p-4 bg-gray-50 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none
+                            border border-gray-200 placeholder-gray-400 text-gray-700"
+                              rows={4}
+                              placeholder="Type your answer here..."
+                              value={
+                                selectedAnswers[question.question_id]
+                                  ?.answer_text || ""
+                              }
+                              onChange={(e) =>
+                                handleAnswerSelect(
+                                  question.question_id,
+                                  undefined,
+                                  e.target.value
+                                )
+                              }
+                            />
+                            {selectedAnswers[question.question_id]
+                              ?.answer_text && (
+                                <div className="absolute bottom-3 right-3 bg-green-50 text-green-600 rounded-full p-1">
+                                  <FiCheckCircle className="h-5 w-5" />
+                                </div>
+                              )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8 sticky bottom-0 bg-white p-6 border-t border-gray-100 rounded-lg shadow-lg z-10">
+                  <button
+                    onClick={handlePreviousQuestion}
+                    disabled={pagination.currentPage === 1}
+                    className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg
+                    transition-colors text-sm font-medium 
+                    ${pagination.currentPage === 1
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"}`}
+                  >
+                    <FiChevronLeft className="h-4 w-4" />
+                    Previous
                   </button>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {pagination.currentPage < pagination.totalPages && (
+                      <button
+                        onClick={handleNextQuestion}
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-lg
+                    hover:bg-gray-50 transition-colors border border-gray-200 hover:border-gray-300 text-sm font-medium"
+                      >
+                        Next
+                        <FiChevronRight className="h-4 w-4" />
+                      </button>
+                    )}
+
+                    <button
+                      onClick={handleSubmitQuiz}
+                      className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                      transition-colors shadow-md text-sm font-medium flex items-center justify-center gap-2"
+                      disabled={submitQuizMutation.isPending}
+                    >
+                      {submitQuizMutation.isPending ? (
+                        <>
+                          <ClipLoader size={18} color="#FFFFFF" />
+                          <span>Submitting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FiCheckCircle className="h-4 w-4" />
+                          Submit Quiz
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
+          )}
+
+          <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-center text-sm text-gray-500">
+            <FiHelpCircle className="h-4 w-4 mr-2" />
+            <span>Need help? Use the question navigator to move between questions</span>
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };

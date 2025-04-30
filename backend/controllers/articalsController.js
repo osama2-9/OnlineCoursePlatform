@@ -195,11 +195,23 @@ export const createArtical = async (req, res) => {
         timeout: 60000,
       }
     );
-
-    return res.status(201).json({
-      message: "Article created successfully",
-      article: newArticle,
-    });
+    if (newArticle) {
+      const newArticleApproveRequest = await prisma.articleApporvel.create({
+        data: {
+          article_id: newArticle.article_id,
+          status: "pending",
+        }
+      });
+      if (newArticleApproveRequest) {
+        return res.status(201).json({
+          message: "New article added to your course please wait to be approved",
+        });
+      }
+    } else {
+      return res.status(400).json({
+        error: "Error while trying to add article",
+      });
+    }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -349,6 +361,7 @@ export const getArticles = async (req, res) => {
       : {};
 
     const where = {
+      is_article_approved: true,
       ...categoryFilter,
       ...tagFilter,
       ...searchFilter,

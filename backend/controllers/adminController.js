@@ -1,14 +1,17 @@
+import { sendNewAccountEmail } from "../emails/WelcomeEmail.js";
 import { prisma } from "../prisma/prismaClint.js";
-import bcrypt from "bcryptjs";
+import { passwordGenerator } from "../services/passwordGenerator.js";
 
 export const createNewUser = async (req, res) => {
   try {
-    const { full_name, email, password_hash, role } = req.body;
-    if (!full_name || !email || !password_hash || !role) {
+    const { full_name, email, role } = req.body;
+    if (!full_name || !email || !role) {
       return res.status(400).json({
         error: "Please fill all feilds",
       });
     }
+  const {hashedPassword ,rawPassword} = await passwordGenerator()
+
     const findSameEmail = await prisma.users.findUnique({
       where: { email: email },
     });
@@ -18,12 +21,11 @@ export const createNewUser = async (req, res) => {
       });
     }
 
-    const passwordHash = await bcrypt.hash(password_hash, 10);
     const newUser = await prisma.users.create({
       data: {
         full_name: full_name,
         email: email,
-        password_hash: passwordHash,
+        password_hash: hashedPassword,
         role: role,
       },
     });
@@ -33,10 +35,18 @@ export const createNewUser = async (req, res) => {
         error: "error while try to add new user",
       });
     }
+    const loginUrl = `https://uplearn-website.vercel.app/login`
+    try {
+      await sendNewAccountEmail(email, loginUrl, rawPassword)
+    } catch (emailerror) {
+      console.log(emailerror)
+    }
 
     return res.status(201).json({
-      messaeg: "New user created successfully",
+      message: "New user created successfully",
     });
+
+
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -104,11 +114,30 @@ export const deleteUser = async (req, res) => {
       });
     }
 
+    await prisma.article.deleteMany({
+      where: {
+        user_id: userId,
+      },
+    })
+
+    await prisma.enrollments.deleteMany({
+      where: {
+        user_id: userId,
+      },
+    })
+
+    await prisma.payments.deleteMany({
+      where: {
+        user_id: userId,
+      },
+    })
+
     const deleteUser = await prisma.users.delete({
       where: {
         user_id: userId,
       },
     });
+
 
     if (!deleteUser) {
       return res.status(400).json({
@@ -382,7 +411,7 @@ export const searchAboutUser = async (req, res) => {
       success: true,
       data: user
     });
-    
+
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -691,11 +720,11 @@ export const getAnalystics = async (req, res) => {
       rating:
         course.reviews.length > 0
           ? parseFloat(
-              (
-                course.reviews.reduce((acc, rev) => acc + rev.rating, 0) /
-                course.reviews.length
-              ).toFixed(1)
-            )
+            (
+              course.reviews.reduce((acc, rev) => acc + rev.rating, 0) /
+              course.reviews.length
+            ).toFixed(1)
+          )
           : 0,
     }));
 

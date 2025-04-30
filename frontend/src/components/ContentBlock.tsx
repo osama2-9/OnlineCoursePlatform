@@ -27,10 +27,11 @@ interface ContentBlock {
 }
 
 export const ContentBlock: React.FC<{ block: ContentBlock }> = ({ block }) => {
+  if(!block)return null
   switch (block.block_type) {
     case "HEADING":
       return (
-        <h2 className="text-2xl font-bold mt-8 mb-4 text-gray-800">
+        <h2 id={`H-${block.content}`} className="text-2xl font-bold mt-8 mb-4 text-gray-800">
           {block.content}
         </h2>
       );

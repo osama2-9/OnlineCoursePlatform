@@ -10,7 +10,7 @@ datasource db {
 model Users {
   user_id                    Int       @id @default(autoincrement())
   full_name                  String
-  password_hash              String?   // Made optional for OAuth users
+  password_hash              String?   
   email                      String    @unique
   role                       Role      @default(learner)
   created_at                 DateTime  @default(now())
@@ -39,7 +39,6 @@ model Users {
   payments      Payments[]
   reviews       Reviews[]
   comments      Comment[]
-  subscriptions Subscriptions[]
   attempts      Attempt[]
   userProgress  UserProgress[]
   likes         Like[]
@@ -137,6 +136,7 @@ model Article {
   created_at       DateTime        @default(now())
   updated_at       DateTime        @updatedAt
   deleted_at       DateTime?
+  is_article_approved Boolean @default(false)
 
   author           Users           @relation(fields: [author_id], references: [user_id])
   comments         Comment[]
@@ -150,6 +150,7 @@ model Article {
   @@index([slug], type: Hash)
   @@index([published_at])
   @@map("articles")
+  article_approvel ArticleApporvel[]
 }
 
 model Category {
@@ -168,6 +169,7 @@ enum ContentStatus {
   archived
   deleted
 }
+
 
 model Comment {
   comment_id     Int            @id @default(autoincrement())
@@ -252,6 +254,7 @@ enum Role {
   admin
   instructor
   support
+  moderator
 }
 
 model Lessons {
@@ -262,6 +265,7 @@ model Lessons {
   description  String
   video_url    String
   attachment   String?
+  is_lesson_approved Boolean @default(false)
   is_free      Boolean  @default(false)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
@@ -269,8 +273,40 @@ model Lessons {
 
   course       Courses        @relation(fields: [course_id], references: [course_id])
   userProgress UserProgress[]
+  lessonsApprovel LessonsApprovel[]
+  
 
   @@map("lessons")
+}
+
+enum ApprovelStatus{
+  pending
+  approved
+  rejected
+}
+
+model LessonsApprovel{
+  lessoon_approvel_id Int @id @default(autoincrement())
+  lesson_id Int
+  approved_by Int?
+  apporval_date DateTime? 
+  status ApprovelStatus @default(pending)
+  reason String?
+  lesson Lessons @relation(fields: [lesson_id], references: [lesson_id])
+  @@map("lessons_approvel")
+
+}
+
+model ArticleApporvel{
+  article_approvel_id Int @id @default(autoincrement())
+  article_id Int
+  approved_by Int?
+  apporval_date DateTime? 
+  reason String?
+  status ApprovelStatus @default(pending)
+  article Article @relation(fields: [article_id], references: [article_id])
+  @@map("articles_approvel")
+
 }
 
 model UserProgress {
@@ -340,27 +376,6 @@ enum EnrollmentStatus {
   completed
   dropped
 }
-
-model Subscriptions {
-  subscription_id        Int                @id @default(autoincrement())
-  user_id                Int
-  stripe_subscription_id String
-  status                 SubscriptionStatus @default(active)
-  start_date             DateTime           @default(now())
-  next_billing_date      DateTime
-  amount                 Float
-
-  user Users @relation(fields: [user_id], references: [user_id])
-
-  @@map("subscriptions")
-}
-
-enum SubscriptionStatus {
-  active
-  inactive
-  canceled
-}
-
 model Reviews {
   review_id   Int      @id @default(autoincrement())
   user_id     Int

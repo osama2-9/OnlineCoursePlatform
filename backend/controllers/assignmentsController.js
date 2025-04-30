@@ -1,14 +1,40 @@
 import { prisma } from "../prisma/prismaClint.js";
 import { newAssignmentNotification } from "../services/notifications.js";
+import { scheduleAssignmentReminder } from "../services/schedule.js";
+
+export async function getAssignmentesDeadlineDate(courseId) {
+  try {
+    if (!courseId) {
+      throw new Error("No course Id found");
+    }
+    const dates = await prisma.assignments.findFirst({
+      where: {
+        course_id: courseId,
+      },
+      select: {
+        end_date: true,
+      },
+      orderBy: {
+        end_date: "asc",
+      },
+    });
+    if (!dates) {
+      throw new Error("Error fetching courses");
+    }
+    return dates.end_date;
+  } catch (error) {
+    throw new Error("error while get creation date");
+  }
+}
 
 const isCourseAssigndToInstructor = async (course_id, instructor_id) => {
   try {
     const course = await prisma.courses.findUnique({
       where: {
         course_id: course_id,
-        instructor_id: instructor_id
-      }
-    })
+        instructor_id: instructor_id,
+      },
+    });
     if (!course) {
       return false;
     }
@@ -17,22 +43,41 @@ const isCourseAssigndToInstructor = async (course_id, instructor_id) => {
     console.log(error);
     return false;
   }
-}
+};
 
 export const createAssignment = async (req, res) => {
   try {
-    const { course_id, instructor_id, title, description, start_date, end_date, points } = req.body;
-    
-    if (!course_id || !instructor_id || !title || !description || !start_date || !end_date || !points) {
+    const {
+      course_id,
+      instructor_id,
+      title,
+      description,
+      start_date,
+      end_date,
+      points,
+    } = req.body;
+
+    if (
+      !course_id ||
+      !instructor_id ||
+      !title ||
+      !description ||
+      !start_date ||
+      !end_date ||
+      !points
+    ) {
       return res.status(400).json({ message: "Please fill all inputs" });
     }
-    
-    const isCourseAssigndToInstructorResult = await isCourseAssigndToInstructor(course_id, instructor_id);
-    
+
+    const isCourseAssigndToInstructorResult = await isCourseAssigndToInstructor(
+      course_id,
+      instructor_id
+    );
+
     if (!isCourseAssigndToInstructorResult) {
       return res.status(400).json({ message: "You can't handle this course" });
     }
-    
+
     const newAssignment = await prisma.assignments.create({
       data: {
         course_id: Number(course_id),
@@ -41,42 +86,48 @@ export const createAssignment = async (req, res) => {
         description: description,
         start_date: new Date(start_date),
         end_date: new Date(end_date),
-        points: Number(points)
-      }
+        points: Number(points),
+      },
     });
-    
+
     if (!newAssignment) {
       return res.status(400).json({ message: "Failed to create assignment" });
     }
-    
+
+    if (newAssignment) {
+      await scheduleAssignmentReminder(newAssignment.course_id);
+    }
     res.status(201).json({ message: "Assignment created successfully" });
-    
+
     try {
       await newAssignmentNotification(course_id);
     } catch (notificationError) {
-      console.error("Failed to send assignment notification:", notificationError);
-    
+      console.error(
+        "Failed to send assignment notification:",
+        notificationError
+      );
     }
-    
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-
 export const getCourseAssignments = async (req, res) => {
   try {
     const { course_id, instructor_id } = req.query;
 
     if (!course_id || !instructor_id) {
-      return res.status(400).json({ message: "Missing course_id or instructor_id" });
+      return res
+        .status(400)
+        .json({ message: "Missing course_id or instructor_id" });
     }
 
     const courseIdInt = Number(course_id);
     const instructorIdInt = Number(instructor_id);
 
-    const isCourseAssignedToInstructorResult = await isCourseAssigndToInstructor(courseIdInt, instructorIdInt);
+    const isCourseAssignedToInstructorResult =
+      await isCourseAssigndToInstructor(courseIdInt, instructorIdInt);
     if (!isCourseAssignedToInstructorResult) {
       return res.status(400).json({ message: "You can't handle this course" });
     }
@@ -108,9 +159,9 @@ export const getCourseAssignments = async (req, res) => {
         },
         _count: {
           select: {
-            submissions: true
-          }
-        }
+            submissions: true,
+          },
+        },
       },
       skip: skip,
       take: limit,
@@ -169,318 +220,323 @@ export const getCourseAssignments = async (req, res) => {
 
 export const getLearnerAssignments = async (req, res) => {
   try {
-    const {userId} = req.query;
-    if(!userId){
+    const { userId } = req.query;
+    if (!userId) {
       return res.status(400).json({
-        message:"Missing user id"
-      })
+        message: "Missing user id",
+      });
     }
-    const userIdInt = parseInt(userId)
+    const userIdInt = parseInt(userId);
     const enrolledCourses = await prisma.enrollments.findMany({
-      where:{
-        user_id:userIdInt
-      }
-    })
+      where: {
+        user_id: userIdInt,
+      },
+    });
 
     const userCourses = await prisma.courses.findMany({
-     where:{
-      course_id:{
-        in:enrolledCourses.map((c) => c.course_id)
-      }
-     },
-   
-    })
-    
-    const assignments = await prisma.assignments.findMany({
-      where:{
-        course_id:{
-          in:userCourses.map((c) => c.course_id)
-        }
+      where: {
+        course_id: {
+          in: enrolledCourses.map((c) => c.course_id),
+        },
       },
-      include:{
-        course:{
-          select:{
-            course_id:true,
-            title:true
-          }
-        }
-      }
-    })
+    });
 
-    if(!assignments){
+    const assignments = await prisma.assignments.findMany({
+      where: {
+        course_id: {
+          in: userCourses.map((c) => c.course_id),
+        },
+      },
+      include: {
+        course: {
+          select: {
+            course_id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    if (!assignments) {
       return res.status(400).json({
-        message:"Failed to get assignments"
-      })
+        message: "Failed to get assignments",
+      });
     }
     return res.status(200).json({
-     data: assignments
-    })
+      data: assignments,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error:"Internal server error"
-    })
-    
-    
+      error: "Internal server error",
+    });
   }
-}
+};
 
 export const submitAssignment = async (req, res) => {
   try {
-    const {assignment_id, file_url, student_id} = req.body;
-    if(!assignment_id ||!file_url ||!student_id){
+    const { assignment_id, file_url, student_id } = req.body;
+    if (!assignment_id || !file_url || !student_id) {
       return res.status(400).json({
-        error:"Missing required fields"
-      })
+        error: "Missing required fields",
+      });
     }
     const findAssignment = await prisma.assignments.findUnique({
-      where:{
-        assignment_id: Number(assignment_id)
-      }
-    })
-    if(!findAssignment){
+      where: {
+        assignment_id: Number(assignment_id),
+      },
+    });
+    if (!findAssignment) {
       return res.status(400).json({
-        error:"Assignment not found"
-      })
+        error: "Assignment not found",
+      });
     }
     const findStudent = await prisma.users.findUnique({
-      where:{
-        user_id: Number(student_id)
-      }
-    })
-    if(!findStudent){
+      where: {
+        user_id: Number(student_id),
+      },
+    });
+    if (!findStudent) {
       return res.status(400).json({
-        error:"Student not found"
-      })
+        error: "Student not found",
+      });
     }
     const findSubmission = await prisma.assignmentSubmission.findFirst({
-      where:{
-        
-          assignment_id: Number(assignment_id),
-          student_id: Number(student_id)
-        
-      }
-    })
-    if(findSubmission){
-      return res.status(400).json({
-        error:"Assignment already submitted"
-      })
-    }
-    if(Date.now() > new Date(findAssignment.end_date).getTime()){
-      return res.status(400).json({
-        error:"Assignment submission deadline passed"
-      })
-    }
-    const newSubmission = await prisma.assignmentSubmission.create({
-      data:{
+      where: {
         assignment_id: Number(assignment_id),
         student_id: Number(student_id),
-        file_url: file_url
-      }
-    })
-    if(!newSubmission){
+      },
+    });
+    if (findSubmission) {
       return res.status(400).json({
-        error:"Failed to submit assignment"
-      })
+        error: "Assignment already submitted",
+      });
+    }
+    if (Date.now() > new Date(findAssignment.end_date).getTime()) {
+      return res.status(400).json({
+        error: "Assignment submission deadline passed",
+      });
+    }
+    const newSubmission = await prisma.assignmentSubmission.create({
+      data: {
+        assignment_id: Number(assignment_id),
+        student_id: Number(student_id),
+        file_url: file_url,
+      },
+    });
+    if (!newSubmission) {
+      return res.status(400).json({
+        error: "Failed to submit assignment",
+      });
     }
     return res.status(200).json({
-      message:"Assignment submitted successfully"
-    })
-
-
+      message: "Assignment submitted successfully",
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error:"Internal server error"
-    })
-    
-    
+      error: "Internal server error",
+    });
   }
-}
+};
 
 export const getLearnersSubmitedAssignment = async (req, res) => {
-  const {course_id,instructor_id ,assignment_id} = req.query;
-  if(!course_id || !instructor_id || !assignment_id){
+  const { course_id, instructor_id, assignment_id } = req.query;
+  if (!course_id || !instructor_id || !assignment_id) {
     return res.status(400).json({
-      error:"Missing required fields"
-    })
+      error: "Missing required fields",
+    });
   }
   const courseIdInt = Number(course_id);
   const instructorIdInt = Number(instructor_id);
   const assignmentIdInt = Number(assignment_id);
-  const isCourseAssignedToInstructorResult = await isCourseAssigndToInstructor(courseIdInt, instructorIdInt);
+  const isCourseAssignedToInstructorResult = await isCourseAssigndToInstructor(
+    courseIdInt,
+    instructorIdInt
+  );
   if (!isCourseAssignedToInstructorResult) {
     return res.status(400).json({
-      error: "You can't handle this course"
+      error: "You can't handle this course",
     });
   }
   const submissions = await prisma.assignmentSubmission.findMany({
-    where:{
-      assignment_id:assignmentIdInt
-      
+    where: {
+      assignment_id: assignmentIdInt,
     },
-    select:{
-     student:{
-      select:{
-        user_id:true,
-        full_name:true
+    select: {
+      student: {
+        select: {
+          user_id: true,
+          full_name: true,
+        },
+      },
 
-      }
-     },
-     
-      file_url:true,
-      submission_id:true,
-      submitted_at:true,
-      assignment_id:true,
-      grade:true,
-      assignment:{
-        select:{
+      file_url: true,
+      submission_id: true,
+      submitted_at: true,
+      assignment_id: true,
+      grade: true,
+      assignment: {
+        select: {
           assignment_id: true,
           start_date: true,
           points: true,
-          end_date:true,
-          title:true,
-        
-        }
-      }
+          end_date: true,
+          title: true,
+        },
+      },
     },
-    orderBy:{
-      submitted_at:"desc"
-    }
-  })
+    orderBy: {
+      submitted_at: "desc",
+    },
+  });
 
-  if(!submissions){
+  if (!submissions) {
     return res.status(400).json({
-      error:"Failed to get submissions"
-    })
+      error: "Failed to get submissions",
+    });
   }
   return res.status(200).json({
-    submissions
-  })  
-  
-}
+    submissions,
+  });
+};
 
 export const submitReview = async (req, res) => {
-  const { assignment_id , submission_id, grade, feedback, instructor_id } = req.body;
-  if (!assignment_id || !submission_id || !grade  || !instructor_id) {
+  const { assignment_id, submission_id, grade, feedback, instructor_id } =
+    req.body;
+  if (!assignment_id || !submission_id || !grade || !instructor_id) {
     return res.status(400).json({
-      error: "Missing required fields"
+      error: "Missing required fields",
     });
   }
   const submission = await prisma.assignmentSubmission.findUnique({
     where: {
-      submission_id: Number(submission_id)
-    }
+      submission_id: Number(submission_id),
+    },
   });
   if (!submission) {
     return res.status(400).json({
-      error: "Submission not found"
+      error: "Submission not found",
     });
   }
   const updatedSubmission = await prisma.assignmentSubmission.update({
     where: {
-      submission_id: Number(submission_id)
+      submission_id: Number(submission_id),
     },
     data: {
       grade: Number(grade),
-      feedback: feedback
-    }
+      feedback: feedback,
+    },
   });
   if (!updatedSubmission) {
     return res.status(400).json({
-      error: "Failed to submit review"
+      error: "Failed to submit review",
     });
   }
   return res.status(200).json({
-    message: "Review submitted successfully"
+    message: "Review submitted successfully",
   });
 };
 
 export const deleteAssignment = async (req, res) => {
   const { assignment_id } = req.params;
-  const {course_id , instructor_id} = req.query;
+  const { course_id, instructor_id } = req.query;
   const courseIdInt = Number(course_id);
   const instructorIdInt = Number(instructor_id);
   if (!assignment_id || !course_id || !instructor_id) {
     return res.status(400).json({
-      error: "Missing required fields"
+      error: "Missing required fields",
     });
   }
-  const isCourseAssignedToInstructorResult = await isCourseAssigndToInstructor(courseIdInt, instructorIdInt);
+  const isCourseAssignedToInstructorResult = await isCourseAssigndToInstructor(
+    courseIdInt,
+    instructorIdInt
+  );
   if (!isCourseAssignedToInstructorResult) {
     return res.status(400).json({
-      error: "You can't handle this course"
+      error: "You can't handle this course",
     });
   }
   const assignment = await prisma.assignments.findUnique({
     where: {
-      assignment_id: Number(assignment_id)
-    }
+      assignment_id: Number(assignment_id),
+    },
   });
   if (!assignment) {
     return res.status(400).json({
-      error: "Assignment not found"
+      error: "Assignment not found",
     });
   }
   const deletedAssignment = await prisma.assignments.delete({
     where: {
-      assignment_id: Number(assignment_id)
-    }
+      assignment_id: Number(assignment_id),
+    },
   });
   if (!deletedAssignment) {
     return res.status(400).json({
-      error: "Failed to delete assignment"
+      error: "Failed to delete assignment",
     });
   }
   return res.status(200).json({
-    message: "Assignment deleted successfully"
+    message: "Assignment deleted successfully",
   });
-}
+};
 
 export const updateAssignment = async (req, res) => {
-  const {assignment_id} = req.params;
-  const {title , description , start_date , end_date , points ,instructor_id ,course_id} = req.body;
+  const { assignment_id } = req.params;
+  const {
+    title,
+    description,
+    start_date,
+    end_date,
+    points,
+    instructor_id,
+    course_id,
+  } = req.body;
   const courseIdInt = Number(course_id);
   const instructorIdInt = Number(instructor_id);
   if (!assignment_id || !course_id || !instructor_id) {
     return res.status(400).json({
-      error: "Missing required fields"
+      error: "Missing required fields",
     });
   }
-  const isCourseAssignedToInstructorResult = await isCourseAssigndToInstructor(courseIdInt, instructorIdInt);
+  const isCourseAssignedToInstructorResult = await isCourseAssigndToInstructor(
+    courseIdInt,
+    instructorIdInt
+  );
   if (!isCourseAssignedToInstructorResult) {
     return res.status(400).json({
-      error: "You can't handle this course"
+      error: "You can't handle this course",
     });
   }
   const assignment = await prisma.assignments.findUnique({
     where: {
-      assignment_id: Number(assignment_id)
-    }
+      assignment_id: Number(assignment_id),
+    },
   });
   if (!assignment) {
     return res.status(400).json({
-      error: "Assignment not found"
+      error: "Assignment not found",
     });
   }
   const updatedAssignment = await prisma.assignments.update({
     where: {
-      assignment_id: Number(assignment_id)
+      assignment_id: Number(assignment_id),
     },
     data: {
       title: title,
       description: description,
       start_date: new Date(start_date),
       end_date: new Date(end_date),
-      points: Number(points)
-    }
+      points: Number(points),
+    },
   });
   if (!updatedAssignment) {
     return res.status(400).json({
-      error: "Failed to update assignment"
+      error: "Failed to update assignment",
     });
   }
   return res.status(200).json({
-    message: "Assignment updated successfully"
+    message: "Assignment updated successfully",
   });
-}
+};

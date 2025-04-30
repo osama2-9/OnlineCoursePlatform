@@ -674,7 +674,7 @@ const CreateArticel = () => {
                     {article.featured_image && (
                       <div className="mt-2 border rounded-md p-2 bg-gray-50">
                         <img
-                          src="/api/placeholder/400/200"
+                          src={article.featured_image}
                           alt="Featured image preview"
                           className="w-full h-auto rounded"
                         />
@@ -916,7 +916,7 @@ const CreateArticel = () => {
                         color="#FFFFFF"
                       />
                     ) : (
-                      "Publish Article"
+                      "Create Article"
                     )}
                   </button>
                 </div>

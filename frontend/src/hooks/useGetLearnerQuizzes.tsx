@@ -48,16 +48,16 @@ export const useGetLearnerQuizzes = () => {
   };
 
   useEffect(() => {
-  qureyClinet.prefetchQuery({
-    queryKey: ["userquizzes"],
-    queryFn: getQuizzes,
-    staleTime: 12 *60* 60 * 1000, 
-    retry: 2,
-  })
+    qureyClinet.prefetchQuery({
+      queryKey: ["userquizzes" ,user?.userId],
+      queryFn: getQuizzes,
+      staleTime: 12 *60* 60 * 1000, 
+      retry: 2,
+    })
   }, [user?.userId]);
 
   const { data } = useQuery({
-    queryKey: ["userquizzes"],
+    queryKey: ["userquizzes" ,user?.userId],
     queryFn: getQuizzes,
     staleTime: 12 *60* 60 * 1000,
     refetchInterval: 12 *60* 60 * 1000,
@@ -70,7 +70,7 @@ export const useGetLearnerQuizzes = () => {
     if (data) {
       setQuizzes(data.quizzes);
     }
-  }, [data]);
+  }, [data ,user?.userId]);
 
   return { quizzs, quizzesLoading };
 };

@@ -42,6 +42,8 @@ export const HomePageNavbar = () => {
       navigate("/admin/dashboard");
     } else if (user?.role === "support") {
       navigate("/support/dashboard");
+    } else if (user?.role === "moderator") {
+      navigate("/moderator/dashboard");
     }
   };
 
@@ -123,12 +125,15 @@ export const HomePageNavbar = () => {
                     >
                       <RiDashboard3Line className="mr-2 h-4 w-4" /> Dashboard
                     </button>
-                    <Link
-                      to="/profile/articles"
-                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center w-full"
-                    >
-                      <FiBookOpen className="mr-2 h-4 w-4" /> Your Articles
-                    </Link>
+                    {user.role == 'admin' || user.role == 'instructor' && (
+
+                      <Link
+                        to="/profile/articles"
+                        className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center w-full"
+                      >
+                        <FiBookOpen className="mr-2 h-4 w-4" /> Your Articles
+                      </Link>
+                    )}
                     <div className="border-t border-gray-100 mt-1">
                       <button
                         onClick={() => {
@@ -178,9 +183,8 @@ export const HomePageNavbar = () => {
       </div>
 
       <div
-        className={`md:hidden mt-4 space-y-4 ${
-          isMobileMenuOpen ? "block" : "hidden"
-        }`}
+        className={`md:hidden mt-4 space-y-4 ${isMobileMenuOpen ? "block" : "hidden"
+          }`}
       >
         <Link
           to="/articels"

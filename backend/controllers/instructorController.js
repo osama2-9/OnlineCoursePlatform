@@ -1,6 +1,7 @@
 import sendMail from "../emails/sendMail.js";
 import { genreateQuestionAttempt } from "../openAI/openAi.js";
 import { prisma } from "../prisma/prismaClint.js";
+import { newQuizNotification } from "../services/notifications.js";
 const isHavePermession = async (course_id, instructor_id) => {
   try {
     const courseId = parseInt(course_id);

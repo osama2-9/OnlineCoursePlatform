@@ -67,13 +67,26 @@ export const createLesson = async (req, res) => {
         attachment: attachment,
         is_free: is_free,
         lesson_order: parseInt(lesson_order),
+        is_lesson_approved:false
       },
     });
 
+
     if (newLesson) {
-      return res.status(201).json({
-        message: "New lesson added to your course",
+      const newLessonApproveRequest = await prisma.lessonsApprovel.create({
+       data:{
+        lesson_id:newLesson.lesson_id,
+        status:"pending",
+        
+       }
       });
+
+      if(newLessonApproveRequest){
+        return res.status(201).json({
+          message: "New lesson added to your course please wait to be approved",
+        });
+      }
+
     } else {
       return res.status(400).json({
         error: "Error while trying to add lesson",
@@ -131,11 +144,13 @@ export const updateLesson = async (req, res) => {
         video_url: video_url,
         attachment: attachment,
         is_free: is_free,
+        is_lesson_approved:false
       },
     });
+
     if (updateLesson) {
       return res.status(200).json({
-        message: "Lesson updated",
+        message: "Lesson updated please wait to be approved",
       });
     } else {
       return res.status(400).json({

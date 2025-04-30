@@ -141,7 +141,7 @@ export const ArticlePage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="relative">
           <div className="flex items-center text-center justify-center">
-            <Loader2 className="animate-spin" color="#2563eb " size={30} />
+            <Loader2 className="animate-spin" color="#2563eb " size={25} />
           </div>
           <p className="mt-4 text-gray-600 text-center">Loading article...</p>
         </div>
@@ -216,7 +216,7 @@ export const ArticlePage: React.FC = () => {
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <button
             className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
-            onClick={() => window.history.back()}
+            onClick={() => window.location.replace('/articels')}
           >
             <ChevronLeft size={20} />
             <span>Back to Articles</span>
@@ -354,7 +354,7 @@ export const ArticlePage: React.FC = () => {
                     .map((heading, index) => (
                       <a
                         key={index}
-                        href={`#heading-${heading.block_id}`}
+                        href={`#H-${heading.content}`}
                         className="block text-sm text-gray-600 hover:text-blue-600 transition-colors"
                       >
                         {heading.content}
@@ -363,31 +363,6 @@ export const ArticlePage: React.FC = () => {
                 </nav>
               </div>
 
-              <div>
-                <h3 className="text-lg font-bold mb-3 text-gray-800">
-                  Related Articles
-                </h3>
-                <div className="space-y-3">
-                  <a
-                    href="#"
-                    className="block text-sm text-gray-600 hover:text-blue-600 transition-colors pb-2 border-b"
-                  >
-                    Advanced techniques for better code organization
-                  </a>
-                  <a
-                    href="#"
-                    className="block text-sm text-gray-600 hover:text-blue-600 transition-colors pb-2 border-b"
-                  >
-                    Understanding modern JavaScript patterns
-                  </a>
-                  <a
-                    href="#"
-                    className="block text-sm text-gray-600 hover:text-blue-600 transition-colors"
-                  >
-                    Best practices for React component design
-                  </a>
-                </div>
-              </div>
             </div>
           </div>
         </div>

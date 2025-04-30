@@ -68,6 +68,8 @@ import ProtectedSupportRoute from "./pages/support/ProtectedSupportRoute";
 import UsersChatPage from "./pages/support/UsersChatPage";
 import { GoogleAuth } from "./pages/GoogleAuth";
 import Privacy from "./pages/Privecy";
+import ProtectedModeratorRoute from "./components/moderator/ProtectedModeratorRoute";
+import ContentModeratorDashboard from "./pages/moderator/ModeratorDashboard";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -280,6 +282,8 @@ function App() {
           path="/support/users/chat"
           element={<UsersChatPage />}
         />
+
+        <Route path="/moderator/dashboard" element={<ProtectedModeratorRoute element={<ContentModeratorDashboard />} />}></Route>
         <Route path="/course-page/:course_id" element={<CoursePage />} />
         <Route path="/payment/success" element={<SuccessPayment />} />
         <Route path="/payment/cancel" element={<CancelPayment />} />

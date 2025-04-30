@@ -101,7 +101,8 @@ export const getCourses = async (req, res) => {
     const sortDirection = req.query.sortDirection || "asc";
     const skip = (page - 1) * pageSize;
 
-    let whereClause = {};
+    let whereClause = {
+    };
 
     if (search) {
       whereClause = {
@@ -356,6 +357,7 @@ export const getCourseById = async (req, res) => {
     const course = await prisma.courses.findUnique({
       where: {
         course_id: courseId,
+        is_published:true
       },
       select: {
         course_id: true,
@@ -381,6 +383,7 @@ export const getCourseById = async (req, res) => {
             video_url: true,
             is_free: true,
             attachment: true,
+            is_lesson_approved:true
           },
           orderBy: {
             lesson_order: "asc",
@@ -391,18 +394,20 @@ export const getCourseById = async (req, res) => {
 
     if (!course) {
       return res.status(404).json({
-        error: "No course found",
+        error: "No Content found",
       });
     }
 
-    course.lessons = course.lessons.map((lesson) => {
-      if (!lesson.is_free) {
-        delete lesson.video_url;
-        delete lesson.attachment;
-      }
-      return lesson;
-    });
 
+   course.lessons= course.lessons.filter((les)=>les.is_lesson_approved == true).map((lessons)=>{
+      if(lessons.is_free){
+        delete lessons.video_url;
+        delete lessons.attachment;
+      }
+      return lessons
+    })
+    
+    
     return res.status(200).json({
       course,
     });
