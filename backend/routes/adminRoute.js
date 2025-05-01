@@ -6,6 +6,7 @@ import {
   deleteUser,
   getAdminDashboardSummary,
   getAnalystics,
+  getContentPublishRequests,
   getInstructors,
   getQuizzes,
   getReviews,
@@ -37,5 +38,10 @@ adminRoute.get(
 adminRoute.get("/get-quizzes/:userId", checkRole("admin"), getQuizzes);
 adminRoute.get("/analystics/:userId", checkRole("admin"), getAnalystics);
 adminRoute.get("/reviews/:userId", checkRole("admin"), getReviews);
+adminRoute.get(
+  "/content-publish-requests",
+  checkRole("admin"),
+  getContentPublishRequests
+);
 
 export default adminRoute;

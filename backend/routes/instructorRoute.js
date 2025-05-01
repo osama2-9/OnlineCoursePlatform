@@ -8,6 +8,7 @@ import {
   getEnrollmentData,
   getInstructorCourses,
   getLessonsByCourseId,
+  getMyContentRequests,
   getQuizzes,
   getStudentProgress,
   getUserAnswers,
@@ -122,7 +123,12 @@ instructorRoute.put(
 
 instructorRoute.post(
   "/send-email",
-  checkRole(['instructor' ,'admin']),
+  checkRole(["instructor", "admin"]),
   sendEmail
+);
+instructorRoute.get(
+  "/get-my-content-requests",
+  checkRole(["instructor", "admin"]),
+  getMyContentRequests
 );
 export default instructorRoute;

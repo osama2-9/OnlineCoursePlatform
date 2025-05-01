@@ -70,6 +70,8 @@ import { GoogleAuth } from "./pages/GoogleAuth";
 import Privacy from "./pages/Privecy";
 import ProtectedModeratorRoute from "./components/moderator/ProtectedModeratorRoute";
 import ContentModeratorDashboard from "./pages/moderator/ModeratorDashboard";
+import PublishContentRequests from "./pages/admin/PublishContentRequests";
+import MyContentRequests from "./pages/instructor/MyContentRequests";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -162,25 +164,34 @@ function App() {
           element={<ProtectedInstractourRoute element={<Analystic />} />}
         />
         <Route
+        path="/instructor/content/requests"
+        element={<ProtectedInstractourRoute element={<MyContentRequests />} />}
+        
+        />
+        <Route
           path="/instructor/quizess"
           element={<ProtectedInstractourRoute element={<Quizzes />} />}
         />
 
         <Route
-        path="/instructor/courses/:courseId/assignments"
-        element={<ProtectedInstractourRoute element={<ShowAssignments />} />}
+          path="/instructor/courses/:courseId/assignments"
+          element={<ProtectedInstractourRoute element={<ShowAssignments />} />}
         />
         <Route
-        path="/instructor/assignments/create"
-        element={<ProtectedInstractourRoute element={<CreateAssignment />} />}
+          path="/instructor/assignments/create"
+          element={<ProtectedInstractourRoute element={<CreateAssignment />} />}
         />
         <Route
-        path="/learner/assignments/submission/:assignmentId/"
-        element={<ProtectLearnerRoute element={<AssignmentSubmissionPage />} />}
+          path="/learner/assignments/submission/:assignmentId/"
+          element={
+            <ProtectLearnerRoute element={<AssignmentSubmissionPage />} />
+          }
         />
         <Route
-        path="/instructor/assignments/submissions/:assignmentId/:courseId/:courseTitle"
-        element={<ProtectedInstractourRoute element={<GetSubmittiedAssignments />} />}
+          path="/instructor/assignments/submissions/:assignmentId/:courseId/:courseTitle"
+          element={
+            <ProtectedInstractourRoute element={<GetSubmittiedAssignments />} />
+          }
         />
         <Route
           path="/instructor/update-quiz"
@@ -265,6 +276,11 @@ function App() {
           element={<ProtectAdminRoute element={<InstructorApplications />} />}
         />
         <Route
+          path="/admin/website/content"
+          element={<ProtectAdminRoute element={<PublishContentRequests />} />}
+        />
+
+        <Route
           path="/admin/reviews"
           element={<ProtectAdminRoute element={<Reviews />} />}
         />
@@ -273,17 +289,18 @@ function App() {
           element={<ProtectAdminRoute element={<AccountSetting />} />}
         />
 
-
         <Route
           path="/support/dashboard"
           element={<ProtectedSupportRoute element={<SupportDashboard />} />}
         />
-        <Route
-          path="/support/users/chat"
-          element={<UsersChatPage />}
-        />
+        <Route path="/support/users/chat" element={<UsersChatPage />} />
 
-        <Route path="/moderator/dashboard" element={<ProtectedModeratorRoute element={<ContentModeratorDashboard />} />}></Route>
+        <Route
+          path="/moderator/dashboard"
+          element={
+            <ProtectedModeratorRoute element={<ContentModeratorDashboard />} />
+          }
+        ></Route>
         <Route path="/course-page/:course_id" element={<CoursePage />} />
         <Route path="/payment/success" element={<SuccessPayment />} />
         <Route path="/payment/cancel" element={<CancelPayment />} />

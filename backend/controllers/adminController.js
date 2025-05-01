@@ -10,7 +10,7 @@ export const createNewUser = async (req, res) => {
         error: "Please fill all feilds",
       });
     }
-  const {hashedPassword ,rawPassword} = await passwordGenerator()
+    const { hashedPassword, rawPassword } = await passwordGenerator();
 
     const findSameEmail = await prisma.users.findUnique({
       where: { email: email },
@@ -35,18 +35,16 @@ export const createNewUser = async (req, res) => {
         error: "error while try to add new user",
       });
     }
-    const loginUrl = `https://uplearn-website.vercel.app/login`
+    const loginUrl = `https://uplearn-website.vercel.app/login`;
     try {
-      await sendNewAccountEmail(email, loginUrl, rawPassword)
+      await sendNewAccountEmail(email, loginUrl, rawPassword);
     } catch (emailerror) {
-      console.log(emailerror)
+      console.log(emailerror);
     }
 
     return res.status(201).json({
       message: "New user created successfully",
     });
-
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -118,26 +116,25 @@ export const deleteUser = async (req, res) => {
       where: {
         user_id: userId,
       },
-    })
+    });
 
     await prisma.enrollments.deleteMany({
       where: {
         user_id: userId,
       },
-    })
+    });
 
     await prisma.payments.deleteMany({
       where: {
         user_id: userId,
       },
-    })
+    });
 
     const deleteUser = await prisma.users.delete({
       where: {
         user_id: userId,
       },
     });
-
 
     if (!deleteUser) {
       return res.status(400).json({
@@ -174,9 +171,7 @@ export const getUsers = async (req, res) => {
           created_at: true,
           lastLogin: true,
           is_active: true,
-          authProvider: true
-
-
+          authProvider: true,
         },
       }),
       prisma.users.count(),
@@ -382,7 +377,7 @@ export const searchAboutUser = async (req, res) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: "Email is required"
+        message: "Email is required",
       });
     }
 
@@ -397,26 +392,25 @@ export const searchAboutUser = async (req, res) => {
         role: true,
         created_at: true,
         is_active: true,
-      }
+      },
     });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      data: user
+      data: user,
     });
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       success: false,
-      error: "Internal server error"
+      error: "Internal server error",
     });
   }
 };
@@ -720,11 +714,11 @@ export const getAnalystics = async (req, res) => {
       rating:
         course.reviews.length > 0
           ? parseFloat(
-            (
-              course.reviews.reduce((acc, rev) => acc + rev.rating, 0) /
-              course.reviews.length
-            ).toFixed(1)
-          )
+              (
+                course.reviews.reduce((acc, rev) => acc + rev.rating, 0) /
+                course.reviews.length
+              ).toFixed(1)
+            )
           : 0,
     }));
 
@@ -797,6 +791,124 @@ export const getReviews = async (req, res) => {
       totalReviews,
       totalPages: Math.ceil(totalReviews / limit),
       currentPage: parseInt(page),
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const getContentPublishRequests = async (req, res) => {
+  try {
+    const { userId, page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+    if (!userId) {
+      return res.status(400).json({
+        error: "Missing required data",
+      });
+    }
+    const isAdmin = await prisma.users.findUnique({
+      where: {
+        user_id: parseInt(userId),
+      },
+      select: {
+        role: true,
+      },
+    });
+    if (!isAdmin || isAdmin.role !== "admin") {
+      return res.status(401).json({
+        error: "Can't access this page",
+      });
+    }
+
+    const lessonsApproveRequests = await prisma.lessonsApprovel.findMany({
+      select: {
+        apporval_date: true,
+        approved_by: true,
+        reason: true,
+        lessoon_approvel_id: true,
+        status: true,
+        lesson: {
+          select: {
+            lesson_id: true,
+            title: true,
+            video_url: true,
+          },
+        },
+      },
+      skip: parseInt(skip),
+      take: parseInt(limit),
+    });
+
+    const articleApproveRequests = await prisma.articleApporvel.findMany({
+      select: {
+        apporval_date: true,
+        approved_by: true,
+        reason: true,
+        article_approvel_id: true,
+        status: true,
+        article: {
+          select: {
+            title: true,
+            article_id: true,
+          },
+        },
+      },
+      skip: parseInt(skip),
+      take: parseInt(limit),
+    });
+
+    const approvedBy = await prisma.users.findMany({
+      where: {
+        user_id: {
+          in: [
+            ...lessonsApproveRequests.map((request) => request.approved_by),
+            ...articleApproveRequests.map((request) => request.approved_by),
+          ],
+        },
+      },
+      select: {
+        full_name: true,
+        user_id: true,
+      },
+    });
+    const lessonsApproveRequestsWithUser = lessonsApproveRequests.map(
+      (request) => {
+        const approver = approvedBy.find(
+          (user) => user.user_id == request.approved_by
+        );
+        return {
+          ...request,
+          approved_by: approver ? approver.full_name : "Unknown",
+        };
+      }
+    );
+    const articleApproveRequestsWithUser = articleApproveRequests.map(
+      (request) => {
+        const approver = approvedBy.find(
+          (user) => user.user_id == request.approved_by
+        );
+        return {
+          ...request,
+          approved_by: approver ? approver.full_name : "Unknown",
+        };
+      }
+    );
+    lessonsApproveRequestsWithUser.sort((a, b) => {
+      return new Date(b.apporval_date) - new Date(a.apporval_date);
+    });
+    articleApproveRequestsWithUser.sort((a, b) => {
+      return new Date(b.apporval_date) - new Date(a.apporval_date);
+    });
+    const allRequests = [
+      ...lessonsApproveRequestsWithUser,
+      ...articleApproveRequestsWithUser,
+    ];
+
+    return res.status(200).json({
+      requests: allRequests,
     });
   } catch (error) {
     console.log(error);

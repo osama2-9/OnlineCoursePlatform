@@ -7,7 +7,6 @@ const isHavePermession = async (course_id, instructor_id) => {
     const courseId = parseInt(course_id);
     const instructorId = parseInt(instructor_id);
 
-
     const course = await prisma.courses.findUnique({
       where: {
         course_id: courseId,
@@ -599,9 +598,6 @@ export const createQuiz = async (req, res) => {
     return res.status(201).json({
       message: "Quiz created successfully",
     });
-
-
-    
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -1456,6 +1452,124 @@ export const sendEmail = async (req, res) => {
     await sendMail(userEmail, subject, text);
     return res.status(200).json({
       success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const getMyContentRequests = async (req, res) => {
+  try {
+    const { instructorId } = req.query;
+    if (!instructorId) {
+      return res.status(400).json({
+        error: "Instructor Id Required",
+      });
+    }
+    const mylessons = await prisma.lessons.findMany({
+      where: {
+        course: {
+          instructor_id: parseInt(instructorId),
+        },
+      },
+      select: {
+        lesson_id: true,
+      },
+    });
+
+    const lessonIds = mylessons.map((lesson) => lesson.lesson_id);
+    const lessons = await prisma.lessonsApprovel.findMany({
+      where: {
+        lesson_id: {
+          in: lessonIds,
+        },
+      },
+      select: {
+        lesson_id: true,
+        apporval_date: true,
+        status: true,
+        lessoon_approvel_id: true,
+        reason: true,
+        lesson: {
+          select: {
+            title: true,
+            description: true,
+            lesson_order: true,
+            video_url: true,
+            attachment: true,
+          },
+        },
+      },
+    });
+    const myarticles = await prisma.article.findMany({
+      where: {
+        author: {
+          user_id: parseInt(instructorId),
+        },
+      },
+      select: {
+        article_id: true,
+      },
+    });
+
+    const articleIds = myarticles.map((article) => article.article_id);
+
+    const articles = await prisma.articleApporvel.findMany({
+      where: {
+        article_id: {
+          in: articleIds,
+        },
+      },
+      select: {
+        article_approvel_id: true,
+        apporval_date: true,
+        status: true,
+        reason: true,
+        article_id: true,
+        article: {
+          select: {
+            title: true,
+            excerpt: true,
+          },
+        },
+      },
+    });
+    const lessonsFormat = lessons.map((lesson) => {
+      return {
+        apporval_date: lesson.apporval_date.toLocaleDateString(),
+        status: lesson.status,
+        lesson_id: lesson.lesson_id,
+        reason: lesson.reason,
+        lessoon_approvel_id: lesson.lessoon_approvel_id,
+        lesson: {
+          ...lesson.lesson,
+        },
+      };
+    });
+
+    const articlesFormat = articles.map((article) => {
+      return {
+        apporval_date: article.apporval_date.toLocaleDateString(),
+        status: article.status,
+        article_approvel_id: article.article_approvel_id,
+        article_id: article.article_id,
+        reason: article.reason,
+        article: {
+          ...article.article,
+        },
+      };
+    });
+
+    const requests = {
+      lessons: lessonsFormat,
+      articles: articlesFormat,
+    };
+
+    return res.status(200).json({
+      requests,
     });
   } catch (error) {
     console.log(error);
