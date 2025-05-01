@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  FaHome,
-  FaBook,
-  FaChartLine,
-  FaUsers,
-  FaBars,
-} from "react-icons/fa";
+import { FaHome, FaBook, FaChartLine, FaUsers, FaBars, FaHammer } from "react-icons/fa";
 
 import { Link, NavLink } from "react-router-dom";
 
@@ -153,6 +147,22 @@ export const InstructorSidebar = () => {
               >
                 <FaChartLine className="w-5 h-5" />
                 <span>Analytics</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/instructor/content/requests"
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`
+                }
+                onClick={closeSidebar}
+              >
+                <FaHammer className="w-5 h-5" />
+                <span>Content</span>
               </NavLink>
             </li>
           </ul>
