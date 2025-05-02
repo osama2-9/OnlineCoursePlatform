@@ -40,9 +40,7 @@ export const InstructorDashboard = () => {
         <div className="bg-white border-l-4 border-blue-600 rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold ">
-                Instructor Dashboard
-              </h1>
+              <h1 className="text-3xl font-bold ">Instructor Dashboard</h1>
               <p className="text-md text-gray-400 mt-1">
                 Welcome back, {user?.full_name}!
               </p>

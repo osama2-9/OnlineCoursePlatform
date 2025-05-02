@@ -16,6 +16,7 @@
   "dependencies": {
     "@huggingface/inference": "^3.1.2",
     "@prisma/client": "latest",
+    "@supabase/supabase-js": "^2.49.4",
     "@vonage/server-sdk": "^3.19.3",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",

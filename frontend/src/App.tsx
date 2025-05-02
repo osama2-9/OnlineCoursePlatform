@@ -164,9 +164,10 @@ function App() {
           element={<ProtectedInstractourRoute element={<Analystic />} />}
         />
         <Route
-        path="/instructor/content/requests"
-        element={<ProtectedInstractourRoute element={<MyContentRequests />} />}
-        
+          path="/instructor/content/requests"
+          element={
+            <ProtectedInstractourRoute element={<MyContentRequests />} />
+          }
         />
         <Route
           path="/instructor/quizess"
