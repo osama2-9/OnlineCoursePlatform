@@ -14,7 +14,7 @@
 
 ###
 
-<p align="left">Course Management: Admins can create, update, and delete courses, add an assignments and quizzes.<br><br>User Authentication: Users can sign up, log in, and manage their profiles.<br><br>Real-Time Communication: Chat with other support team via socket.io.<br><br>Stripe Integration: For handling payments and subscriptions.<br><br>Video Streaming: Watch course videos directly on the platform.<br><br>Course Analytics: Visualize course progress and analytics with charts.</p>
+<p align="left">Course Management: Admins can create, update, and delete courses, add an assignments and quizzes.<br><br>User Authentication: Users can sign up, log in, and manage their profiles.<br><br>Real-Time Communication: Chat with other support team via socket.io.<br><br>Stripe Integration: For handling payments and subscriptions.<br><br>Video Streaming: Watch course videos directly on the platform.<br><br>Course Analytics: Visualize course progress and analytics with charts.<br><br> Roles:Admin,Instructor,Moderator,Support and learner</p>
 
 ###
 
