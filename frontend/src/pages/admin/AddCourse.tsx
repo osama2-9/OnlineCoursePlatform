@@ -18,6 +18,8 @@ export const AddCourse = () => {
     course_img: "",
     learn_outcome: learnOutcomes,
     category: "",
+    start_date: "",
+    end_date: "",
   });
 
   useEffect(() => {
@@ -105,6 +107,8 @@ export const AddCourse = () => {
           course_img: "",
           learn_outcome: [""],
           category: "",
+          start_date: "",
+          end_date: "",
         });
       }
     } catch (error) {
@@ -128,16 +132,15 @@ export const AddCourse = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-4xl mx-auto p-8 bg-white rounded-lg shadow-2xl mt-10 border border-gray-100">
+      <div className="max-w-5xl mx-auto p-8 bg-white rounded-md shadow-md mt-10 border border-gray-100">
         <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
           Create a New Course
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title and Price in the Same Line */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label
-                className="block text-lg font-semibold text-gray-700 mb-2"
+                className="block  font-semibold text-gray-900 mb-2"
                 htmlFor="title"
               >
                 Course Title
@@ -155,7 +158,7 @@ export const AddCourse = () => {
             </div>
             <div>
               <label
-                className="block text-lg font-semibold text-gray-700 mb-2"
+                className="block  font-semibold text-gray-900 mb-2"
                 htmlFor="price"
               >
                 Price ($)
@@ -173,10 +176,9 @@ export const AddCourse = () => {
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label
-              className="block text-lg font-semibold text-gray-700 mb-2"
+              className="block  font-semibold text-gray-900 mb-2"
               htmlFor="description"
             >
               Course Description
@@ -193,10 +195,9 @@ export const AddCourse = () => {
             />
           </div>
 
-          {/* Instructor - React Select */}
           <div>
             <label
-              className="block text-lg font-semibold text-gray-700 mb-2"
+              className="block  font-semibold text-gray-900 mb-2"
               htmlFor="instructor_id"
             >
               Instructor
@@ -225,7 +226,7 @@ export const AddCourse = () => {
           </div>
           <div>
             <label
-              className="block text-lg font-semibold text-gray-700 mb-2"
+              className="block  font-semibold text-gray-900 mb-2"
               htmlFor="instructor_id"
             >
               Category
@@ -253,10 +254,9 @@ export const AddCourse = () => {
             />
           </div>
 
-          {/* Course Image */}
           <div>
             <label
-              className="block text-lg font-semibold text-gray-700 mb-2"
+              className="block  font-semibold text-gray-900 mb-2"
               htmlFor="course_img"
             >
               Course Image
@@ -280,9 +280,45 @@ export const AddCourse = () => {
             )}
           </div>
 
-          {/* Learning Outcomes */}
           <div>
-            <label className="block text-lg font-semibold text-gray-700 mb-2">
+            <label
+              className="block  font-semibold text-gray-900 mb-2"
+              htmlFor="start_date"
+            >
+              Start Date
+            </label>
+            <input
+              id="start_date"
+              name="start_date"
+              type="date"
+              value={formData.start_date}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              required
+            />
+          </div>
+
+
+          <div>
+            <label
+              className="block  font-semibold text-gray-900 mb-2"
+              htmlFor="end_date"
+            >
+              End Date
+            </label>
+            <input
+              id="end_date"
+              name="end_date"
+              type="date"
+              value={formData.end_date}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block  font-semibold text-gray-900 mb-2">
               Learning Outcomes
             </label>
             {learnOutcomes.map((outcome, index) => (
@@ -327,10 +363,9 @@ export const AddCourse = () => {
             </button>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full py-3 bg-black text-white font-semibold rounded-lg hover:bg-black transition-all duration-200"
+            className="w-full py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-all duration-200"
           >
             Create Course
           </button>

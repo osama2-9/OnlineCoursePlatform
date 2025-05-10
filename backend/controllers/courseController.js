@@ -36,6 +36,8 @@ export const createCourse = async (req, res) => {
       course_img,
       learn_outcome,
       category,
+      start_date,
+      end_date,
     } = req.body;
 
     if (
@@ -45,7 +47,9 @@ export const createCourse = async (req, res) => {
       !instructor_id ||
       !course_img ||
       !learn_outcome ||
-      !category
+      !category ||
+      !start_date ||
+      !end_date
     ) {
       return res.status(400).json({
         error: "Please fill all inputs",
@@ -74,6 +78,8 @@ export const createCourse = async (req, res) => {
         instructor_id: instructor_id,
         learning_outcomes: learn_outcome,
         category: category,
+        start_date: start_date,
+        end_date: end_date,
       },
     });
 
@@ -101,8 +107,7 @@ export const getCourses = async (req, res) => {
     const sortDirection = req.query.sortDirection || "asc";
     const skip = (page - 1) * pageSize;
 
-    let whereClause = {
-    };
+    let whereClause = {};
 
     if (search) {
       whereClause = {
@@ -225,6 +230,8 @@ export const updateCourse = async (req, res) => {
       courseType,
       learning_outcomes,
       is_published,
+      start_date,
+      end_date,
     } = req.body;
 
     let { course_img } = req.body;
@@ -281,6 +288,8 @@ export const updateCourse = async (req, res) => {
       ...(learning_outcomes && { learning_outcomes }),
       ...(is_published !== undefined && { is_published }),
       ...(course_img && { course_img }),
+      ...(start_date && { start_date }),
+      ...(end_date && { end_date }),
       ...(instructor?.user_id && {
         instructor_id: parseInt(instructor.user_id),
       }),
@@ -357,7 +366,7 @@ export const getCourseById = async (req, res) => {
     const course = await prisma.courses.findUnique({
       where: {
         course_id: courseId,
-        is_published:true
+        is_published: true,
       },
       select: {
         course_id: true,
@@ -374,6 +383,8 @@ export const getCourseById = async (req, res) => {
             user_id: true,
           },
         },
+        start_date: true,
+        end_date: true,
         lessons: {
           select: {
             lesson_id: true,
@@ -383,7 +394,7 @@ export const getCourseById = async (req, res) => {
             video_url: true,
             is_free: true,
             attachment: true,
-            is_lesson_approved:true
+            is_lesson_approved: true,
           },
           orderBy: {
             lesson_order: "asc",
@@ -398,16 +409,16 @@ export const getCourseById = async (req, res) => {
       });
     }
 
+    course.lessons = course.lessons
+      .filter((les) => les.is_lesson_approved == true)
+      .map((lessons) => {
+        if (lessons.is_free) {
+          delete lessons.video_url;
+          delete lessons.attachment;
+        }
+        return lessons;
+      });
 
-   course.lessons= course.lessons.filter((les)=>les.is_lesson_approved == true).map((lessons)=>{
-      if(lessons.is_free){
-        delete lessons.video_url;
-        delete lessons.attachment;
-      }
-      return lessons
-    })
-    
-    
     return res.status(200).json({
       course,
     });
@@ -476,6 +487,61 @@ export const updatePublishStatus = async (req, res) => {
       });
     }
 
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const searchCourse = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({
+        error: "search error",
+      });
+    }
+
+    const courses = await prisma.courses.findMany({
+      where: {
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } },
+          { category: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        course_id: true,
+        title: true,
+        description: true,
+        price: true,
+        course_img: true,
+        category: true,
+        course_type: true,
+        start_date:true,
+        end_date:true,
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
+        instructor: {
+          select: {
+            full_name: true,
+          },
+        },
+      },
+    });
+    if (!courses) {
+      return res.status(404).json({
+        error: "No courses found",
+      });
+    }
+    return res.status(200).json({
+      courses,
+    });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({
       error: "Internal server error",
     });

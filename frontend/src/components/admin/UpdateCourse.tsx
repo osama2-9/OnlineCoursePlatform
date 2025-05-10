@@ -3,12 +3,14 @@ import { Course } from "../../types/Course";
 import Select from "react-select";
 import { useGetInstructor } from "../../hooks/useGetInstructor";
 import { ImgReader } from "../../hooks/ImgReader";
+import { Loader2 } from "lucide-react";
 
 interface UpdateCourseModalProps {
   isOpen: boolean;
   onClose: () => void;
   courseData: Course | null;
   onUpdateCourse: (updatedCourse: any) => void;
+  isUpdating: boolean;
 }
 
 export const UpdateCourse = ({
@@ -16,6 +18,7 @@ export const UpdateCourse = ({
   onClose,
   courseData,
   onUpdateCourse,
+  isUpdating,
 }: UpdateCourseModalProps) => {
   const [title, setTitle] = useState<string>("");
   const [price, setPrice] = useState<number>(0);
@@ -23,6 +26,8 @@ export const UpdateCourse = ({
   const [description, setDescription] = useState<string>("");
   const [instructorId, setInstructorId] = useState<number | null>(null);
   const [learnOutcomes, setLearnOutcomes] = useState<string[]>([]);
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date>(new Date());
   const [courseType, setCourseType] = useState<"free" | "paid">("paid");
   const { instractors } = useGetInstructor();
   const { handleImageChange, img } = ImgReader();
@@ -110,8 +115,10 @@ export const UpdateCourse = ({
         description: description,
         price: courseType === "free" ? 0 : price,
         category: category,
-        course_type: courseType, // Changed from courseType to course_type
+        course_type: courseType,
         learning_outcomes: learnOutcomes,
+        start_date: startDate,
+        end_date: endDate,
         is_published: courseData.is_published,
         course_img: img || courseData.course_img,
         instructor: {
@@ -152,7 +159,6 @@ export const UpdateCourse = ({
             </button>
           </div>
           <div className="space-y-4">
-            {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Title
@@ -166,7 +172,6 @@ export const UpdateCourse = ({
               />
             </div>
 
-            {/* Course Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Course Type
@@ -195,7 +200,6 @@ export const UpdateCourse = ({
               </div>
             </div>
 
-            {/* Price */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Price
@@ -217,7 +221,6 @@ export const UpdateCourse = ({
               )}
             </div>
 
-            {/* Instructor */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Instructor
@@ -245,7 +248,6 @@ export const UpdateCourse = ({
               />
             </div>
 
-            {/* Category */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Category
@@ -274,7 +276,6 @@ export const UpdateCourse = ({
               />
             </div>
 
-            {/* Learning Outcomes */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Learning Outcomes
@@ -306,7 +307,6 @@ export const UpdateCourse = ({
               </button>
             </div>
 
-            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description
@@ -320,7 +320,32 @@ export const UpdateCourse = ({
               />
             </div>
 
-            {/* Image Upload */}
+            <div className="flex space-x-4 w-full ">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={startDate.toISOString().split("T")[0]}
+                  onChange={(e) => setStartDate(new Date(e.target.value))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={endDate.toISOString().split("T")[0]}
+                  onChange={(e) => setEndDate(new Date(e.target.value))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Course Image
@@ -343,7 +368,6 @@ export const UpdateCourse = ({
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-end mt-6 space-x-4">
             <button
               onClick={onClose}
@@ -355,7 +379,7 @@ export const UpdateCourse = ({
               onClick={handleUpdate}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
             >
-              Update
+              {isUpdating ? <Loader2 className="animate-spin text-white" size={15}/> : "Update"}
             </button>
           </div>
         </div>

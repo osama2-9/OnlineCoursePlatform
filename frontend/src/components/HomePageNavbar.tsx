@@ -7,20 +7,25 @@ import {
   FiBookOpen,
   FiUser,
   FiChevronDown,
+  FiSearch,
 } from "react-icons/fi";
 import { RiDashboard3Line } from "react-icons/ri";
 
 import { useState, useRef, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../store/store";
 import { useLogout } from "../hooks/useLogout";
+import { useAuth } from "../hooks/useAuth";
 
 export const HomePageNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
   const navigate = useNavigate();
-  const user = useSelector((state: RootState) => state.user.user);
+  const { user } = useAuth();
   const { handleLogout } = useLogout();
 
   const toggleMobileMenu = () => {
@@ -55,6 +60,12 @@ export const HomePageNavbar = () => {
       ) {
         setShowProfileMenu(false);
       }
+
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -72,6 +83,40 @@ export const HomePageNavbar = () => {
             <span className="text-2xl font-semibold">UpLearn</span>
           </div>
         </Link>
+
+        <div
+          className="flex-1 max-w-xl mx-6 hidden sm:block"
+          ref={searchContainerRef}
+        >
+          <form className="relative">
+            <div className="flex items-center relative">
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all duration-200"
+                placeholder="Search courses"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search"
+              />
+
+              <div className="ml-5 mt-1 flex items-center space-x-2">
+                {searchQuery && (
+                  <>
+                    <button
+                      onClick={() => {
+                        navigate(`/search?q=${searchQuery}`);
+                        setSearchQuery("");
+                      }}
+                    >
+                      <FiSearch className="h-5 w-5 text-gray-400" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </form>
+        </div>
 
         <div className="space-x-6 hidden md:flex items-center">
           <Link
@@ -125,15 +170,15 @@ export const HomePageNavbar = () => {
                     >
                       <RiDashboard3Line className="mr-2 h-4 w-4" /> Dashboard
                     </button>
-                    {user.role == 'admin' || user.role == 'instructor' && (
-
-                      <Link
-                        to="/profile/articles"
-                        className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center w-full"
-                      >
-                        <FiBookOpen className="mr-2 h-4 w-4" /> Your Articles
-                      </Link>
-                    )}
+                    {user.role === "admin" ||
+                      (user.role === "instructor" && (
+                        <Link
+                          to="/profile/articles"
+                          className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center w-full"
+                        >
+                          <FiBookOpen className="mr-2 h-4 w-4" /> Your Articles
+                        </Link>
+                      ))}
                     <div className="border-t border-gray-100 mt-1">
                       <button
                         onClick={() => {
@@ -173,6 +218,7 @@ export const HomePageNavbar = () => {
 
         <div className="md:hidden flex items-center">
           <button
+            type="button"
             className="text-orange-500"
             onClick={toggleMobileMenu}
             aria-label="Toggle Menu"
@@ -183,9 +229,38 @@ export const HomePageNavbar = () => {
       </div>
 
       <div
-        className={`md:hidden mt-4 space-y-4 ${isMobileMenuOpen ? "block" : "hidden"
-          }`}
+        className={`md:hidden mt-4 space-y-4 ${
+          isMobileMenuOpen ? "block" : "hidden"
+        }`}
       >
+        <div className="py-2 px-4">
+          <form className="relative">
+            <div className="flex items-center relative">
+              <input
+                ref={searchInputRef}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                type="text"
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                placeholder="Search..."
+                value={searchQuery}
+                aria-label="Search"
+              />
+              <div className="ml-5 mt-1 flex items-center space-x-2">
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      navigate(`/search?q=${searchQuery}`);
+                      setSearchQuery("");
+                    }}
+                  >
+                    <FiSearch className="h-5 w-5 text-black" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </form>
+        </div>
+
         <Link
           to="/articels"
           className="block py-2 px-4 text-gray-700 hover:bg-orange-100 rounded-md transition-all duration-300 ease-in-out"
@@ -204,7 +279,7 @@ export const HomePageNavbar = () => {
                     <img
                       src={user.profile_image}
                       alt={user.full_name}
-                      className="w-full h-full object-cover rounded-full"
+                      className="w-full h-full  rounded-full"
                     />
                   ) : (
                     <FiUser className="h-4 w-4" />

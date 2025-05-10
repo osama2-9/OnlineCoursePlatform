@@ -72,6 +72,7 @@ import ProtectedModeratorRoute from "./components/moderator/ProtectedModeratorRo
 import ContentModeratorDashboard from "./pages/moderator/ModeratorDashboard";
 import PublishContentRequests from "./pages/admin/PublishContentRequests";
 import MyContentRequests from "./pages/instructor/MyContentRequests";
+import SearchPage from "./pages/SearchPage";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -81,6 +82,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/*" element={<NotFound />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/auth/google" element={<GoogleAuth />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/support" element={<SupportPage />} />

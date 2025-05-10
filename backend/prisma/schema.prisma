@@ -70,6 +70,8 @@ model Courses {
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
   learning_outcomes String[]
+  start_date        DateTime       @default(now())
+  end_date          DateTime       @default(now())
   instructor        Users          @relation(fields: [instructor_id], references: [user_id])
   lessons           Lessons[]
   enrollments       Enrollments[]

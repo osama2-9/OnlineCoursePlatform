@@ -212,7 +212,6 @@ export const AdminSidebar = () => {
               )}
             </li>
 
-            {/* Enrollments Section */}
             <li>
               <button
                 className="flex items-center space-x-3 p-3 w-full text-left rounded-lg transition-colors text-gray-700 hover:bg-gray-100"
@@ -245,7 +244,6 @@ export const AdminSidebar = () => {
               )}
             </li>
 
-            {/* Reviews Section */}
             <li>
               <button
                 className="flex items-center space-x-3 p-3 w-full text-left rounded-lg transition-colors text-gray-700 hover:bg-gray-100"
@@ -278,7 +276,6 @@ export const AdminSidebar = () => {
               )}
             </li>
 
-            {/* Payments Section */}
             <li>
               <NavLink
                 to="/admin/analystics"
@@ -309,6 +306,22 @@ export const AdminSidebar = () => {
               >
                 <FaClipboardList className="w-5 h-5" />
                 <span>Applications</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/admin/website/content"
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`
+                }
+                onClick={closeSidebar}
+              >
+                <FaClipboardList className="w-5 h-5" />
+                <span>Website Content</span>
               </NavLink>
             </li>
             <li>

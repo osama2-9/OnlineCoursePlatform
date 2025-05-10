@@ -76,7 +76,6 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Stats Section */}
       <div className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
@@ -95,17 +94,14 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Services Section */}
       <div className="bg-gray-50 py-16">
         <Services />
       </div>
 
-      {/* Explore Courses Section */}
       <div className="bg-white py-16">
         <ExploreCourses />
       </div>
 
-      {/* Instructor Section */}
       <div className="bg-gray-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
@@ -127,7 +123,6 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Features Section */}
       <div className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -168,7 +163,6 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* CTA Section */}
       <div className="bg-gray-900 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-6">

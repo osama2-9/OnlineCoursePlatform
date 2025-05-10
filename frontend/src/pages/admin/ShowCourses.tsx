@@ -49,6 +49,7 @@ export const ShowCourses = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>("");
   const [categories, setCategories] = useState<string[]>([]);
+  const [isUpdateCourse, setIsUpdateCourse] = useState<boolean>(false);
 
   const [searchTimeout, setSearchTimeout] = useState<ReturnType<
     typeof setTimeout
@@ -202,6 +203,7 @@ export const ShowCourses = () => {
         learning_outcomes: updatedCourse.learning_outcomes ?? [],
       };
 
+      setIsUpdateCourse(true);
       const res = await axios.put(
         `${API}/course/update-course`,
         courseToUpdate,
@@ -221,6 +223,8 @@ export const ShowCourses = () => {
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error);
+    }finally{
+      setIsUpdateCourse(false);
     }
   };
 
@@ -498,6 +502,7 @@ export const ShowCourses = () => {
               isOpen={showUpdateModal}
               onClose={() => setShowUpdateModal(false)}
               onUpdateCourse={handleUpdateCourse}
+              isUpdating={isUpdateCourse}
             />
             {showDeleteModal && (
               <>

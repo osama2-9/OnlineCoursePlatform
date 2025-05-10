@@ -46,9 +46,10 @@ export const useGetInstructorEnrollments = () => {
     try {
       setEnrollmentsLoading(true);
       const res = await axios.get<InstructorEnrollmentsReponse>(
-        `${API}/instructor/instructor-courses-enrollments/${user?.userId}`,    {
-          params:{
-            limit:11
+        `${API}/instructor/instructor-courses-enrollments/${user?.userId}`,
+        {
+          params: {
+            limit: 11,
           },
           headers: {
             "Content-Type": "application/json",
@@ -79,5 +80,5 @@ export const useGetInstructorEnrollments = () => {
     }
   }, [data]);
 
-  return { enrollments, enrollmentsLoading  ,pagintion};
+  return { enrollments, enrollmentsLoading, pagintion };
 };

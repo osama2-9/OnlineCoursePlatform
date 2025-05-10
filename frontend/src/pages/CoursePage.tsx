@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { FaLock } from "react-icons/fa";
+import { FaCheck, FaLock } from "react-icons/fa";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { Loading } from "../components/Loading";
 import toast from "react-hot-toast";
@@ -26,6 +26,8 @@ interface CourseDetails {
     user_id: number;
     full_name: string;
   };
+  start_date: Date;
+  end_date: Date;
   learning_outcomes: string[];
   lessons: {
     lesson_id: number;
@@ -138,7 +140,6 @@ export const CoursePage = () => {
     }
   };
 
-  // Update the loading check
   if (isLoading || isCourseLoading) {
     return <Loading />;
   }
@@ -148,9 +149,8 @@ export const CoursePage = () => {
       {isCourseLoading ? (
         <Loading />
       ) : (
-        <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen p-6 flex justify-center">
-          <div className="bg-white shadow-lg rounded-xl w-full max-w-7xl p-8">
-            {/* Header Section */}
+        <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen p-2 flex justify-center">
+          <div className="bg-white shadow-lg rounded-xl w-full  p-4">
             <div className="border-b pb-6 mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
               <div className="space-y-3">
                 <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
@@ -175,11 +175,8 @@ export const CoursePage = () => {
               </div>
             </div>
 
-            {/* Main Content */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Left Content */}
               <div className="col-span-2 space-y-8">
-                {/* Learning Outcomes */}
                 <div className="bg-gray-50 rounded-xl p-6">
                   <h2 className="text-xl font-semibold text-gray-800 mb-4">
                     What you'll learn
@@ -187,26 +184,13 @@ export const CoursePage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {course?.learning_outcomes?.map((lo, idx) => (
                       <div key={idx} className="flex items-start space-x-2">
-                        <svg
-                          className="w-5 h-5 text-green-500 mt-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
+                        <FaCheck size={15} className="text-green-500" />
                         <span className="text-gray-600">{lo}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Course Content */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-semibold text-gray-800">
@@ -268,7 +252,6 @@ export const CoursePage = () => {
                 </div>
               </div>
 
-              {/* Right Content - Course Card */}
               <div className="sticky top-6">
                 <div className="bg-white border rounded-xl shadow-lg overflow-hidden">
                   <img
@@ -318,12 +301,25 @@ export const CoursePage = () => {
 
                     <div className="border-t pt-6">
                       <h3 className="font-medium text-gray-800 mb-2">
-                        For teams & companies
+                        Start learning today
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Get special pricing for teams of 5 or more people.
-                        Contact us for details.
+                        Join thousands of learners and gain access to this
+                        course. Get started today and unlock your potential with
+                        our expert-led content.
                       </p>
+                      <div className="flex items-center justify-between mt-4">
+                        <p className="text-sm text-gray-600 mt-4">
+                          starts at{" "}
+                          {course?.start_date &&
+                            new Date(course.start_date).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-4">
+                          ends at{" "}
+                          {course?.end_date &&
+                            new Date(course.end_date).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

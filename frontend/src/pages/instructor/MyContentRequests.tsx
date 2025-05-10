@@ -5,6 +5,7 @@ import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import { InstructorLayout } from "../../layouts/InstructorLayout";
 
 interface Lesson {
   apporval_date: string;
@@ -216,67 +217,75 @@ function ContentCard({ item }: ContentCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 flex flex-col">
-      <div className="flex justify-between items-center p-4 bg-gray-50 border-b">
-        <div
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            statusColors[item.status] || "bg-gray-100"
-          }`}
-        >
-          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-        </div>
-        <div className="flex items-center text-xs text-gray-500">
-          <Calendar size={14} className="mr-1" />
-          {item.apporval_date}
-        </div>
-      </div>
-
-      <div className="p-4 flex-grow">
-        <h3 className="font-bold text-lg text-gray-800 mb-2">
-          {content.title}
-        </h3>
-
-        <div className="flex items-center text-sm text-gray-500 mb-3">
-          <div className="flex items-center mr-3">
-            <FileText size={14} className="mr-1" />
-            <span>{isLesson ? "Lesson" : "Article"}</span>
+    <>
+      <InstructorLayout>
+        <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 flex flex-col">
+          <div className="flex justify-between items-center p-4 bg-gray-50 border-b">
+            <div
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                statusColors[item.status] || "bg-gray-100"
+              }`}
+            >
+              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+            </div>
+            <div className="flex items-center text-xs text-gray-500">
+              <Calendar size={14} className="mr-1" />
+              {item.apporval_date}
+            </div>
           </div>
 
-          {isLesson && (
-            <div className="flex items-center">
+          <div className="p-4 flex-grow">
+            <h3 className="font-bold text-lg text-gray-800 mb-2">
+              {content.title}
+            </h3>
+
+            <div className="flex items-center text-sm text-gray-500 mb-3">
+              <div className="flex items-center mr-3">
+                <FileText size={14} className="mr-1" />
+                <span>{isLesson ? "Lesson" : "Article"}</span>
+              </div>
+
               {isLesson && (
-                <span>
-                  Order:{" "}
-                  {"lesson_order" in content ? content.lesson_order : "N/A"}
-                </span>
+                <div className="flex items-center">
+                  {isLesson && (
+                    <span>
+                      Order:{" "}
+                      {"lesson_order" in content ? content.lesson_order : "N/A"}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
 
-        <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-          {isLesson
-            ? (content as Lesson["lesson"]).description
-            : (content as Article["article"]).excerpt}
-        </p>
+            <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+              {isLesson
+                ? (content as Lesson["lesson"]).description
+                : (content as Article["article"]).excerpt}
+            </p>
 
-        {item.status === "rejected" && item.reason && (
-          <div className="mb-4 p-3 bg-red-50 rounded-md text-sm text-red-700">
-            <strong>Rejection reason:</strong> {item.reason}
+            {item.status === "rejected" && item.reason && (
+              <div className="mb-4 p-3 bg-red-50 rounded-md text-sm text-red-700">
+                <strong>Rejection reason:</strong> {item.reason}
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      <div className="p-4 border-t flex justify-between">
-        {isLesson && "video_url" in content && content.video_url && (
-          <a href={content.video_url} target="_blank" rel="noopener noreferrer">
-            <button className="text-purple-600 hover:text-purple-800 text-sm flex items-center">
-              <Video size={16} className="mr-1" />
-              Video
-            </button>
-          </a>
-        )}
-      </div>
-    </div>
+          <div className="p-4 border-t flex justify-between">
+            {isLesson && "video_url" in content && content.video_url && (
+              <a
+                href={content.video_url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <button className="text-purple-600 hover:text-purple-800 text-sm flex items-center">
+                  <Video size={16} className="mr-1" />
+                  Video
+                </button>
+              </a>
+            )}
+          </div>
+        </div>
+      </InstructorLayout>
+    </>
   );
 }

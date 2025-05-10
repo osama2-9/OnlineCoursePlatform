@@ -5,6 +5,7 @@ import {
   deleteCourse,
   getCourseById,
   getCourses,
+  searchCourse,
   updateCourse,
   updatePublishStatus,
 } from "../controllers/courseController.js";
@@ -26,4 +27,5 @@ courseRoute.put(
   updatePublishStatus
 );
 
+courseRoute.get('/search',searchCourse)
 export default courseRoute;

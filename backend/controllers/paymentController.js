@@ -20,6 +20,22 @@ export const createCheckoutSession = async (req, res) => {
         course_id: courseID,
       },
     });
+    if (!userAlreadyEnrolled) {
+      const course = await prisma.courses.findUnique({
+        where: {
+          course_id: parseInt(courseID),
+        },
+        select: {
+          start_date: true,
+        },
+      });
+
+      if (course.start_date < new Date()) {
+        return res.status(400).json({
+          error: "Course already started",
+        });
+      }
+    }
 
     if (userAlreadyEnrolled) {
       return res.status(400).json({
