@@ -11,6 +11,8 @@ import {
 import toast from "react-hot-toast";
 import axios from "axios";
 import { API } from "../API/ApiBaseUrl";
+import { HomePageFooter } from "../components/HomePageFooter";
+import { Link } from "react-router-dom";
 
 interface Instructor {
   full_name: string;
@@ -328,9 +330,12 @@ export default function SearchPage() {
                         <span className="text-gray-900">${course.price}</span>
                       )}
                     </div>
-                    <button className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-4 py-2 rounded-lg flex items-center transition-colors">
+                    <Link
+                      to={`/course-page/${course.course_id}`}
+                      className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-4 py-2 rounded-lg flex items-center transition-colors"
+                    >
                       View Course <ArrowRight size={16} className="ml-1" />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -351,6 +356,7 @@ export default function SearchPage() {
           )}
         </div>
       </main>
+      <HomePageFooter />
     </div>
   );
 }

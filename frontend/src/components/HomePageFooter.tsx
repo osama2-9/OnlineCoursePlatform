@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   FaFacebookF,
   FaTwitter,
@@ -11,47 +10,9 @@ import {
 } from "react-icons/fa";
 
 export const HomePageFooter = () => {
-  const [email, setEmail] = useState("");
-
-  const handleSubscribe = () => {
-    // Handle subscription logic
-    alert(`Thank you for subscribing with: ${email}`);
-    setEmail("");
-  };
-
   return (
     <footer className="bg-gray-900 text-white w-full">
       <div className="max-w-7xl mx-auto px-4 py-12 lg:py-16">
-        <div className="bg-gray-800 rounded-lg p-6 lg:p-8 mb-12">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-6 md:mb-0 md:mr-8">
-              <h3 className="text-xl lg:text-2xl font-bold mb-2">
-                Stay Updated with UpLearn
-              </h3>
-              <p className="text-gray-300 text-sm lg:text-base">
-                Subscribe to our newsletter for the latest courses and learning
-                tips.
-              </p>
-            </div>
-            <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="px-4 py-3 rounded-lg bg-gray-700 border border-gray-600 text-white w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleSubscribe}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors flex items-center justify-center"
-              >
-                Subscribe
-                <FaArrowRight className="ml-2" />
-              </button>
-            </div>
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           <div className="space-y-4">
             <div className="flex items-center">
@@ -92,7 +53,6 @@ export const HomePageFooter = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div className="space-y-4">
             <h3 className="text-xl font-bold border-b border-gray-700 pb-2">
               Explore
@@ -100,7 +60,7 @@ export const HomePageFooter = () => {
             <ul className="space-y-3">
               {[
                 { name: "Home", path: "/" },
-                { name: "All Courses", path: "/courses" },
+                { name: "All Courses", path: "/explore" },
                 { name: "About Us", path: "/about" },
                 { name: "Become an Instructor", path: "/become-an-instructor" },
                 { name: "Contact", path: "/contact" },
@@ -125,9 +85,7 @@ export const HomePageFooter = () => {
             </h3>
             <ul className="space-y-3">
               {[
-                { name: "Help Center", path: "/help" },
-                { name: "Career Guidance", path: "/careers" },
-                { name: "Success Stories", path: "/success-stories" },
+                { name: "Help Center", path: "/support" },
                 { name: "Privacy Policy", path: "/privacy" },
                 { name: "Terms of Service", path: "/terms" },
               ].map((link) => (
