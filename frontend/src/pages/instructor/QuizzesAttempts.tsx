@@ -4,10 +4,10 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
-import { FaEye } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { useQuery } from "@tanstack/react-query";
+import { Clock, User, Filter, ChevronLeft, ChevronRight, Eye, FileText, Trophy, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface User {
   full_name: string;
@@ -28,6 +28,7 @@ interface Quiz {
   title: string;
   duration: number;
   Attempt: Attempt[];
+  total_marks:number
 }
 
 interface Pagination {
@@ -41,6 +42,20 @@ interface QuizzesResponse {
   data: Quiz[];
   pagination: Pagination;
 }
+
+const StatsCard = ({ icon, title, value, color }: any) => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
+    <div className="flex items-center justify-between">
+      <div className={`p-3 rounded-lg ${color}`}>
+        {icon}
+      </div>
+      <div className="text-right">
+        <p className="text-sm text-gray-600 font-medium">{title}</p>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+      </div>
+    </div>
+  </div>
+);
 
 const QuizzesAttempts = () => {
   const { user } = useAuth();
@@ -126,170 +141,293 @@ const QuizzesAttempts = () => {
     )
     .flat();
 
+  const getScoreColor = (score: number) => {
+    if (score === 0) return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    if (score >= 80) return "bg-green-100 text-green-800 border-green-200";
+    if (score >= 60) return "bg-blue-100 text-blue-800 border-blue-200";
+    return "bg-red-100 text-red-800 border-red-200";
+  };
+
+  const getScoreIcon = (score: number) => {
+    if (score === 0) return <AlertCircle className="w-4 h-4" />;
+    if (score >= 80) return <Trophy className="w-4 h-4" />;
+    return <CheckCircle2 className="w-4 h-4" />;
+  };
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString(),
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+  };
+
+  const totalAttempts = filteredAttempts.length;
+  const reviewedAttempts = filteredAttempts.filter(quiz => quiz.Attempt[0].score > 0).length;
+  const pendingAttempts = totalAttempts - reviewedAttempts;
+  const avgScore = totalAttempts > 0 ? 
+    (filteredAttempts.reduce((sum, quiz) => sum + quiz.Attempt[0].score, 0) / totalAttempts).toFixed(1) : "0";
+
   return (
     <InstructorLayout>
-      <div className="p-5 max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-gray-800">Quiz Attempts</h1>
+      <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Quiz Attempts</h1>
+          <p className="text-gray-600">Review and manage student quiz submissions</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatsCard
+            icon={<FileText className="w-6 h-6 text-blue-600" />}
+            title="Total Attempts"
+            value={totalAttempts}
+            color="bg-blue-100"
+          />
+          <StatsCard
+            icon={<CheckCircle2 className="w-6 h-6 text-green-600" />}
+            title="Reviewed"
+            value={reviewedAttempts}
+            color="bg-green-100"
+          />
+          <StatsCard
+            icon={<AlertCircle className="w-6 h-6 text-yellow-600" />}
+            title="Pending Review"
+            value={pendingAttempts}
+            color="bg-yellow-100"
+          />
+          <StatsCard
+            icon={<Trophy className="w-6 h-6 text-purple-600" />}
+            title="Average Score"
+            value={`${avgScore}%`}
+            color="bg-purple-100"
+          />
+        </div>
 
-        <div className="mb-6 flex flex-wrap gap-6 bg-white p-4 rounded-lg shadow-sm">
-          <div className="flex items-center">
-            <label className="mr-3 font-medium text-gray-700">
-              Filter by Quiz:
-            </label>
-            <select
-              value={quizFilter}
-              onChange={(e) =>
-                setQuizFilter(
-                  e.target.value === "all" ? "all" : parseInt(e.target.value)
-                )
-              }
-              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            >
-              <option value="all">All Quizzes</option>
-              {quizzes.map((quiz) => (
-                <option key={quiz.quiz_id} value={quiz.quiz_id}>
-                  {quiz.title}
-                </option>
-              ))}
-            </select>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Filter className="w-5 h-5 text-gray-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filter by Quiz
+              </label>
+              <select
+                value={quizFilter}
+                onChange={(e) =>
+                  setQuizFilter(
+                    e.target.value === "all" ? "all" : parseInt(e.target.value)
+                  )
+                }
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <option value="all">All Quizzes</option>
+                {quizzes.map((quiz) => (
+                  <option key={quiz.quiz_id} value={quiz.quiz_id}>
+                    {quiz.title}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="flex items-center">
-            <label className="mr-3 font-medium text-gray-700">
-              Filter by Status:
-            </label>
-            <select
-              value={filter}
-              onChange={(e) =>
-                setFilter(e.target.value as "all" | "reviewed" | "not-reviewed")
-              }
-              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            >
-              <option value="all">All Attempts</option>
-              <option value="reviewed">Reviewed</option>
-              <option value="not-reviewed">Not Reviewed</option>
-            </select>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filter by Status
+              </label>
+              <select
+                value={filter}
+                onChange={(e) =>
+                  setFilter(e.target.value as "all" | "reviewed" | "not-reviewed")
+                }
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <option value="all">All Attempts</option>
+                <option value="reviewed">Reviewed</option>
+                <option value="not-reviewed">Not Reviewed</option>
+              </select>
+            </div>
           </div>
         </div>
 
         {filteredAttempts.length === 0 ? (
-          <div className="text-center text-gray-500 py-16 bg-white rounded-lg shadow-sm">
-            <p className="text-xl">No quiz attempts available</p>
-            <p className="text-sm mt-2">
-              Try adjusting your filters or check back later
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-16 text-center">
+            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No quiz attempts found</h3>
+            <p className="text-gray-600">
+              Try adjusting your filters or check back later for new submissions
             </p>
           </div>
         ) : (
-          <>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             {loading ? (
-              <div className="flex items-center justify-center">
-                <ClipLoader size={25} />
+              <div className="flex items-center justify-center py-16">
+                <ClipLoader size={40} color="#3B82F6" />
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto rounded-lg shadow">
-                  <table className="min-w-full bg-white">
-                    <thead>
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                          Quiz Title
-                        </th>
-                        <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                          Duration
-                        </th>
-                        <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                          Learner Name
-                        </th>
-                        <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                          Start Time
-                        </th>
-                        <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                          End Time
-                        </th>
-                        <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                          Score
-                        </th>
-                        <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                          Actions
-                        </th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900">Quiz</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900">Student</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900">Duration</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900">Started</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900">Completed</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900">Score</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-900">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {filteredAttempts.map((quiz) =>
-                        quiz.Attempt.map((attempt) => (
-                          <tr
-                            key={attempt.attempt_id}
-                            className="hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="py-4 px-4 whitespace-nowrap">
-                              {quiz.title}
-                            </td>
-                            <td className="py-4 px-4 whitespace-nowrap">
-                              {quiz.duration} mins
-                            </td>
-                            <td className="py-4 px-4 whitespace-nowrap">
-                              {attempt.user.full_name}
-                            </td>
-                            <td className="py-4 px-4 whitespace-nowrap">
-                              {new Date(attempt.start_time).toLocaleString()}
-                            </td>
-                            <td className="py-4 px-4 whitespace-nowrap">
-                              {new Date(attempt.end_time).toLocaleString()}
-                            </td>
-                            <td className="py-4 px-4 whitespace-nowrap">
-                              <span
-                                className={`px-2 py-1 rounded-full text-sm ${
-                                  attempt.score > 0
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-yellow-100 text-yellow-800"
-                                }`}
-                              >
-                                {attempt.score}
-                              </span>
-                            </td>
-                            <td className="py-4 px-4 whitespace-nowrap">
-                              <button
-                                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm"
-                                onClick={() =>
-                                  handleReview(
-                                    attempt.attempt_id,
-                                    quiz.quiz_id,
-                                    quiz.course_id
-                                  )
-                                }
-                              >
-                                <FaEye /> Review
-                              </button>
-                            </td>
-                          </tr>
-                        ))
+                        quiz.Attempt.map((attempt) => {
+                          const startTime = formatDateTime(attempt.start_time);
+                          const endTime = formatDateTime(attempt.end_time);
+                          
+                          return (
+                            <tr key={attempt.attempt_id} className="hover:bg-gray-50 transition-colors">
+                              <td className="py-4 px-6">
+                                <div className="flex items-center">
+                                  <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                                    <FileText className="w-4 h-4 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-gray-900">{quiz.title}</p>
+                                    <p className="text-sm text-gray-600">Quiz ID: {quiz.quiz_id}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <div className="flex items-center">
+                               
+                                  <span className="font-medium text-gray-900">{attempt.user.full_name}</span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <div className="flex items-center text-gray-600">
+                                  <Clock className="w-4 h-4 mr-2" />
+                                  {quiz.duration} mins
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <div className="text-sm">
+                                  <p className="font-medium text-gray-900">{startTime.date}</p>
+                                  <p className="text-gray-600">{startTime.time}</p>
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <div className="text-sm">
+                                  <p className="font-medium text-gray-900">{endTime.date}</p>
+                                  <p className="text-gray-600">{endTime.time}</p>
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${getScoreColor(attempt.score)}`}>
+                                  {getScoreIcon(attempt.score)}
+                                  {attempt.score === 0 ? 'Pending' : `${attempt.score}/${quiz.total_marks}`}
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <button
+                                  onClick={() => handleReview(attempt.attempt_id, quiz.quiz_id, quiz.course_id)}
+                                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                  Review
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
                 </div>
+
+                <div className="lg:hidden p-4 space-y-4">
+                  {filteredAttempts.map((quiz) =>
+                    quiz.Attempt.map((attempt) => {
+                      const startTime = formatDateTime(attempt.start_time);
+                      const endTime = formatDateTime(attempt.end_time);
+                      
+                      return (
+                        <div key={attempt.attempt_id} className="bg-gray-50 rounded-lg p-4 space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center">
+                              <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                                <FileText className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{quiz.title}</p>
+                                <p className="text-sm text-gray-600">Duration: {quiz.duration} mins</p>
+                              </div>
+                            </div>
+                            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${getScoreColor(attempt.score)}`}>
+                              {getScoreIcon(attempt.score)}
+                              {attempt.score === 0 ? 'Pending' : `${attempt.score}/${quiz.total_marks}`}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center">
+                            
+                            <span className="font-medium text-gray-900">{attempt.user.full_name}</span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p className="text-gray-600">Started</p>
+                              <p className="font-medium">{startTime.date}</p>
+                              <p className="text-gray-600">{startTime.time}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Completed</p>
+                              <p className="font-medium">{endTime.date}</p>
+                              <p className="text-gray-600">{endTime.time}</p>
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={() => handleReview(attempt.attempt_id, quiz.quiz_id, quiz.course_id)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Review
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handlePageChange(pagination.page - 1)}
+                        disabled={pagination.page === 1}
+                        className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        Previous
+                      </button>
+                      <button
+                        onClick={() => handlePageChange(pagination.page + 1)}
+                        disabled={pagination.page === pagination.totalPages}
+                        className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Page <span className="font-medium">{pagination.page}</span> of{" "}
+                      <span className="font-medium">{pagination.totalPages}</span>
+                    </div>
+                  </div>
+                </div>
               </>
             )}
-
-            <div className="mt-6 flex justify-end items-center gap-4">
-              <button
-                className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={pagination.page === 1}
-              >
-                Previous
-              </button>
-              <span className="text-gray-600">
-                Page {pagination.page} of {pagination.totalPages}
-              </span>
-              <button
-                className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.totalPages}
-              >
-                Next
-              </button>
-            </div>
-          </>
+          </div>
         )}
       </div>
     </InstructorLayout>

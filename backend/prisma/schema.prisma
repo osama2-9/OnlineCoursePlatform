@@ -294,7 +294,7 @@ model LessonsApprovel{
   apporval_date DateTime? 
   status ApprovelStatus @default(pending)
   reason String?
-  lesson Lessons @relation(fields: [lesson_id], references: [lesson_id])
+  lesson Lessons @relation(fields: [lesson_id], references: [lesson_id] ,onDelete: Cascade)
   @@map("lessons_approvel")
 
 }
@@ -306,7 +306,7 @@ model ArticleApporvel{
   apporval_date DateTime? 
   reason String?
   status ApprovelStatus @default(pending)
-  article Article @relation(fields: [article_id], references: [article_id])
+  article Article @relation(fields: [article_id], references: [article_id] ,onDelete: Cascade)
   @@map("articles_approvel")
 
 }
@@ -402,6 +402,7 @@ model Quizzes {
   is_published Boolean        @default(false)
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
+  total_marks Int            @default(10)
 
   course       Courses        @relation(fields: [course_id], references: [course_id])
   questions    Question[]     

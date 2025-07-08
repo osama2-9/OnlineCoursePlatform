@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { useGetCourses } from "../hooks/useGetCourses";
 import { Loading } from "./Loading";
-import { FaSearch } from "react-icons/fa";
 import { FaFilter } from "react-icons/fa";
 import CourseCard from "./CourseCard";
 
 const ExploreCourses = () => {
   const [filter, setFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { courses, loading } = useGetCourses();
 
@@ -26,15 +24,10 @@ const ExploreCourses = () => {
         ? price > 0
         : true;
 
-    const searchFilter = searchQuery
-      ? course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchQuery.toLowerCase())
-      : true;
-
     const categoryMatch =
       categoryFilter === "all" || course?.category === categoryFilter;
 
-    return priceFilter && searchFilter && categoryMatch;
+    return priceFilter && categoryMatch;
   });
 
   if (loading) return <Loading />;
@@ -42,7 +35,7 @@ const ExploreCourses = () => {
   if (!filter || !categoryFilter) return null;
 
   return (
-    <div className="bg-gray-50 py-12">
+    <div className=" py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
@@ -54,53 +47,32 @@ const ExploreCourses = () => {
           </p>
         </div>
 
-        <div className="mb-8 bg-white p-4 rounded-lg shadow-sm">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search for courses..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-              />
-            </div>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+          <div className="flex gap-2">
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="block w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Courses</option>
+              <option value="free">Free Courses</option>
+              <option value="paid">Paid Courses</option>
+            </select>
 
-            <div className="flex gap-4">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white min-w-[160px]"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-
-              <div className="flex gap-2">
-                {["all", "free", "paid"]?.map((filterOption) => (
-                  <button
-                    key={filterOption}
-                    className={`px-6 py-3 rounded-lg text-sm font-medium transition-colors ${
-                      filter === filterOption
-                        ? "bg-gray-800 text-white"
-                        : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                    }`}
-                    onClick={() => setFilter(filterOption)}
-                  >
-                    {filterOption.charAt(0).toUpperCase() +
-                      filterOption.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="block w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Categories</option>
+              {categories?.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-
         <div className="mb-6">
           <p className="text-gray-600">
             Showing {filteredCourses?.length}{" "}

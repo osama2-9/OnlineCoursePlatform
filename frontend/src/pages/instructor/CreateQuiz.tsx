@@ -17,6 +17,7 @@ export const CreateQuiz = () => {
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState(0);
   const [maxAttempts, setMaxAttempts] = useState(1);
+  const [totalMarks, setTotalMarks] = useState(0);
   const [selectedCourse, setSelectedCourse] = useState<CourseOptions | null>(
     null
   );
@@ -34,7 +35,10 @@ export const CreateQuiz = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+    if (totalMarks < 1 || totalMarks > 100) {
+      toast.error("Total marks should be between 1 and 100");
+      return;
+    }
     try {
       const res = await axios.post(`${API}/instructor/create-quiz`, {
         instructorId: user?.userId,
@@ -43,11 +47,12 @@ export const CreateQuiz = () => {
         description: description,
         duration: duration,
         maxAttempts: maxAttempts,
-      } ,{
-        headers:{
-            "Content-Type":"application/json"
+        totalMarks: totalMarks,
+      }, {
+        headers: {
+          "Content-Type": "application/json"
         },
-        withCredentials:true
+        withCredentials: true
       });
       const data = await res.data;
       if (data) {
@@ -133,6 +138,23 @@ export const CreateQuiz = () => {
                 required
               />
             </div>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Total Marks
+            </label>
+            <input
+              type="number"
+              value={totalMarks}
+              onChange={(e) => setTotalMarks(parseInt(e.target.value))}
+              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              min="1"
+              max="100"
+
+              placeholder="Enter total marks"
+              required
+            />
           </div>
 
           <div className="mb-6">

@@ -3,6 +3,7 @@ import {
   aiSuggestionsQuestion,
   createQuestion,
   createQuiz,
+  deleteLesson,
   deleteQuestion,
   getAnalysticsForCharts,
   getEnrollmentData,
@@ -130,5 +131,11 @@ instructorRoute.get(
   "/get-my-content-requests",
   checkRole(["instructor", "admin"]),
   getMyContentRequests
+);
+
+instructorRoute.delete(
+  "/delete-lesson",
+  checkRole("instructor"),
+  deleteLesson
 );
 export default instructorRoute;

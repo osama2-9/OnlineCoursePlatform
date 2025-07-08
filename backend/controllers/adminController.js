@@ -451,13 +451,10 @@ export const getQuizzes = async (req, res) => {
     const limitNumber = parseInt(limit);
     const skip = (pageNumber - 1) * limitNumber;
 
-    // Fetch the total number of quizzes
     const totalQuizzes = await prisma.quizzes.count();
 
-    // Calculate the total number of pages
     const totalPages = Math.ceil(totalQuizzes / limitNumber);
 
-    // Fetch the quizzes for the current page
     const quizzes = await prisma.quizzes.findMany({
       select: {
         title: true,
@@ -866,7 +863,7 @@ export const getContentPublishRequests = async (req, res) => {
           in: [
             ...lessonsApproveRequests.map((request) => request.approved_by),
             ...articleApproveRequests.map((request) => request.approved_by),
-          ],
+          ].filter((id) => id !== null),
         },
       },
       select: {
@@ -917,3 +914,132 @@ export const getContentPublishRequests = async (req, res) => {
     });
   }
 };
+
+export const getCourses = async (req ,res)=>{
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 8;
+    const search = req.query.search || "";
+    const category = req.query.category || "";
+    const priceRange = req.query.priceRange || "";
+    const sortField = req.query.sortField || "";
+    const sortDirection = req.query.sortDirection || "asc";
+    const skip = (page - 1) * pageSize;
+
+    
+    let whereClause = {};
+
+    if (search) {
+      whereClause = {
+        OR: [
+          { title: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
+          { category: { contains: search, mode: "insensitive" } },
+          {
+            instructor: {
+              full_name: { contains: search, mode: "insensitive" },
+            },
+          },
+        ],
+      };
+    }
+
+    if (category) {
+      whereClause = {
+        ...whereClause,
+        category: category,
+        
+      };
+    }
+
+    if (priceRange) {
+      switch (priceRange) {
+        case "free":
+          whereClause = { ...whereClause, price: 0 };
+          break;
+        case "0-50":
+          whereClause = { ...whereClause, price: { gte: 0, lte: 50 } };
+          break;
+        case "51-100":
+          whereClause = { ...whereClause, price: { gte: 51, lte: 100 } };
+          break;
+        case "101+":
+          whereClause = { ...whereClause, price: { gte: 101 } };
+          break;
+      }
+    }
+
+    let orderBy = {};
+    if (sortField) {
+      if (sortField === "instructor.full_name") {
+        orderBy = {
+          instructor: {
+            full_name: sortDirection,
+          },
+        };
+      } else {
+        orderBy = {
+          [sortField]: sortDirection,
+        };
+      }
+    }
+
+    const [courses, totalCourses] = await Promise.all([
+      prisma.courses.findMany({
+        where: whereClause,
+        
+        skip: skip,
+        take: pageSize,
+        orderBy: orderBy,
+        select: {
+          
+          course_id: true,
+          title: true,
+          price: true,
+          category: true,
+          course_img: true,
+          course_type: true,
+          is_published: true,
+          created_at: true,
+          description: true,
+          learning_outcomes: true,
+          instructor: {
+            select: {
+              full_name: true,
+              user_id: true,
+            },
+          },
+        },
+      }),
+      prisma.courses.count({
+        where: whereClause,
+      }),
+    ]);
+
+    if (courses.length === 0) {
+      return res.status(404).json({
+        error: "No courses found",
+      });
+    }
+
+    const totalPages = Math.ceil(totalCourses / pageSize);
+
+    return res.status(200).json({
+      courses,
+      pagination: {
+        totalCourses,
+        totalPages,
+        currentPage: page,
+        pageSize,
+      },
+    });
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error:"Internal server error"
+    })
+    
+    
+  }
+}

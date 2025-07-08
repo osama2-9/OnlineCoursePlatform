@@ -4,9 +4,12 @@ import { Link, NavLink } from "react-router-dom";
 export const Sidebar = () => {
   return (
     <div className="p-6 bg-white h-full shadow-lg">
-      <div className="mb-8">
+      <div className="mb-8">  
+
+      <Link to={'/'} >
         <h1 className="text-2xl font-bold text-orange-600">Uplearn</h1>
         <p className="text-sm text-gray-500">Your Learning Platform</p>
+      </Link>
       </div>
 
       <nav>

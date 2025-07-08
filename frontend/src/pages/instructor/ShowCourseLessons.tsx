@@ -101,12 +101,17 @@ export const ShowCourseLessons = () => {
   const handleDeleteLesson = async () => {
     try {
       await axios.delete(
-        `${API}/lesson/delete-lesson/${selectedLesson?.lesson_id}`,
+        `${API}/instructor/delete-lesson`,
         {
           headers: {
             "Content-Type": "application/json",
           },
           withCredentials: true,
+          params: {
+            lessonId: selectedLesson?.lesson_id,
+            instructorId: user?.userId,
+            courseId: courseId,
+          },
         }
       );
       toast.success("Lesson deleted successfully!");

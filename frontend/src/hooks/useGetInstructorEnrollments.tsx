@@ -49,7 +49,7 @@ export const useGetInstructorEnrollments = () => {
         `${API}/instructor/instructor-courses-enrollments/${user?.userId}`,
         {
           params: {
-            limit: 11,
+            limit: 100,
           },
           headers: {
             "Content-Type": "application/json",

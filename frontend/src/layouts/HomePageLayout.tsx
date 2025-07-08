@@ -10,7 +10,7 @@ export const HomePageLayout = ({ children }: HomePageLayoutInterface) => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <HomePageNavbar />
-      <div className="flex-grow mx-auto ">{children}</div>
+      <div className="flex-grow  ">{children}</div>
       <HomePageFooter />
     </div>
   );

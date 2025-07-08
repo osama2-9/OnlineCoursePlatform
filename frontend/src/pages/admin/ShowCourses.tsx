@@ -60,7 +60,7 @@ export const ShowCourses = () => {
     try {
       setIsLoading(true);
       const res = await axios.get<FetchCoursesResponse>(
-        `${API}/course/get-courses`,
+        `${API}/admin/courses`,
         {
           params: {
             page,

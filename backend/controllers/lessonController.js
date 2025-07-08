@@ -67,21 +67,21 @@ export const createLesson = async (req, res) => {
         attachment: attachment,
         is_free: is_free,
         lesson_order: parseInt(lesson_order),
-        is_lesson_approved:false
+        is_lesson_approved: false
       },
     });
 
 
     if (newLesson) {
       const newLessonApproveRequest = await prisma.lessonsApprovel.create({
-       data:{
-        lesson_id:newLesson.lesson_id,
-        status:"pending",
-        
-       }
+        data: {
+          lesson_id: newLesson.lesson_id,
+          status: "pending",
+
+        }
       });
 
-      if(newLessonApproveRequest){
+      if (newLessonApproveRequest) {
         return res.status(201).json({
           message: "New lesson added to your course please wait to be approved",
         });
@@ -127,6 +127,9 @@ export const updateLesson = async (req, res) => {
         lesson_id: parseInt(lesson_id),
         course_id: parseInt(course_id),
       },
+      include: {
+        lessonsApprovel: true
+      }
     });
     if (!findLesson) {
       return res.status(400).json({
@@ -144,7 +147,20 @@ export const updateLesson = async (req, res) => {
         video_url: video_url,
         attachment: attachment,
         is_free: is_free,
-        is_lesson_approved:false
+        is_lesson_approved: false,
+        lessonsApprovel: {
+
+          update: {
+            where: {
+              lesson_id: parseInt(lesson_id),
+              lessoon_approvel_id: findLesson.lessonsApprovel.filter((lApproveLesson) => lApproveLesson.lesson_id === parseInt(lesson_id))[0].lessoon_approvel_id
+            },
+            data: {
+
+              status: "pending",
+            }
+          }
+        }
       },
     });
 
@@ -297,9 +313,8 @@ export const changeLessonAccess = async (req, res) => {
     });
 
     return res.status(200).json({
-      message: `Lesson access status updated successfully. Now it is ${
-        updatedLesson.is_free ? "free" : "paid"
-      }.`,
+      message: `Lesson access status updated successfully. Now it is ${updatedLesson.is_free ? "free" : "paid"
+        }.`,
     });
   } catch (error) {
     if (error.message === "You don't have permission to handle this course") {

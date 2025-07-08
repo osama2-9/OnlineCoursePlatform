@@ -406,7 +406,7 @@ export const QuizPage = () => {
     <>
 
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+        <div className="w-full mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
           <div className="p-6 bg-white border-b border-gray-100">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex-1">

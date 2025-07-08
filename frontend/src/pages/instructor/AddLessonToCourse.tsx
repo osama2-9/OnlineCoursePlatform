@@ -28,8 +28,8 @@ export const AddLessonToCourse = () => {
     lesson_order: 1,
   });
   const [loading, setLoading] = useState(false);
-  const [videoUploadProgress, setVideoUploadProgress] = useState(0); // Progress for video upload
-  const [fileUploadProgress, setFileUploadProgress] = useState(0); // Progress for file upload
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0); 
+  const [fileUploadProgress, setFileUploadProgress] = useState(0); 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);

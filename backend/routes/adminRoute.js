@@ -7,6 +7,7 @@ import {
   getAdminDashboardSummary,
   getAnalystics,
   getContentPublishRequests,
+  getCourses,
   getInstructors,
   getQuizzes,
   getReviews,
@@ -43,5 +44,6 @@ adminRoute.get(
   checkRole("admin"),
   getContentPublishRequests
 );
+adminRoute.get('/courses', checkRole("admin") ,getCourses)
 
 export default adminRoute;

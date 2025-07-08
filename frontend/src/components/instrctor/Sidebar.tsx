@@ -41,9 +41,13 @@ export const InstructorSidebar = () => {
             : "-translate-x-full lg:translate-x-0"
         } z-50`}
       >
+
         <div className="mb-8">
+
+        <Link to={'/'} >
           <h1 className="text-2xl font-bold text-orange-600">Uplearn</h1>
           <p className="text-sm text-gray-500">Instructor Dashboard</p>
+        </Link>
         </div>
 
         <nav>

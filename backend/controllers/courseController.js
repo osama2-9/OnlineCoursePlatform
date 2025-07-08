@@ -107,7 +107,8 @@ export const getCourses = async (req, res) => {
     const sortDirection = req.query.sortDirection || "asc";
     const skip = (page - 1) * pageSize;
 
-    let whereClause = {};
+    
+    let whereClause = {is_published:true,};
 
     if (search) {
       whereClause = {
@@ -128,6 +129,7 @@ export const getCourses = async (req, res) => {
       whereClause = {
         ...whereClause,
         category: category,
+        
       };
     }
 
@@ -166,10 +168,12 @@ export const getCourses = async (req, res) => {
     const [courses, totalCourses] = await Promise.all([
       prisma.courses.findMany({
         where: whereClause,
+        
         skip: skip,
         take: pageSize,
         orderBy: orderBy,
         select: {
+          
           course_id: true,
           title: true,
           price: true,

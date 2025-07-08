@@ -2,6 +2,7 @@ import sendMail from "../emails/sendMail.js";
 import { genreateQuestionAttempt } from "../openAI/openAi.js";
 import { prisma } from "../prisma/prismaClint.js";
 import { newQuizNotification } from "../services/notifications.js";
+import { v2 as cloudinary } from "cloudinary";
 const isHavePermession = async (course_id, instructor_id) => {
   try {
     const courseId = parseInt(course_id);
@@ -244,6 +245,7 @@ export const updateMyCourse = async (req, res) => {
         title: title,
         description: description,
         learning_outcomes: learning_outcomes,
+        
       },
     });
     if (!update) {
@@ -1036,9 +1038,8 @@ export const toggleQuizPublish = async (req, res) => {
     });
 
     return res.status(200).json({
-      message: `Quiz ${
-        is_published ? "published" : "unpublished"
-      } successfully!`,
+      message: `Quiz ${is_published ? "published" : "unpublished"
+        } successfully!`,
       quiz: updatedQuiz,
     });
   } catch (error) {
@@ -1083,6 +1084,7 @@ export const getUsersAttempts = async (req, res) => {
           course_id: true,
           title: true,
           duration: true,
+          total_marks:true,
           Attempt: {
             select: {
               user: {
@@ -1539,7 +1541,7 @@ export const getMyContentRequests = async (req, res) => {
     });
     const lessonsFormat = lessons.map((lesson) => {
       return {
-        apporval_date: lesson.apporval_date.toLocaleDateString(),
+        apporval_date: new Date(lesson.apporval_date).toLocaleDateString(),
         status: lesson.status,
         lesson_id: lesson.lesson_id,
         reason: lesson.reason,
@@ -1578,3 +1580,44 @@ export const getMyContentRequests = async (req, res) => {
     });
   }
 };
+
+export const deleteLesson = async (req, res) => {
+  try {
+    const { lessonId, instructorId, courseId } = req.query
+    await isHavePermession(parseInt(courseId), parseInt(instructorId));
+    const deleteLesson = await prisma.lessons.delete({
+      where: {
+        lesson_id: parseInt(lessonId),
+      },
+      select: {
+        video_url: true,
+        attachment: true,
+      },
+    });
+    const publicId = deleteLesson.video_url.split('/').pop().split('.')[0];
+    const publicIdAttachment = deleteLesson.attachment.split('/').pop().split('.')[0];
+
+    if (deleteLesson) {
+      const deleteVideo = await cloudinary.uploader.destroy(publicId);
+      const deleteAttachment = await cloudinary.uploader.destroy(publicIdAttachment);
+      if (!deleteVideo || !deleteAttachment) {
+        return res.status(400).json({
+          error: "Error while delete the lesson",
+        });
+      }
+      return res.status(200).json({
+        message: "lesson deleted",
+      });
+    } else {
+      return res.status(400).json({
+        error: "Error while delete the lesson",
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+}

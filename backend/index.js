@@ -18,7 +18,7 @@ import applicationsRoute from "./routes/applicationRoute.js";
 import articleRoute from "./routes/articalsRoute.js";
 import assignmentsRoute from "./routes/assignmentsRoute.js";
 import supportRoute from "./routes/supportRoute.js";
-import { rescheduleAllReminders} from "./services/schedule.js";
+import { rescheduleAllReminders } from "./services/schedule.js";
 import moderatorRoute from "./routes/moderatorRoute.js";
 
 dotenv.config();
@@ -28,7 +28,11 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://uplearn-website.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://uplearn-website.vercel.app",
+      "http://localhost:3000",
+    ],
     credentials: true,
   },
 });
@@ -36,7 +40,11 @@ const io = new Server(server, {
 const stripe = new Stripe(process.env.STRIPE_SECRET);
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://uplearn-website.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://uplearn-website.vercel.app",
+      "http://localhost:3000",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })

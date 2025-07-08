@@ -23,12 +23,10 @@ export const AdminSidebar = () => {
   const [isEnrollmentsOpen, setIsEnrollmentsOpen] = useState(false);
   const [isReviewsOpen, setIsReviewsOpen] = useState(false);
 
-  // Toggle sidebar visibility
   const toggleSidebar = () => {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
-  // Close sidebar when clicking outside
   const closeSidebar = () => {
     if (isSidebarVisible) {
       setIsSidebarVisible(false);
@@ -37,7 +35,6 @@ export const AdminSidebar = () => {
 
   return (
     <>
-      {/* Menu Icon for Small Screens */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={toggleSidebar}
@@ -47,7 +44,6 @@ export const AdminSidebar = () => {
         </button>
       </div>
 
-      {/* Overlay for Small Screens */}
       {isSidebarVisible && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -55,7 +51,6 @@ export const AdminSidebar = () => {
         ></div>
       )}
 
-      {/* Sidebar */}
       <div
         className={`fixed lg:relative inset-y-0 left-0 w-64 p-6 bg-white h-full shadow-lg transform transition-transform duration-300 ease-in-out ${
           isSidebarVisible
@@ -64,13 +59,15 @@ export const AdminSidebar = () => {
         } z-50`}
       >
         <div className="mb-8">
+
+        <Link to={'/'} >
           <h1 className="text-2xl font-bold text-orange-600">Uplearn</h1>
           <p className="text-sm text-gray-500">Admin Dashboard</p>
+        </Link >
         </div>
 
         <nav>
           <ul className="space-y-3">
-            {/* Users Section */}
             <li>
               <NavLink
                 to="/admin/dashboard"

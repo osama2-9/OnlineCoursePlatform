@@ -16,9 +16,7 @@ export const HomePageFooter = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           <div className="space-y-4">
             <div className="flex items-center">
-              <div className="h-8 w-8 rounded-md bg-orange-600 flex items-center justify-center mr-2">
-                <span className="font-bold text-white">U</span>
-              </div>
+              
               <h3 className="text-2xl font-bold">UpLearn</h3>
             </div>
             <p className="text-gray-400 leading-relaxed">
