@@ -1,5 +1,5 @@
-import { response } from "express";
 import { prisma } from "../prisma/prismaClint.js";
+
 export const createCategory = async (req, res) => {
   try {
     const { userId, name, slug, description } = req.body;
@@ -84,6 +84,7 @@ export const getCategories = async (req, res) => {
     });
   }
 };
+
 export const createArtical = async (req, res) => {
   try {
     const {
@@ -200,11 +201,12 @@ export const createArtical = async (req, res) => {
         data: {
           article_id: newArticle.article_id,
           status: "pending",
-        }
+        },
       });
       if (newArticleApproveRequest) {
         return res.status(201).json({
-          message: "New article added to your course please wait to be approved",
+          message:
+            "New article added to your course please wait to be approved",
         });
       }
     } else {
@@ -219,14 +221,15 @@ export const createArtical = async (req, res) => {
     });
   }
 };
+
 export const getArticalById = async (req, res) => {
   try {
     const { articalId, userId } = req.params;
 
     const articalIdInt = parseInt(articalId);
     let userIdInt = null;
-    
-    if (userId && userId !== 'undefined') {
+
+    if (userId && userId !== "undefined") {
       userIdInt = parseInt(userId);
     }
 
@@ -252,7 +255,6 @@ export const getArticalById = async (req, res) => {
         author_id: true,
         tags: true,
         title: true,
-       
       },
     });
 
@@ -293,7 +295,7 @@ export const getArticalById = async (req, res) => {
       article,
       likes_count: likes,
       allowLike,
-      isBookmarked
+      isBookmarked,
     });
   } catch (error) {
     console.log(error);
@@ -303,43 +305,40 @@ export const getArticalById = async (req, res) => {
   }
 };
 
-export const getArticleComments = async (req ,res)=>{
+export const getArticleComments = async (req, res) => {
   try {
-    const {articleId} = req.params
+    const { articleId } = req.params;
     const comments = await prisma.comment.findMany({
       where: {
         article_id: parseInt(articleId),
       },
-      select:{
+      select: {
         comment_id: true,
         content: true,
         author: {
           select: {
             full_name: true,
-            user_id: true
+            user_id: true,
           },
         },
         created_at: true,
-      }
-    })
-    if(!comments){
+      },
+    });
+    if (!comments) {
       return res.status(404).json({
         error: "Comments not found",
-      })
+      });
     }
     return res.status(200).json({
-      comments
-    })
-    
+      comments,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       error: "Internal server error",
     });
-    
   }
-}
-
+};
 
 export const getArticles = async (req, res) => {
   try {
@@ -367,7 +366,6 @@ export const getArticles = async (req, res) => {
       ...searchFilter,
     };
 
-  
     const [totalArticles, articles] = await Promise.all([
       prisma.article.count({ where }),
       prisma.article.findMany({
@@ -392,8 +390,8 @@ export const getArticles = async (req, res) => {
           _count: {
             select: {
               comments: true,
-              likes: true
-            }
+              likes: true,
+            },
           },
           author_id: true,
         },
@@ -402,14 +400,14 @@ export const getArticles = async (req, res) => {
         },
         skip,
         take: limit,
-      })
+      }),
     ]);
 
-    const articlesWithCounts = articles.map(article => ({
+    const articlesWithCounts = articles.map((article) => ({
       ...article,
       likes_count: article._count.likes,
       comments_count: article._count.comments,
-      _count: undefined
+      _count: undefined,
     }));
 
     const totalPages = Math.ceil(totalArticles / limit);
@@ -433,7 +431,6 @@ export const getArticles = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: "Internal server error",
-    
     });
   }
 };
@@ -482,136 +479,132 @@ export const addComment = async (req, res) => {
   }
 };
 
-export const deleteComment = async (req ,res)=>{
-  try{
-    const {userId,articleId,commentId} = req.params;
+export const deleteComment = async (req, res) => {
+  try {
+    const { userId, articleId, commentId } = req.params;
     const articleIdInt = parseInt(articleId);
     const commentIdInt = parseInt(commentId);
     const userIdInt = parseInt(userId);
-    if(!userId || !articleId ||!commentId){
+    if (!userId || !articleId || !commentId) {
       return res.status(400).json({
-        error:"Missing required fields"
-      })
+        error: "Missing required fields",
+      });
     }
     const article = await prisma.article.findUnique({
       where: {
-        article_id:articleIdInt
-
+        article_id: articleIdInt,
       },
-      select:{
-        article_id:true
-      }
-    })
-    if(!article){
+      select: {
+        article_id: true,
+      },
+    });
+    if (!article) {
       return res.status(404).json({
-        error:"Article not found"
-      })
+        error: "Article not found",
+      });
     }
     const comment = await prisma.comment.findUnique({
-      where:{
-        comment_id:commentIdInt,
-        article_id:articleIdInt,
-        author_id:userIdInt
-      }
-    })
-    if(!comment){
+      where: {
+        comment_id: commentIdInt,
+        article_id: articleIdInt,
+        author_id: userIdInt,
+      },
+    });
+    if (!comment) {
       return res.status(400).json({
-        error:"Comment not found"
-      })
+        error: "Comment not found",
+      });
     }
 
     const deleteComment = await prisma.comment.deleteMany({
-      where:{
-        comment_id:commentIdInt,
-        article_id:articleIdInt,
-        author_id:userIdInt
-      }
-    })
-if(!deleteComment){
-  return res.status(400).json({
-    success:false,
-    error:"Can't delete comment please try again"
-  })
-}
-
-return res.status(200).json({
-  success:true
-})
-
-
-  }catch(error){
-    console.log(error);
-    return res.status(500).json({
-      error:"Internal server error"
-    })
-    
-  }
-}
-
-export const updateComment = async (req ,res)=>{
-  try {
-    const {articalId ,userId ,commentId ,comment} =req.body
-    const articleIdInt = parseInt(articalId);
-    const commentIdInt = parseInt(commentId);
-    const userIdInt = parseInt(userId);
-    if(!userId || !articalId ||!commentId ||!comment){
-      return res.status(400).json({
-        error:"Missing required fields"
-      })
-    }
-
-    const article = await prisma.article.findUnique({
-      where:{
-        article_id:articleIdInt
+      where: {
+        comment_id: commentIdInt,
+        article_id: articleIdInt,
+        author_id: userIdInt,
       },
-      select:{
-        article_id:true
-      }
-    })
-    if(!article){
-      return res.status(404).json({
-        error:"Article not found"
-      })
-    }
-    const findComment = await prisma.comment.findUnique({
-      where:{
-        comment_id:commentIdInt,
-        article_id:articleIdInt,
-        author_id:userIdInt
-      }
-    })
-    if(!findComment){
+    });
+    if (!deleteComment) {
       return res.status(400).json({
-        error:"Comment not found"
-      })
+        success: false,
+        error: "Can't delete comment please try again",
+      });
     }
-    const updateComment = await prisma.comment.update({
-      where:{
-        comment_id:commentIdInt,
-        article_id:articleIdInt,
-        author_id:userIdInt
-      },
-      data:{
-        content:comment
-      }
-    })
-    if(!updateComment){
-      return res.status(400).json({
-        error:"Can't update comment please try again"
-      })
-    }
+
     return res.status(200).json({
-      success:true
-    })
+      success: true,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error:"Internal server error"
-    })
-    
-    
+      error: "Internal server error",
+    });
   }
-}
+};
+
+
+export const updateComment = async (req, res) => {
+  try {
+    const { articalId, userId, commentId, comment } = req.body;
+    const articleIdInt = parseInt(articalId);
+    const commentIdInt = parseInt(commentId);
+    const userIdInt = parseInt(userId);
+    if (!userId || !articalId || !commentId || !comment) {
+      return res.status(400).json({
+        error: "Missing required fields",
+      });
+    }
+
+    const article = await prisma.article.findUnique({
+      where: {
+        article_id: articleIdInt,
+      },
+      select: {
+        article_id: true,
+      },
+    });
+    if (!article) {
+      return res.status(404).json({
+        error: "Article not found",
+      });
+    }
+    const findComment = await prisma.comment.findUnique({
+      where: {
+        comment_id: commentIdInt,
+        article_id: articleIdInt,
+        author_id: userIdInt,
+      },
+    });
+    if (!findComment) {
+      return res.status(400).json({
+        error: "Comment not found",
+      });
+    }
+    const updateComment = await prisma.comment.update({
+      where: {
+        comment_id: commentIdInt,
+        article_id: articleIdInt,
+        author_id: userIdInt,
+      },
+      data: {
+        content: comment,
+      },
+    });
+    if (!updateComment) {
+      return res.status(400).json({
+        error: "Can't update comment please try again",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
 export const addLike = async (req, res) => {
   try {
     const { userId, articleId } = req.body;
@@ -654,26 +647,27 @@ export const addLike = async (req, res) => {
     });
   }
 };
+
 export const removeLike = async (req, res) => {
   try {
-    const {articleId, userId} = req.params;
+    const { articleId, userId } = req.params;
     const articleIdInt = parseInt(articleId);
     const userIdInt = parseInt(userId);
-    
-    if(!articleId || !userId) {
+
+    if (!articleId || !userId) {
       return res.status(400).json({
-        error: "Missing required fields"
+        error: "Missing required fields",
       });
     }
 
     const like = await prisma.like.findFirst({
       where: {
         article_id: articleIdInt,
-        user_id: userIdInt
-      }
+        user_id: userIdInt,
+      },
     });
 
-    if(!like) {
+    if (!like) {
       return res.status(400).json({
         remove_like_success: false,
       });
@@ -682,28 +676,27 @@ export const removeLike = async (req, res) => {
     await prisma.like.deleteMany({
       where: {
         article_id: articleIdInt,
-        user_id: userIdInt
-      }
+        user_id: userIdInt,
+      },
     });
 
     return res.status(200).json({
-      remove_like_success: true
+      remove_like_success: true,
     });
-    
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Internal server error"
+      error: "Internal server error",
     });
   }
-}; 
+};
 
 export const addBookmark = async (req, res) => {
   try {
     const { articleId, userId } = req.body;
     const articleIdInt = parseInt(articleId);
     const userIdInt = parseInt(userId);
-    
+
     if (!articleIdInt || !userIdInt) {
       return res.status(400).json({
         error: "Missing required fields",
@@ -759,7 +752,7 @@ export const removeBookmark = async (req, res) => {
     const { articleId, userId } = req.params;
     const articleIdInt = parseInt(articleId);
     const userIdInt = parseInt(userId);
-    
+
     if (!articleIdInt || !userIdInt) {
       return res.status(400).json({
         error: "Missing required fields",
@@ -797,13 +790,13 @@ export const removeBookmark = async (req, res) => {
       error: "Internal server error",
     });
   }
-}; 
+};
 
 export const getBookMarkedArticles = async (req, res) => {
   try {
     const userId = req.params.userId;
     const userIdInt = parseInt(userId);
-    
+
     if (!userIdInt) {
       return res.status(400).json({
         error: "Missing required fields",
@@ -811,55 +804,85 @@ export const getBookMarkedArticles = async (req, res) => {
     }
 
     const bookmarks = await prisma.bookmark.findMany({
-      where:{
-        user_id: userIdInt
+      where: {
+        user_id: userIdInt,
       },
       select: {
-        article_id: true
-      }
-    })
-
+        article_id: true,
+      },
+    });
 
     const articles = await prisma.article.findMany({
       where: {
         article_id: {
-          in: bookmarks.map(bookmark => bookmark.article_id)
-        }
-      
-      },
-      include:{
-        author:{
-          select:{
-            full_name:true
-          }
+          in: bookmarks.map((bookmark) => bookmark.article_id),
         },
-      _count:{
-        select:{
-       likes:true,
-       comments:true
-        }
-      }
       },
-      
-    })
+      include: {
+        author: {
+          select: {
+            full_name: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+    });
 
-    const formattedArticle = articles.map((articles)=>{
+    const formattedArticle = articles.map((articles) => {
       return {
         ...articles,
-        likes_count:articles._count.likes,
-        comments_count:articles._count.comments
-
-      }
-    })
+        likes_count: articles._count.likes,
+        comments_count: articles._count.comments,
+      };
+    });
     return res.status(200).json({
       success: true,
-      data: formattedArticle
-    })
-    
+      data: formattedArticle,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       error: "Internal server error",
     });
   }
-}
+};
+
+export const seen = async (req, res) => {
+  try {
+    const {userId ,articleId} =req.body
+    if(!userId || !articleId){
+      return res.status(400).json({
+        error:"Missing required ids"
+      })
+    }
+    const seen = await prisma.seen.findFirst({
+      where:{
+        user_id:userId,
+        article_id:articleId
+      }
+    })
+    if(!seen){
+      await prisma.seen.create({
+        data:{
+          user_id:userId,
+          article_id:parseInt(articleId),
+          seen_at: new Date(),
+          
+        }
+      })
+      return res.status(200).json({
+        seen_success:true
+      })
+    }
+    return res.status(200).json({
+      seen_success:false
+    })
+  } catch (error) {
+    console.log(error);
+  }
+};

@@ -73,6 +73,8 @@ import ContentModeratorDashboard from "./pages/moderator/ModeratorDashboard";
 import PublishContentRequests from "./pages/admin/PublishContentRequests";
 import MyContentRequests from "./pages/instructor/MyContentRequests";
 import SearchPage from "./pages/SearchPage";
+import { Certifications } from "./pages/learner/Certifications";
+import { CertificationsRequests } from "./pages/instructor/CertificationsRequests";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -191,6 +193,10 @@ function App() {
           }
         />
         <Route
+          path="/learner/certificates"
+          element={<ProtectLearnerRoute element={<Certifications />} />}
+        />
+        <Route
           path="/instructor/assignments/submissions/:assignmentId/:courseId/:courseTitle"
           element={
             <ProtectedInstractourRoute element={<GetSubmittiedAssignments />} />
@@ -216,14 +222,21 @@ function App() {
           path="/instructor/add-questions/:quizId/quiz/:quizname/c/:coursename/cid/:courseId"
           element={<ProtectedInstractourRoute element={<AddQuestions />} />}
         />
+
         <Route
           path="/instructor/review-quiz/:quizId/course/:courseId"
           element={<ProtectedInstractourRoute element={<ReviewQuiz />} />}
         />
+
         <Route
           path="/instructor/update-question/:questionId/course/:courseId"
           element={<ProtectedInstractourRoute element={<UpdateQuestion />} />}
         />
+        <Route
+          path="/instructor/certifications"
+          element={<ProtectedInstractourRoute element={<CertificationsRequests />} />}
+        />
+
         <Route
           path="/instructor/settings"
           element={

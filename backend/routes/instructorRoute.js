@@ -138,4 +138,5 @@ instructorRoute.delete(
   checkRole("instructor"),
   deleteLesson
 );
+
 export default instructorRoute;

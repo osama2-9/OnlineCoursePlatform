@@ -13,6 +13,7 @@ import {
   getCategories,
   removeBookmark,
   removeLike,
+  seen,
   updateComment,
 } from "../controllers/articalsController.js";
 import { checkRole } from "../middlewares/checkRole.js";
@@ -37,4 +38,5 @@ articleRoute.get("/get-bookmarks/user/:userId", protectedRoute, getBookMarkedArt
 articleRoute.delete('/delete-comment/:articleId/:commentId/:userId', protectedRoute, deleteComment)
 articleRoute.put('/edit-comment', protectedRoute, updateComment)
 articleRoute.get('/get-article-comments/:articleId', getArticleComments)
+articleRoute.post('/seen', protectedRoute, seen)
 export default articleRoute;

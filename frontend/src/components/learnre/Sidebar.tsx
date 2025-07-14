@@ -1,4 +1,4 @@
-import { FaHome, FaBook, FaChartLine, FaStar } from "react-icons/fa";
+import { FaHome, FaBook, FaChartLine, FaStar, FaCertificate } from "react-icons/fa";
 import { Link, NavLink } from "react-router-dom";
 
 export const Sidebar = () => {
@@ -72,6 +72,21 @@ export const Sidebar = () => {
             >
               <FaStar className="w-5 h-5" />
               <span>Review</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/learner/certificates"
+              className={({ isActive }) =>
+                `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-orange-50 text-orange-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              <FaCertificate className="w-5 h-5" />
+              <span>Certificates</span>
             </NavLink>
           </li>
         </ul>

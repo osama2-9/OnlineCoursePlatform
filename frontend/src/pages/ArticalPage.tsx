@@ -20,11 +20,11 @@ import { Likes } from "../hooks/Likes";
 import { useAuth } from "../hooks/useAuth";
 import { useBookmark } from "../hooks/Bookmark";
 import toast from "react-hot-toast";
-
+import { useEffect } from "react";
 
 interface Author {
   full_name: string;
-  user_id:number
+  user_id: number;
 }
 
 interface ContentBlock {
@@ -71,29 +71,26 @@ interface Article {
   views?: number;
 }
 
-
 interface ArticleResponseData {
   article: Article;
   allowLike?: boolean;
   likes_count?: number;
   isBookmarked?: boolean;
-
 }
-
 
 export const ArticlePage: React.FC = () => {
   const { user } = useAuth();
   const { articalId } = useParams<{ articalId: string }>();
   let requestEndpoint = `${API}/articels/get-article/${articalId}/u/${user?.userId}`;
-  if(!user){
+  if (!user) {
     requestEndpoint = `${API}/articels/get-article/${articalId}/u/undefined`;
-  }else{
+  } else {
     requestEndpoint = `${API}/articels/get-article/${articalId}/u/${user?.userId}`;
   }
   const copyArticleUrl = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Article URL copied to clipboard");
-  }
+  };
   const getArticleContent = async (): Promise<ArticleResponseData> => {
     try {
       const res = await axios.get(`${requestEndpoint}`, {
@@ -115,26 +112,61 @@ export const ArticlePage: React.FC = () => {
     retry: 2,
     enabled: !!articalId,
   });
-  const { handleClickLike, handleClickUnlike, addLikeSuccess, removeLikeSuccess } = Likes(articalId, user?.userId);
-  const {addBookmarkSuccess, removeBookmarkSuccess, addBookmark, removeBookmark} = useBookmark(articalId ,user?.userId);
-  let likes = data?.likes_count || 0
+  const {
+    handleClickLike,
+    handleClickUnlike,
+    addLikeSuccess,
+    removeLikeSuccess,
+  } = Likes(articalId, user?.userId);
+  const {
+    addBookmarkSuccess,
+    removeBookmarkSuccess,
+    addBookmark,
+    removeBookmark,
+  } = useBookmark(articalId, user?.userId);
+  let likes = data?.likes_count || 0;
   let allowLike = data && data.allowLike ? data?.allowLike : false;
-  if(addLikeSuccess){
+  if (addLikeSuccess) {
     likes++;
-    allowLike = false
+    allowLike = false;
   }
-  if(removeLikeSuccess){
+  if (removeLikeSuccess) {
     likes--;
     allowLike = true;
   }
 
   let isBookmarked = data && data.isBookmarked ? data?.isBookmarked : false;
-  if(addBookmarkSuccess){
-    isBookmarked = true
+  if (addBookmarkSuccess) {
+    isBookmarked = true;
   }
-  if(removeBookmarkSuccess){
-    isBookmarked = false
+  if (removeBookmarkSuccess) {
+    isBookmarked = false;
   }
+
+  const handleSeen = async () => {
+    try {
+      const response = await axios.post(
+        `${API}/articels/seen`,
+        {
+          userId: user?.userId,
+          articleId: articalId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+      console.log(response.data)
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(()=>{
+    handleSeen()
+  } ,[articalId ,user?.userId])
 
   if (isLoading) {
     return (
@@ -216,7 +248,7 @@ export const ArticlePage: React.FC = () => {
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <button
             className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
-            onClick={() => window.location.replace('/articels')}
+            onClick={() => window.location.replace("/articels")}
           >
             <ChevronLeft size={20} />
             <span>Back to Articles</span>
@@ -224,23 +256,29 @@ export const ArticlePage: React.FC = () => {
 
           <div className="flex items-center gap-5">
             <button
-            onClick={copyArticleUrl}
+              onClick={copyArticleUrl}
               className="text-gray-600 hover:text-blue-600 transition-colors"
               title="Share"
             >
               <Share2 size={20} />
             </button>
             <button
-            onClick={handleBookmarkRequest}
-              className={`text-gray-600 hover:text-blue-600 transition-colors ${ isBookmarked? 'text-yellow-600' : 'text-gray-600 hover:text-yellow-600'}`}
+              onClick={handleBookmarkRequest}
+              className={`text-gray-600 hover:text-blue-600 transition-colors ${
+                isBookmarked
+                  ? "text-yellow-600"
+                  : "text-gray-600 hover:text-yellow-600"
+              }`}
               title="Bookmark"
             >
               <Bookmark size={20} />
             </button>
             <button
-            onClick={handleLikeRequest}
+              onClick={handleLikeRequest}
               className={`flex items-center gap-1 transition-colors ${
-                !allowLike ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'
+                !allowLike
+                  ? "text-blue-600"
+                  : "text-gray-600 hover:text-blue-600"
               }`}
               title={allowLike ? "Like" : "Unlike"}
               disabled={!user}
@@ -271,7 +309,9 @@ export const ArticlePage: React.FC = () => {
               </div>
               <div className="flex items-center mr-6">
                 <Calendar size={16} className="mr-1 text-gray-500" />
-                <span>{created_at && new Date(created_at).toLocaleDateString()}</span>
+                <span>
+                  {created_at && new Date(created_at).toLocaleDateString()}
+                </span>
               </div>
               <div className="flex items-center mr-6">
                 <Clock size={16} className="mr-1 text-gray-500" />
@@ -325,8 +365,6 @@ export const ArticlePage: React.FC = () => {
                 </div>
               )}
             </div>
-
-           
           </div>
 
           <div className="lg:w-1/4">
@@ -362,7 +400,6 @@ export const ArticlePage: React.FC = () => {
                     ))}
                 </nav>
               </div>
-
             </div>
           </div>
         </div>

@@ -73,7 +73,7 @@ export const ShowEnrollments = () => {
           },
           params: {
             page: currentPage,
-            limit: rowsPerPage,
+            limit: 15,
             status: filters.status !== "all" ? filters.status : undefined,
             search: filters.searchTerm || undefined,
           },
@@ -242,13 +242,15 @@ export const ShowEnrollments = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
+          <div className="bg-white shadow-md rounded-lg ">
             <div className="p-6">
               <h2 className="text-2xl font-semibold text-gray-800">
                 Enrollments
               </h2>
             </div>
-            <table className="min-w-full divide-y divide-gray-200">
+            <div  className="overflow-x-auto">
+
+            <table className="w-full divide-y divide-gray-200 overflow-x-auto">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -274,7 +276,7 @@ export const ShowEnrollments = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-200 overflow-x-auto">
                 {getFilteredEnrollments().length > 0 ? (
                   getFilteredEnrollments().map((enrollment) => (
                     <tr
@@ -341,6 +343,8 @@ export const ShowEnrollments = () => {
                 )}
               </tbody>
             </table>
+            </div>
+
           </div>
           {selectdEnrollment && (
             <UpdateEnrollment

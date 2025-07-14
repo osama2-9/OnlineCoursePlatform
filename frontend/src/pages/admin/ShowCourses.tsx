@@ -10,7 +10,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { UpdateCourse } from "../../components/admin/UpdateCourse";
 import { Course } from "../../types/Course";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
-import { FaSort, FaDownload } from "react-icons/fa";
+import { FaSort, FaDownload, FaSearch, FaFilter } from "react-icons/fa";
 import { CSVLink } from "react-csv";
 
 interface Pagination {
@@ -128,11 +128,6 @@ export const ShowCourses = () => {
     }
   }, [courses]);
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= pagination.totalPages) {
-      setPagination((prev) => ({ ...prev, currentPage: newPage }));
-    }
-  };
 
   const handleAddLesson = (courseId: number, instructorId: number) => {
     navigate(
@@ -223,7 +218,7 @@ export const ShowCourses = () => {
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error);
-    }finally{
+    } finally {
       setIsUpdateCourse(false);
     }
   };
@@ -303,262 +298,315 @@ export const ShowCourses = () => {
       {loading ? (
         <Loading />
       ) : (
-        <div className="mt-5 px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Total Courses
-              </h3>
-              <p className="text-3xl font-bold text-black">
-                {pagination.totalCourses}
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Course Management
+              </h1>
+              <p className="text-gray-600">
+                Manage and monitor all courses in your platform
               </p>
             </div>
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Published
-              </h3>
-              <p className="text-3xl font-bold text-black">
-                {courses?.filter((c) => c.is_published).length}
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Unpublished
-              </h3>
-              <p className="text-3xl font-bold text-black">
-                {courses?.filter((c) => !c.is_published).length}
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all hover:shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Categories
-              </h3>
-              <p className="text-3xl font-bold text-black">
-                {categories.length}
-              </p>
-            </div>
-          </div>
 
-          <div className="bg-white shadow-md border border-gray-200 rounded-lg p-6 mb-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="w-full md:w-auto">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="w-full md:w-80 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Search courses..."
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      Total Courses
+                    </p>
+                    <p className="text-3xl font-bold text-black">
+                      {pagination.totalCourses}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => handleCategoryFilter(e.target.value)}
-                  className="p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      Published
+                    </p>
+                    <p className="text-3xl font-bold text-black">
+                      {courses?.filter((c) => c.is_published).length}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-                <select
-                  value={selectedPriceRange}
-                  onChange={(e) => handlePriceRangeFilter(e.target.value)}
-                  className="p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                >
-                  <option value="">All Prices</option>
-                  <option value="free">Free</option>
-                  <option value="0-50">$0 - $50</option>
-                  <option value="51-100">$51 - $100</option>
-                  <option value="101+">$101+</option>
-                </select>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      Unpublished
+                    </p>
+                    <p className="text-3xl font-bold text-black">
+                      {courses?.filter((c) => !c.is_published).length}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-                {courses && courses.length > 0 && (
-                  <CSVLink
-                    data={exportData || []}
-                    filename="courses-export.csv"
-                    className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      Categories
+                    </p>
+                    <p className="text-3xl font-bold text-black">
+                      {categories.length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Filters and Search */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                {/* Search */}
+                <div className="relative flex-1 max-w-md">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaSearch className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    placeholder="Search courses..."
+                  />
+                </div>
+
+                {/* Filters */}
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <FaFilter className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Filter by:</span>
+                  </div>
+
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => handleCategoryFilter(e.target.value)}
+                    className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm min-w-[140px]"
                   >
-                    <FaDownload /> Export
-                  </CSVLink>
-                )}
+                    <option value="">All Categories</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={selectedPriceRange}
+                    onChange={(e) => handlePriceRangeFilter(e.target.value)}
+                    className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm min-w-[120px]"
+                  >
+                    <option value="">All Prices</option>
+                    <option value="free">Free</option>
+                    <option value="0-50">$0 - $50</option>
+                    <option value="51-100">$51 - $100</option>
+                    <option value="101+">$101+</option>
+                  </select>
+
+                  {courses && courses.length > 0 && (
+                    <CSVLink
+                      data={exportData || []}
+                      filename="courses-export.csv"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
+                    >
+                      <FaDownload className="h-4 w-4" />
+                      Export CSV
+                    </CSVLink>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white shadow-lg rounded-lg p-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-              Courses
-            </h2>
+            {/* Table */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  All Courses
+                </h3>
+              </div>
 
-            <div className="overflow-x-auto w-full">
-              <table className="min-w-full table-auto border-collapse">
-                <thead>
-                  <tr>
-                    <th
-                      onClick={() => handleSort("course_id")}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2">
-                        # <FaSort />
-                      </div>
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Title
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Instructor
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Price
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Course Type
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Is Published
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Category
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Image
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 bg-gray-100 border-b">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {courses?.length === 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <td
-                        colSpan={9}
-                        className="py-4 px-4 text-center text-gray-500"
+                      <th
+                        onClick={() => handleSort("course_id")}
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                       >
-                        No courses found
-                      </td>
+                        <div className="flex items-center gap-2">
+                          ID
+                          <FaSort className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Course
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Instructor
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Category
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ) : (
-                    courses?.map((course) => (
-                      <tr
-                        key={course.course_id}
-                        className="hover:bg-gray-50 cursor-pointer"
-                      >
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          {course.course_id}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          {course.title}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          {course.instructor.full_name}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          ${course.price}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          {course.course_type ?? "free"}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          {course.is_published ? "Published" : "Unpublished"}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          {course.category}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          <img
-                            src={course.course_img}
-                            alt={course.title}
-                            className="w-16 h-16 object-cover rounded-md"
-                          />
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 border-b">
-                          <CourseActionsDropdown
-                            courseId={course.course_id}
-                            instructorId={course.instructor.user_id}
-                            isPublished={course.is_published}
-                            courseName={course.title}
-                            onAddLesson={handleAddLesson}
-                            onShowLessons={handleShowLessons}
-                            onTogglePublish={handleTogglePublish}
-                            updateCourse={() => onClickUpdate(course)}
-                            deleteCourse={() => onClickDelete(course)}
-                          />
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {courses?.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="px-6 py-12 text-center">
+                          <div className="flex flex-col items-center">
+                            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                              <div className="w-6 h-6 bg-gray-300 rounded"></div>
+                            </div>
+                            <p className="text-gray-500 text-sm">
+                              No courses found
+                            </p>
+                          </div>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <UpdateCourse
-              courseData={selectedCourse}
-              isOpen={showUpdateModal}
-              onClose={() => setShowUpdateModal(false)}
-              onUpdateCourse={handleUpdateCourse}
-              isUpdating={isUpdateCourse}
-            />
-            {showDeleteModal && (
-              <>
-                <ConfirmeDelete
-                  title={selectedCourse?.title}
-                  onCancel={onClickCancelDelete}
-                  onConfirm={handleDeleteCourse}
-                />
-              </>
-            )}
-            <div className="mt-6 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <button
-                  className="px-3 py-1 bg-gray-200 rounded-md"
-                  onClick={() => handlePageChange(1)}
-                  disabled={pagination.currentPage === 1}
-                >
-                  First
-                </button>
-                <button
-                  className="px-3 py-1 bg-gray-200 rounded-md"
-                  onClick={() => handlePageChange(pagination.currentPage - 1)}
-                  disabled={pagination.currentPage === 1}
-                >
-                  Previous
-                </button>
-                {[...Array(pagination.totalPages)].map((_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => handlePageChange(i + 1)}
-                    className={`px-3 py-1 rounded-md ${
-                      pagination.currentPage === i + 1
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-200"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                <button
-                  className="px-3 py-1 bg-gray-200 rounded-md"
-                  onClick={() => handlePageChange(pagination.currentPage + 1)}
-                  disabled={pagination.currentPage === pagination.totalPages}
-                >
-                  Next
-                </button>
-                <button
-                  className="px-3 py-1 bg-gray-200 rounded-md"
-                  onClick={() => handlePageChange(pagination.totalPages)}
-                  disabled={pagination.currentPage === pagination.totalPages}
-                >
-                  Last
-                </button>
+                    ) : (
+                      courses?.map((course) => (
+                        <tr
+                          key={course.course_id}
+                          className="hover:bg-gray-50 transition-colors duration-150"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            #{course.course_id}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-12 w-12">
+                                <img
+                                  src={course.course_img}
+                                  alt={course.title}
+                                  className="h-12 w-12 rounded-lg object-cover"
+                                />
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
+                                  {course.title}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {course.instructor.full_name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span className="font-medium">${course.price}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {course.course_type ?? "free"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                course.is_published
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {course.is_published
+                                ? "Published"
+                                : "Unpublished"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {course.category}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <CourseActionsDropdown
+                              courseId={course.course_id}
+                              instructorId={course.instructor.user_id}
+                              isPublished={course.is_published}
+                              courseName={course.title}
+                              onAddLesson={handleAddLesson}
+                              onShowLessons={handleShowLessons}
+                              onTogglePublish={handleTogglePublish}
+                              updateCourse={() => onClickUpdate(course)}
+                              deleteCourse={() => onClickDelete(course)}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
+
+              {pagination.totalPages > 1 && (
+                <div className="bg-white px-6 py-4 flex items-center justify-between border-t border-gray-200">
+                  <div className="flex-1 flex justify-between sm:hidden"></div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Showing{" "}
+                        <span className="font-medium">
+                          {(pagination.currentPage - 1) * pagination.pageSize +
+                            1}
+                        </span>{" "}
+                        to{" "}
+                        <span className="font-medium">
+                          {Math.min(
+                            pagination.currentPage * pagination.pageSize,
+                            pagination.totalCourses
+                          )}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-medium">
+                          {pagination.totalCourses}
+                        </span>{" "}
+                        results
+                      </p>
+                    </div>
+                    <div></div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Modals */}
+          <UpdateCourse
+            courseData={selectedCourse}
+            isOpen={showUpdateModal}
+            onClose={() => setShowUpdateModal(false)}
+            onUpdateCourse={handleUpdateCourse}
+            isUpdating={isUpdateCourse}
+          />
+
+          {showDeleteModal && (
+            <ConfirmeDelete
+              title={selectedCourse?.title}
+              onCancel={onClickCancelDelete}
+              onConfirm={handleDeleteCourse}
+            />
+          )}
         </div>
       )}
     </AdminLayout>

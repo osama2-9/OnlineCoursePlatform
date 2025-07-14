@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FaHome, FaBook, FaChartLine, FaUsers, FaBars, FaHammer } from "react-icons/fa";
+import { LiaCertificateSolid } from "react-icons/lia";
 
 import { Link, NavLink } from "react-router-dom";
 
@@ -41,13 +42,11 @@ export const InstructorSidebar = () => {
             : "-translate-x-full lg:translate-x-0"
         } z-50`}
       >
-
         <div className="mb-8">
-
-        <Link to={'/'} >
-          <h1 className="text-2xl font-bold text-orange-600">Uplearn</h1>
-          <p className="text-sm text-gray-500">Instructor Dashboard</p>
-        </Link>
+          <Link to={"/"}>
+            <h1 className="text-2xl font-bold text-orange-600">Uplearn</h1>
+            <p className="text-sm text-gray-500">Instructor Dashboard</p>
+          </Link>
         </div>
 
         <nav>
@@ -167,6 +166,25 @@ export const InstructorSidebar = () => {
               >
                 <FaHammer className="w-5 h-5" />
                 <span>Content</span>
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink
+                to="/instructor/certifications"
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`
+                }
+                onClick={closeSidebar}
+              >
+                <span>
+                  <LiaCertificateSolid className="w-5 h-5" />
+                </span>
+                <span>Certifications</span>
               </NavLink>
             </li>
           </ul>

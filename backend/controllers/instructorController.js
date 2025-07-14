@@ -245,7 +245,6 @@ export const updateMyCourse = async (req, res) => {
         title: title,
         description: description,
         learning_outcomes: learning_outcomes,
-        
       },
     });
     if (!update) {
@@ -1038,8 +1037,9 @@ export const toggleQuizPublish = async (req, res) => {
     });
 
     return res.status(200).json({
-      message: `Quiz ${is_published ? "published" : "unpublished"
-        } successfully!`,
+      message: `Quiz ${
+        is_published ? "published" : "unpublished"
+      } successfully!`,
       quiz: updatedQuiz,
     });
   } catch (error) {
@@ -1084,7 +1084,7 @@ export const getUsersAttempts = async (req, res) => {
           course_id: true,
           title: true,
           duration: true,
-          total_marks:true,
+          total_marks: true,
           Attempt: {
             select: {
               user: {
@@ -1583,7 +1583,7 @@ export const getMyContentRequests = async (req, res) => {
 
 export const deleteLesson = async (req, res) => {
   try {
-    const { lessonId, instructorId, courseId } = req.query
+    const { lessonId, instructorId, courseId } = req.query;
     await isHavePermession(parseInt(courseId), parseInt(instructorId));
     const deleteLesson = await prisma.lessons.delete({
       where: {
@@ -1594,12 +1594,17 @@ export const deleteLesson = async (req, res) => {
         attachment: true,
       },
     });
-    const publicId = deleteLesson.video_url.split('/').pop().split('.')[0];
-    const publicIdAttachment = deleteLesson.attachment.split('/').pop().split('.')[0];
+    const publicId = deleteLesson.video_url.split("/").pop().split(".")[0];
+    const publicIdAttachment = deleteLesson.attachment
+      .split("/")
+      .pop()
+      .split(".")[0];
 
     if (deleteLesson) {
       const deleteVideo = await cloudinary.uploader.destroy(publicId);
-      const deleteAttachment = await cloudinary.uploader.destroy(publicIdAttachment);
+      const deleteAttachment = await cloudinary.uploader.destroy(
+        publicIdAttachment
+      );
       if (!deleteVideo || !deleteAttachment) {
         return res.status(400).json({
           error: "Error while delete the lesson",
@@ -1613,11 +1618,10 @@ export const deleteLesson = async (req, res) => {
         error: "Error while delete the lesson",
       });
     }
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       error: "Internal server error",
     });
   }
-}
+};

@@ -18,13 +18,50 @@ import applicationsRoute from "./routes/applicationRoute.js";
 import articleRoute from "./routes/articalsRoute.js";
 import assignmentsRoute from "./routes/assignmentsRoute.js";
 import supportRoute from "./routes/supportRoute.js";
+import certificationRoute from "./routes/certificationsRoute.js";
 import { rescheduleAllReminders } from "./services/schedule.js";
 import moderatorRoute from "./routes/moderatorRoute.js";
+import helmet from "helmet";
 
 dotenv.config();
 
 const app = express();
 
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": [
+          "'self'",
+          "https://js.stripe.com",
+          "https://cdn.jsdelivr.net",
+        ],
+        "style-src": [
+          "'self'",
+          "'unsafe-inline'",
+          "https://fonts.googleapis.com",
+        ],
+        "img-src": [
+          "'self'",
+          "data:",
+          "blob:",
+          "https://res.cloudinary.com/dk5kncp7q",
+        ],
+        "connect-src": [
+          "'self'",
+          "https://api.stripe.com",
+          "http://localhost:5173",
+          "https://uplearn-website.vercel.app",
+        ],
+        "frame-src": ["'self'", "https://js.stripe.com"],
+        "object-src": ["'none'"],
+        "base-uri": ["'self'"],
+      },
+    },
+  })
+);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -71,6 +108,7 @@ app.use("/api/articels", articleRoute);
 app.use("/api/assignments", assignmentsRoute);
 app.use("/api/support", supportRoute);
 app.use("/api/moderator", moderatorRoute);
+app.use("/api/certifications", certificationRoute);
 
 server.listen(process.env.PORT, () => {
   rescheduleAllReminders();

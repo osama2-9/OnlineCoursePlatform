@@ -18,19 +18,20 @@ import {
 } from "../controllers/authController.js";
 import protectedRoute from "../middlewares/protectedRoute.js";
 import { generateAuthUrl, handleGoogleCallback } from "../googleAuth/google.js";
+import { authLimit } from "../utils/rateLimiter.js";
 
 const authRoute = express.Router();
 
 authRoute.get("/check-auth", isAuthenticated);
-authRoute.post("/signup", signup);
-authRoute.post("/login", login);
+authRoute.post("/signup", authLimit, signup);
+authRoute.post("/login", authLimit, login);
 authRoute.post("/logout", logout);
 authRoute.post("/active-email-request", protectedRoute, activeEmailRequest);
 authRoute.post("/verify-email", protectedRoute, verifyEmail);
-authRoute.post("/reset-password-request", resetPasswordRequest);
+authRoute.post("/reset-password-request", authLimit, resetPasswordRequest);
 authRoute.post("/set-new-password", setNewPassword);
 authRoute.post("/deactive", protectedRoute, deactiveMyAccount);
-authRoute.post("/active-account-request", activeAccountRequest);
+authRoute.post("/active-account-request", authLimit, activeAccountRequest);
 authRoute.post("/active-acc-attempt", activeMyAccount);
 authRoute.post("/enable2FA", protectedRoute, towFAEnable);
 authRoute.post("/verify-2fa", verify2FA);

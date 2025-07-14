@@ -37,7 +37,11 @@ export const createNewUser = async (req, res) => {
     }
     const loginUrl = `https://uplearn-website.vercel.app/login`;
     try {
-      await sendNewAccountEmail(email, loginUrl, rawPassword);
+      await sendNewAccountEmail(
+        email,
+        loginUrl,
+        rawPassword
+      );
     } catch (emailerror) {
       console.log(emailerror);
     }
@@ -114,7 +118,7 @@ export const deleteUser = async (req, res) => {
 
     await prisma.article.deleteMany({
       where: {
-        user_id: userId,
+        author_id: userId,
       },
     });
 
@@ -915,7 +919,7 @@ export const getContentPublishRequests = async (req, res) => {
   }
 };
 
-export const getCourses = async (req ,res)=>{
+export const getCourses = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 8;
@@ -926,7 +930,6 @@ export const getCourses = async (req ,res)=>{
     const sortDirection = req.query.sortDirection || "asc";
     const skip = (page - 1) * pageSize;
 
-    
     let whereClause = {};
 
     if (search) {
@@ -948,7 +951,6 @@ export const getCourses = async (req ,res)=>{
       whereClause = {
         ...whereClause,
         category: category,
-        
       };
     }
 
@@ -987,12 +989,11 @@ export const getCourses = async (req ,res)=>{
     const [courses, totalCourses] = await Promise.all([
       prisma.courses.findMany({
         where: whereClause,
-        
+
         skip: skip,
         take: pageSize,
         orderBy: orderBy,
         select: {
-          
           course_id: true,
           title: true,
           price: true,
@@ -1033,13 +1034,10 @@ export const getCourses = async (req ,res)=>{
         pageSize,
       },
     });
-    
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error:"Internal server error"
-    })
-    
-    
+      error: "Internal server error",
+    });
   }
-}
+};

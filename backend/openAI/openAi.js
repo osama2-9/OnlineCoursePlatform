@@ -39,13 +39,13 @@ export async function genreateQuestionAttempt(questionType, quizname, course) {
       return {
         question: parsedContent.question,
         options: ["True", "False"],
-        correctAnswer: parsedContent.answer ? 0 : 1, // 0 for True, 1 for False
+        correctAnswer: parsedContent.answer ? 0 : 1, 
       };
     } else if (questionType === "mcq") {
       return {
         question: parsedContent.question,
         options: parsedContent.options,
-        correctAnswer: parsedContent.correctAnswer.charCodeAt(0) - 65, // Convert 'A' to 0, 'B' to 1, etc.
+        correctAnswer: parsedContent.correctAnswer.charCodeAt(0) - 65, 
       };
     }
   } catch (error) {

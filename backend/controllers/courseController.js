@@ -107,8 +107,7 @@ export const getCourses = async (req, res) => {
     const sortDirection = req.query.sortDirection || "asc";
     const skip = (page - 1) * pageSize;
 
-    
-    let whereClause = {is_published:true,};
+    let whereClause = { is_published: true };
 
     if (search) {
       whereClause = {
@@ -129,7 +128,6 @@ export const getCourses = async (req, res) => {
       whereClause = {
         ...whereClause,
         category: category,
-        
       };
     }
 
@@ -168,12 +166,11 @@ export const getCourses = async (req, res) => {
     const [courses, totalCourses] = await Promise.all([
       prisma.courses.findMany({
         where: whereClause,
-        
+
         skip: skip,
         take: pageSize,
         orderBy: orderBy,
         select: {
-          
           course_id: true,
           title: true,
           price: true,
@@ -416,7 +413,7 @@ export const getCourseById = async (req, res) => {
     course.lessons = course.lessons
       .filter((les) => les.is_lesson_approved == true)
       .map((lessons) => {
-        if (lessons.is_free) {
+        if (!lessons.is_free) {
           delete lessons.video_url;
           delete lessons.attachment;
         }
@@ -450,6 +447,9 @@ export const updatePublishStatus = async (req, res) => {
       where: {
         course_id: parseInt(course_id),
       },
+      select: {
+        is_published: true,
+      },
     });
 
     if (!course) {
@@ -464,7 +464,7 @@ export const updatePublishStatus = async (req, res) => {
       },
     });
 
-    if (lessonCount === 0) {
+    if (lessonCount === 0 && course.is_published == false) {
       return res.status(400).json({
         error: "Cannot publish a course without lessons!",
       });
@@ -522,8 +522,8 @@ export const searchCourse = async (req, res) => {
         course_img: true,
         category: true,
         course_type: true,
-        start_date:true,
-        end_date:true,
+        start_date: true,
+        end_date: true,
         reviews: {
           select: {
             rating: true,

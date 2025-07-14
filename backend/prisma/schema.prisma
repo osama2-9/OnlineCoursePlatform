@@ -55,6 +55,7 @@ model Users {
   SupportTicket SupportTicket[]
   SupportTicketMessage SupportTicketMessage[]
   SupportTicketAccessToken SupportTicketAccessToken[]
+  CertificateRequest CertificateRequest[]
 }
 
 model Courses {
@@ -72,7 +73,7 @@ model Courses {
   learning_outcomes String[]
   start_date        DateTime       @default(now())
   end_date          DateTime       @default(now())
-  instructor        Users          @relation(fields: [instructor_id], references: [user_id])
+  instructor        Users          @relation(fields: [instructor_id], references: [user_id] , onDelete: Cascade)
   lessons           Lessons[]
   enrollments       Enrollments[]
   reviews           Reviews[]
@@ -84,6 +85,7 @@ model Courses {
   assignments       Assignments[]
   @@map("courses")
   Notifications Notifications[]
+  CertificateRequest CertificateRequest[]
 }
 
 model InstructorsApplications {
@@ -140,7 +142,7 @@ model Article {
   deleted_at       DateTime?
   is_article_approved Boolean @default(false)
 
-  author           Users           @relation(fields: [author_id], references: [user_id])
+  author           Users           @relation(fields: [author_id], references: [user_id] ,onDelete: Cascade)
   comments         Comment[]
   categories       Category[]
   content_blocks   ContentBlock[]
@@ -183,7 +185,7 @@ model Comment {
   updated_at     DateTime       @updatedAt
   status         CommentStatus  @default(published)
 
-  author        Users          @relation(fields: [author_id], references: [user_id])
+  author        Users          @relation(fields: [author_id], references: [user_id]  ,onDelete: Cascade)
   article       Article        @relation(fields: [article_id], references: [article_id])
 
   @@index([article_id])
@@ -341,7 +343,7 @@ model Payments {
   updated_at               DateTime      @updatedAt
   course_id                Int?
 
-  user   Users    @relation(fields: [user_id], references: [user_id])
+  user   Users    @relation(fields: [user_id], references: [user_id] ,onDelete: Cascade)
   course Courses? @relation(fields: [course_id], references: [course_id])
 
   @@map("payments")
@@ -367,7 +369,7 @@ model Enrollments {
   access_granted  Boolean          @default(false)
   access_token    String?
 
-  user   Users   @relation(fields: [user_id], references: [user_id])
+  user   Users   @relation(fields: [user_id], references: [user_id] ,onDelete: Cascade)
   course Courses @relation(fields: [course_id], references: [course_id])
 
   @@map("enrollments")
@@ -386,7 +388,7 @@ model Reviews {
   review_text String?
   created_at  DateTime @default(now())
 
-  user   Users   @relation(fields: [user_id], references: [user_id])
+  user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
   course Courses @relation(fields: [course_id], references: [course_id])
 
   @@map("reviews")
@@ -452,7 +454,7 @@ model Attempt {
   start_time   DateTime      @default(now())
   end_time     DateTime?
   score        Float         @default(0)
-  user         Users         @relation(fields: [user_id], references: [user_id])
+  user         Users         @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
   quiz         Quizzes       @relation(fields: [quiz_id], references: [quiz_id])
   answers      Answer[]      
 
@@ -480,7 +482,7 @@ model Like {
   course_id  Int?
   created_at DateTime @default(now())
 
-  user   Users   @relation(fields: [user_id], references: [user_id])
+  user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
   article Article? @relation(fields: [article_id], references: [article_id])
   course  Courses? @relation(fields: [course_id], references: [course_id])
 
@@ -496,7 +498,7 @@ model Bookmark {
   course_id   Int?
   created_at  DateTime @default(now())
 
-  user   Users   @relation(fields: [user_id], references: [user_id])
+  user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
   article Article? @relation(fields: [article_id], references: [article_id])
   course  Courses? @relation(fields: [course_id], references: [course_id])
 
@@ -511,7 +513,7 @@ model Seen {
   article_id Int
   seen_at    DateTime @default(now())
 
-  user   Users   @relation(fields: [user_id], references: [user_id])
+  user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
   article Article @relation(fields: [article_id], references: [article_id])
 
   @@unique([user_id, article_id]) 
@@ -531,7 +533,7 @@ model Assignments {
   updated_at      DateTime  @updatedAt
 
   course          Courses   @relation(fields: [course_id], references: [course_id])
-  instructor      Users     @relation(fields: [instructor_id], references: [user_id])
+  instructor      Users     @relation(fields: [instructor_id], references: [user_id],onDelete: Cascade)
   submissions     AssignmentSubmission[]
 
   @@map("assignments")
@@ -548,7 +550,7 @@ model AssignmentSubmission {
   feedback       String?
 
   assignment      Assignments @relation(fields: [assignment_id], references: [assignment_id])
-  student         Users       @relation(fields: [student_id], references: [user_id])
+  student         Users       @relation(fields: [student_id], references: [user_id],onDelete: Cascade)
 
   @@map("assignment_submissions")
   Users Users[] @relation("StudentSubmissions")
@@ -563,7 +565,7 @@ model SupportTicketAccessToken {
   created_at  DateTime @default(now())
 
   ticket      SupportTicket @relation(fields: [ticket_id], references: [ticket_id])
-  user        Users @relation(fields: [user_id], references: [user_id])
+  user        Users @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
 
   @@map("support_ticket_access_tokens")
 }
@@ -578,7 +580,7 @@ model SupportTicket {
   created_at    DateTime   @default(now())
   updated_at    DateTime   @updatedAt
 
-  user Users @relation(fields: [user_id], references: [user_id])
+  user Users @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
   accessTokens SupportTicketAccessToken[]
 
   @@map("support_tickets")
@@ -600,7 +602,7 @@ model SupportTicketMessage {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
   ticket SupportTicket @relation(fields: [ticket_id], references: [ticket_id])
-  user Users @relation(fields: [user_id], references: [user_id])
+  user Users @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
 
   @@map("support_ticket_messages")
 }
@@ -620,4 +622,26 @@ enum NotificationType {
   ASSIGNMENT_DEADLINE
   QUIZ_NEW
   QUIZ_ENDING
+}
+model CertificateRequest {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  course_id   Int
+  verification_code String
+  status      CertificateStatus @default(pending)
+  requested_at DateTime @default(now())
+  issued_at   DateTime?
+  certificate_url String?
+
+  user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
+  course Courses @relation(fields: [course_id], references: [course_id])
+
+  @@unique([user_id, course_id])
+  @@map("certificate_requests")
+}
+
+enum CertificateStatus {
+  pending
+  approved
+  rejected
 }
