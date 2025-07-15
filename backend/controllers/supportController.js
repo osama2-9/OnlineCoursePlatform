@@ -5,7 +5,6 @@ import { sendChatLink } from "../emails/sendChatLink.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
-
 const findAndAssignSupportTicket = async (ticket_id) => {
   const supportUsers = await prisma.users.findMany({
     where: {
@@ -15,21 +14,6 @@ const findAndAssignSupportTicket = async (ticket_id) => {
   });
 
   if (supportUsers.length === 0) {
-    return null;
-  }
-
-  const supportTicket = await prisma.supportTicket.findUnique({
-    where: { ticket_id },
-    select: {
-      user: {
-        select: {
-          email: true,
-        },
-      },
-    },
-  });
-
-  if (!supportTicket) {
     return null;
   }
 
@@ -62,7 +46,55 @@ const findAndAssignSupportTicket = async (ticket_id) => {
     data: { assign_to: assignedUser.supportUserId },
   });
 
-  return supportTicket;
+  const ticket = await prisma.supportTicket.findUnique({
+    where: { ticket_id },
+    select: {
+      ticket_id: true,
+      title: true,
+      description: true,
+      status: true,
+      created_at: true,
+      updated_at: true,
+      assign_to: true,
+      user: {
+        select: {
+          user_id: true,
+          full_name: true,
+          email: true,
+        },
+      },
+      SupportTicketMessage: {
+        select: {
+          message_id: true,
+          user_id: true,
+          message: true,
+          is_read: true,
+          created_at: true,
+        },
+      },
+    },
+  });
+
+  if (!ticket) return null;
+
+  const formattedTicket = {
+    ticket_id: ticket.ticket_id,
+    title: ticket.title,
+    description: ticket.description,
+    status: ticket.status,
+    created_at: ticket.created_at.toISOString(),
+    updated_at: ticket.updated_at.toISOString(),
+    user: ticket.user,
+    messages: ticket.SupportTicketMessage.map((message) => ({
+      message_id: message.message_id,
+      sender: message.user_id === ticket.user.user_id ? "user" : "support",
+      message: message.message,
+      sent_at: message.created_at.toISOString(),
+      is_read: message.is_read,
+    })),
+  };
+
+  return formattedTicket;
 };
 export const createSupportTicket = async (req, res) => {
   try {
@@ -96,7 +128,6 @@ export const createSupportTicket = async (req, res) => {
     });
 
     const token = await generateChatAccessToken(user_id);
-
     if (!token) {
       return res.status(500).json({
         error: "Failed to generate chat access token",
@@ -115,12 +146,6 @@ export const createSupportTicket = async (req, res) => {
     if (!createToken) {
       return res.status(500).json({
         error: "Failed to create chat access token",
-      });
-    }
-
-    if (!supportTicket) {
-      return res.status(500).json({
-        error: "Failed to create support ticket",
       });
     }
 
@@ -151,19 +176,7 @@ export const createSupportTicket = async (req, res) => {
       }
     });
   } catch (error) {
-    if (error.message === "User not found") {
-      return res.status(404).json({
-        error: "User not found",
-      });
-    }
-
-    if (error.message === "error while genreate the chat access token") {
-      return res.status(500).json({
-        error: "Failed to generate chat access token",
-      });
-    }
-
-    console.error(error);
+    console.error("Error in createSupportTicket:", error);
     res.status(500).json({ error: "Failed to create support ticket" });
   }
 };
@@ -200,6 +213,11 @@ export const verifyChatAccessToken = async (req, res) => {
         },
       },
     });
+    if (!accesstoken) {
+      return res.status(400).json({
+        error: "Invalid access token",
+      });
+    }
 
     if (accesstoken.ticket.status == "closed") {
       return res.status(200).json({

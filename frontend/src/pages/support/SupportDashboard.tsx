@@ -163,6 +163,7 @@ const SupportDashboard: React.FC = () => {
               user_id: user.userId,
               ticket_id: selectedTicket.ticket_id,
               sender: "support",
+              is_read: false,
             },
           ],
         };
@@ -200,7 +201,11 @@ const SupportDashboard: React.FC = () => {
 
   useEffect(() => {
     if (data) {
-      setTickets(data);
+      const sorted = [...data].sort(
+        (a, b) =>
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+      setTickets(sorted);
     }
   }, [data]);
 

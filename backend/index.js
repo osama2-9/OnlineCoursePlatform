@@ -95,6 +95,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDE_API_SECRET,
 });
 
+
 app.use("/api/auth", authRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/course", courseRoute);

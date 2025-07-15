@@ -1,10 +1,11 @@
 interface SupportTicketMessage {
   message_id: number;
-  message: string;
-  sent_at: string;
-  sender: 'user' | 'support'; // Add this field
   user_id: number;
   ticket_id: number;
+  message: string;
+  is_read: boolean;
+  sent_at: string;
+  sender: "user" | "support";
 }
 
 interface SupportTicket {
