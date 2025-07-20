@@ -73,7 +73,7 @@ model Courses {
   learning_outcomes String[]
   start_date        DateTime       @default(now())
   end_date          DateTime       @default(now())
-  instructor        Users          @relation(fields: [instructor_id], references: [user_id] , onDelete: Cascade)
+  instructor        Users          @relation(fields: [instructor_id], references: [user_id] , onDelete: Restrict)
   lessons           Lessons[]
   enrollments       Enrollments[]
   reviews           Reviews[]

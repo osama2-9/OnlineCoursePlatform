@@ -37,6 +37,8 @@ interface CourseDetails {
     is_free: boolean;
     attachment: string[];
   }[];
+  avgRating: string;
+  totalRating: number;
 }
 
 interface CourseResponse {
@@ -168,8 +170,12 @@ export const CoursePage = () => {
                   </div>
                   <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-full">
                     <span className="text-yellow-500 text-xl">★</span>
-                    <span className="text-gray-700 ml-1 font-medium">4.6</span>
-                    <span className="text-gray-500 ml-2">(2037)</span>
+                    <span className="text-gray-700 ml-1 font-medium">
+                      {course?.avgRating}
+                    </span>
+                    <span className="text-gray-500 ml-2">
+                      ({course?.totalRating})
+                    </span>
                   </div>
                 </div>
               </div>
@@ -257,7 +263,7 @@ export const CoursePage = () => {
                   <img
                     src={course?.course_img}
                     alt="Course thumbnail"
-                    className="w-full h-48 object-cover"
+                    className="w-full h-48 "
                   />
                   <div className="p-6 space-y-6">
                     <div className="flex items-center justify-between">

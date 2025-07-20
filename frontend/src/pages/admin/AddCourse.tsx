@@ -33,14 +33,14 @@ export const AddCourse = () => {
   }, [img]);
 
   const { instractors } = useGetInstructor();
-  
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData({ 
-      ...formData, 
-      [name]: name === "price" ? parseFloat(value) || 0 : value 
+    setFormData({
+      ...formData,
+      [name]: name === "price" ? parseFloat(value) || 0 : value,
     });
   };
 
@@ -110,7 +110,7 @@ export const AddCourse = () => {
     if (formData.start_date && formData.end_date) {
       const startDate = new Date(formData.start_date);
       const endDate = new Date(formData.end_date);
-      
+
       if (startDate >= endDate) {
         toast.error("End date must be after start date");
         setIsSubmitting(false);
@@ -119,8 +119,10 @@ export const AddCourse = () => {
     }
 
     // Filter out empty learning outcomes
-    const filteredOutcomes = learnOutcomes.filter(outcome => outcome.trim() !== "");
-    
+    const filteredOutcomes = learnOutcomes.filter(
+      (outcome) => outcome.trim() !== ""
+    );
+
     if (filteredOutcomes.length === 0) {
       toast.error("Please add at least one learning outcome");
       setIsSubmitting(false);
@@ -160,7 +162,8 @@ export const AddCourse = () => {
         setLearnOutcomes([""]);
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || "Failed to create course";
+      const errorMessage =
+        error.response?.data?.error || "Failed to create course";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -205,22 +208,22 @@ export const AddCourse = () => {
       <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-        
 
           {/* Form Card */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-           
-
             <form onSubmit={handleSubmit} className="p-8 space-y-8">
               {/* Basic Information */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Basic Information
                 </h3>
-                
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700" htmlFor="title">
+                    <label
+                      className="block text-sm font-semibold text-gray-700"
+                      htmlFor="title"
+                    >
                       Course Title *
                     </label>
                     <input
@@ -234,13 +237,18 @@ export const AddCourse = () => {
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700" htmlFor="price">
+                    <label
+                      className="block text-sm font-semibold text-gray-700"
+                      htmlFor="price"
+                    >
                       Price (USD) *
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-3 text-gray-500 font-medium">$</span>
+                      <span className="absolute left-4 top-3 text-gray-500 font-medium">
+                        $
+                      </span>
                       <input
                         id="price"
                         name="price"
@@ -258,7 +266,10 @@ export const AddCourse = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700" htmlFor="description">
+                  <label
+                    className="block text-sm font-semibold text-gray-700"
+                    htmlFor="description"
+                  >
                     Course Description *
                   </label>
                   <textarea
@@ -271,7 +282,9 @@ export const AddCourse = () => {
                     placeholder="Describe what students will learn and achieve in this course..."
                     required
                   />
-                  <p className="text-sm text-gray-500">Minimum 50 characters recommended</p>
+                  <p className="text-sm text-gray-500">
+                    Minimum 50 characters recommended
+                  </p>
                 </div>
               </div>
 
@@ -280,7 +293,7 @@ export const AddCourse = () => {
                 <h3 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Assignment & Category
                 </h3>
-                
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">
@@ -289,14 +302,16 @@ export const AddCourse = () => {
                     <Select
                       options={instructorOptions}
                       onChange={handleInstructorChange}
-                      value={instructorOptions.find(option => option.value === formData.instructor_id)}
+                      value={instructorOptions.find(
+                        (option) => option.value === formData.instructor_id
+                      )}
                       isSearchable
                       placeholder="Search and select an instructor..."
                       styles={customSelectStyles}
                       className="react-select-container"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">
                       Category *
@@ -304,7 +319,9 @@ export const AddCourse = () => {
                     <Select
                       options={categoryOptions}
                       onChange={handleCategoryChange}
-                      value={categoryOptions.find(option => option.value === formData.category)}
+                      value={categoryOptions.find(
+                        (option) => option.value === formData.category
+                      )}
                       isSearchable
                       placeholder="Select a category..."
                       styles={customSelectStyles}
@@ -319,10 +336,13 @@ export const AddCourse = () => {
                 <h3 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Course Timeline
                 </h3>
-                
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700" htmlFor="start_date">
+                    <label
+                      className="block text-sm font-semibold text-gray-700"
+                      htmlFor="start_date"
+                    >
                       Start Date *
                     </label>
                     <input
@@ -331,14 +351,17 @@ export const AddCourse = () => {
                       type="date"
                       value={formData.start_date}
                       onChange={handleChange}
-                      min={new Date().toISOString().split('T')[0]}
+                      min={new Date().toISOString().split("T")[0]}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700" htmlFor="end_date">
+                    <label
+                      className="block text-sm font-semibold text-gray-700"
+                      htmlFor="end_date"
+                    >
                       End Date *
                     </label>
                     <input
@@ -347,7 +370,10 @@ export const AddCourse = () => {
                       type="date"
                       value={formData.end_date}
                       onChange={handleChange}
-                      min={formData.start_date || new Date().toISOString().split('T')[0]}
+                      min={
+                        formData.start_date ||
+                        new Date().toISOString().split("T")[0]
+                      }
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                       required
                     />
@@ -360,9 +386,12 @@ export const AddCourse = () => {
                 <h3 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Course Media
                 </h3>
-                
+
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700" htmlFor="course_img">
+                  <label
+                    className="block text-sm font-semibold text-gray-700"
+                    htmlFor="course_img"
+                  >
                     Course Image *
                   </label>
                   <div className="relative">
@@ -378,7 +407,9 @@ export const AddCourse = () => {
                   </div>
                   {img && (
                     <div className="mt-4 p-4 bg-gray-50 rounded-xl">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Preview:</p>
+                      <p className="text-sm font-medium text-gray-700 mb-3">
+                        Preview:
+                      </p>
                       <img
                         src={img}
                         alt="Course Preview"
@@ -394,19 +425,27 @@ export const AddCourse = () => {
                 <h3 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Learning Outcomes
                 </h3>
-                
+
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-600">Define what students will be able to do after completing this course</p>
-                  
+                  <p className="text-sm text-gray-600">
+                    Define what students will be able to do after completing
+                    this course
+                  </p>
+
                   {learnOutcomes.map((outcome, index) => (
-                    <div key={index} className="flex items-start space-x-3 group">
+                    <div
+                      key={index}
+                      className="flex items-start space-x-3 group"
+                    >
                       <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-semibold mt-2">
                         {index + 1}
                       </div>
                       <div className="flex-1">
                         <textarea
                           value={outcome}
-                          onChange={(e) => handleLearnOutcomeChange(index, e.target.value)}
+                          onChange={(e) =>
+                            handleLearnOutcomeChange(index, e.target.value)
+                          }
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 placeholder-gray-400 resize-none"
                           placeholder={`Learning outcome ${index + 1}...`}
                           rows={2}
@@ -419,21 +458,41 @@ export const AddCourse = () => {
                           onClick={() => handleRemoveLearnOutcome(index)}
                           className="flex-shrink-0 w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-all duration-200 mt-2 opacity-0 group-hover:opacity-100"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
                           </svg>
                         </button>
                       )}
                     </div>
                   ))}
-                  
+
                   <button
                     type="button"
                     onClick={handleAddLearnOutcome}
                     className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-4 py-2 rounded-lg transition-all duration-200"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
                     </svg>
                     <span className="font-medium">Add Learning Outcome</span>
                   </button>
@@ -454,8 +513,18 @@ export const AddCourse = () => {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center space-x-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
                       </svg>
                       <span>Create Course</span>
                     </div>

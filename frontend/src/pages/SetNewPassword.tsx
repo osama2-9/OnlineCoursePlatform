@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { API } from "../API/ApiBaseUrl";
+import {FaEye, FaEyeSlash} from "react-icons/fa"
 
 const SetNewPassword = () => {
   const [password, setPassword] = useState("");
@@ -10,7 +11,13 @@ const SetNewPassword = () => {
   const [success, setSuccess] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [showPassword ,setShowPassword] = useState<boolean>(false)
   const token = searchParams.get("token");
+
+  const handleShowPassword=()=>{
+    setShowPassword(!showPassword)
+  }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,13 +134,17 @@ const SetNewPassword = () => {
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                     placeholder="Enter your new password"
+
                   />
+                  <button className="absolute top-1/2 right-2 transform -translate-y-1/2" type="button" onClick={handleShowPassword}>
+                    {showPassword ? <FaEye color="gray"/> : <FaEyeSlash color="gray"/>}
+                  </button>
                 </div>
               </div>
 
@@ -144,18 +155,20 @@ const SetNewPassword = () => {
                 >
                   Confirm Password
                 </label>
-                <div className="mt-1">
+                <div className="mt-1 relative">
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                     placeholder="Confirm your new password"
                   />
+                    
                 </div>
+              
               </div>
 
               <div>

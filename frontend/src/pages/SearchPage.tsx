@@ -37,7 +37,7 @@ interface Course {
   course_type: string;
   created_at: string;
   instructor: Instructor;
-  reviews?: Review[];
+  avgRating: string;
 }
 
 const categories = [
@@ -109,11 +109,6 @@ export default function SearchPage() {
     return matchesCategory && matchesPrice;
   });
 
-  const getAverageRating = (reviews: Review[] = []) => {
-    if (reviews.length === 0) return 0;
-    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
-    return (sum / reviews.length).toFixed(1);
-  };
 
   const formatCategory = (category: string) => {
     return category
@@ -284,11 +279,11 @@ export default function SearchPage() {
                         <Star size={16} fill="currentColor" />
                       </div>
                       <span className="ml-1 text-sm font-medium">
-                        {getAverageRating(course.reviews) || "No rates yet"}
+                      
                       </span>
-                      {course.reviews && course.reviews.length > 0 && (
+                      {course.avgRating && (
                         <span className="text-gray-400 text-sm ml-1">
-                          ({course.reviews.length})
+                          ({course.avgRating})
                         </span>
                       )}
                     </div>

@@ -12,6 +12,7 @@ interface Course {
   instructor: {
     full_name: string;
   };
+  avgRating: string;
 }
 
 interface Pagination {
@@ -62,7 +63,6 @@ export const useGetCourses = (
     refetchInterval: 1000 * 60 * 12,
     retry: 1,
   });
-
 
   return {
     courses: data?.courses || [],

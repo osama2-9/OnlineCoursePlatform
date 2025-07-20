@@ -96,6 +96,7 @@ const ExploreCourses = () => {
               <CourseCard
                 key={course.course_id}
                 {...course}
+                avgRating={Number(course.avgRating)}
                 instructor_name={course.instructor.full_name}
               />
             ))}

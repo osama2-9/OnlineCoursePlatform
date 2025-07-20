@@ -339,16 +339,14 @@ export const getArticleComments = async (req, res) => {
     });
   }
 };
-
 export const getArticles = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const categoryFilter = req.query.category
-      ? { category: req.query.category }
-      : {};
+    const sortBy = req.query.sort || 'latest'; 
+    const categoryFilter = req.query.category ? { category: req.query.category } : {};
     const tagFilter = req.query.tag ? { tags: { has: req.query.tag } } : {};
     const searchFilter = req.query.search
       ? {
@@ -359,12 +357,21 @@ export const getArticles = async (req, res) => {
         }
       : {};
 
-    const where = {
+    let where = {
       is_article_approved: true,
       ...categoryFilter,
       ...tagFilter,
       ...searchFilter,
     };
+    let orderBy = { created_at: "desc" };
+
+    if (sortBy === "popular") {
+     
+      orderBy = { likes: { _count: "desc" } };
+    } else if (sortBy === "mostDiscussed") {
+      
+      orderBy = { comments: { _count: "desc" } };
+    } 
 
     const [totalArticles, articles] = await Promise.all([
       prisma.article.count({ where }),
@@ -395,9 +402,7 @@ export const getArticles = async (req, res) => {
           },
           author_id: true,
         },
-        orderBy: {
-          created_at: "desc",
-        },
+        orderBy,
         skip,
         take: limit,
       }),
@@ -863,7 +868,7 @@ export const seen = async (req, res) => {
     const seen = await prisma.seen.findFirst({
       where:{
         user_id:userId,
-        article_id:articleId
+        article_id:parseInt(articleId)
       }
     })
     if(!seen){

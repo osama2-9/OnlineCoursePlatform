@@ -22,6 +22,7 @@ import certificationRoute from "./routes/certificationsRoute.js";
 import { rescheduleAllReminders } from "./services/schedule.js";
 import moderatorRoute from "./routes/moderatorRoute.js";
 import helmet from "helmet";
+import { autoSanitize } from "express-pure-sanitize";
 
 dotenv.config();
 
@@ -62,6 +63,7 @@ app.use(
     },
   })
 );
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -94,8 +96,16 @@ cloudinary.config({
   api_key: process.env.CLOUDE_API,
   api_secret: process.env.CLOUDE_API_SECRET,
 });
-
-
+app.use(
+  autoSanitize({
+    removeHTML: true,
+    removeEmojis: true,
+    lowercaseEmails: true,
+    normalizeFields: ["email", "full_name"],
+    allowedChars: /[a-zA-Z0-9@. ]/,
+    stripSQLMeta: true,
+  })
+);
 app.use("/api/auth", authRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/course", courseRoute);

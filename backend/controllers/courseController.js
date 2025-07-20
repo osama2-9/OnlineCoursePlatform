@@ -66,7 +66,9 @@ export const createCourse = async (req, res) => {
         error: `Course named ${title} already exsit !`,
       });
     }
-    const img = await cloudinary.uploader.upload(course_img);
+    const img = await cloudinary.uploader.upload(course_img, {
+      resource_type: "auto",
+    });
     let imgUrl = img.secure_url;
 
     const newCourse = await prisma.courses.create({
@@ -95,7 +97,6 @@ export const createCourse = async (req, res) => {
     });
   }
 };
-
 export const getCourses = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -166,7 +167,6 @@ export const getCourses = async (req, res) => {
     const [courses, totalCourses] = await Promise.all([
       prisma.courses.findMany({
         where: whereClause,
-
         skip: skip,
         take: pageSize,
         orderBy: orderBy,
@@ -187,6 +187,11 @@ export const getCourses = async (req, res) => {
               user_id: true,
             },
           },
+          reviews: {
+            select: {
+              rating: true,
+            },
+          },
         },
       }),
       prisma.courses.count({
@@ -200,10 +205,32 @@ export const getCourses = async (req, res) => {
       });
     }
 
+    const coursesWithAvgRating = courses
+      .map((course) => {
+        const avgRating =
+          course.reviews.length > 0
+            ? (
+                course.reviews.reduce((sum, review) => sum + review.rating, 0) /
+                course.reviews.length
+              ).toFixed(1)
+            : "0.0";
+
+        const { reviews, ...courseWithoutReviews } = course;
+        return {
+          ...courseWithoutReviews,
+          avgRating,
+        };
+      })
+      .sort((a, b) => {
+        a.avgRating = Number(a.avgRating);
+        b.avgRating = Number(b.avgRating);
+        return b.avgRating - a.avgRating;
+      });
+
     const totalPages = Math.ceil(totalCourses / pageSize);
 
     return res.status(200).json({
-      courses,
+      courses: coursesWithAvgRating,
       pagination: {
         totalCourses,
         totalPages,
@@ -386,6 +413,11 @@ export const getCourseById = async (req, res) => {
         },
         start_date: true,
         end_date: true,
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
         lessons: {
           select: {
             lesson_id: true,
@@ -397,6 +429,7 @@ export const getCourseById = async (req, res) => {
             attachment: true,
             is_lesson_approved: true,
           },
+
           orderBy: {
             lesson_order: "asc",
           },
@@ -410,6 +443,15 @@ export const getCourseById = async (req, res) => {
       });
     }
 
+    const avgRating =
+      course.reviews.length > 0
+        ? course.reviews
+            .reduce((sum, review) => sum + review.rating, 0)
+            .toFixed(1) / course.reviews.length
+        : "0.0";
+
+    const totalRating = course.reviews.length || 0;
+
     course.lessons = course.lessons
       .filter((les) => les.is_lesson_approved == true)
       .map((lessons) => {
@@ -419,9 +461,14 @@ export const getCourseById = async (req, res) => {
         }
         return lessons;
       });
+    const { reviews, ...courseWithoutReviews } = course;
 
     return res.status(200).json({
-      course,
+      course: {
+        ...courseWithoutReviews,
+        avgRating: avgRating.toString(),
+        totalRating: totalRating,
+      },
     });
   } catch (error) {
     console.log(error);
@@ -536,13 +583,31 @@ export const searchCourse = async (req, res) => {
         },
       },
     });
-    if (!courses) {
+
+    if (!courses || courses.length === 0) {
       return res.status(404).json({
         error: "No courses found",
       });
     }
+
+    // Attach avgRating to each course and remove reviews
+    const coursesWithAvgRating = courses.map((course) => {
+      const avgRating =
+        course.reviews.length > 0
+          ? (
+              course.reviews.reduce((sum, review) => sum + review.rating, 0) /
+              course.reviews.length
+            ).toFixed(1)
+          : "0.0";
+      const { reviews, ...courseWithoutReviews } = course;
+      return {
+        ...courseWithoutReviews,
+        avgRating,
+      };
+    });
+
     return res.status(200).json({
-      courses,
+      courses: coursesWithAvgRating,
     });
   } catch (error) {
     console.log(error);
