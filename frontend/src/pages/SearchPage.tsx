@@ -21,9 +21,6 @@ interface Instructor {
 interface SeachResponse {
   courses: Course[];
 }
-interface Review {
-  rating: number;
-}
 
 interface Course {
   course_id: number;
@@ -108,7 +105,6 @@ export default function SearchPage() {
 
     return matchesCategory && matchesPrice;
   });
-
 
   const formatCategory = (category: string) => {
     return category
@@ -278,9 +274,7 @@ export default function SearchPage() {
                       <div className="flex text-yellow-400">
                         <Star size={16} fill="currentColor" />
                       </div>
-                      <span className="ml-1 text-sm font-medium">
-                      
-                      </span>
+                      <span className="ml-1 text-sm font-medium"></span>
                       {course.avgRating && (
                         <span className="text-gray-400 text-sm ml-1">
                           ({course.avgRating})
