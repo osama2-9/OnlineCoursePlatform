@@ -373,7 +373,7 @@ export const getAvliableQuizzes = async (req, res) => {
 
     if (!enrollments || enrollments.length === 0) {
       return res.status(404).json({
-        error: "No enrollments found for this user",
+        quizzes: [],
       });
     }
 

@@ -133,10 +133,9 @@ export const CoursePage = () => {
       }
     } catch (error: any) {
       console.log(error);
-      toast.error(
-        error?.response?.data?.error ||
-          "Payment failed. Please try again later."
-      );
+      if (error.response.data.error == "Unauthorized: No token provided") {
+        toast.error("Please login before enroll ");
+      }
     } finally {
       setIsPaymentLoading(false);
     }

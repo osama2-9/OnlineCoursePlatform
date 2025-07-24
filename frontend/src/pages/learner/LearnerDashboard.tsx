@@ -71,7 +71,7 @@ export const LearnerDashboard = () => {
               <FaBell className="text-gray-700" />
               <h2 className="font-semibold text-gray-900">Recent Updates</h2>
               <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                {notifications.filter((notification) => new Date(notification.created_at).getDay() == new Date().getDay()).length} notifications
+                {notifications?.filter((notification) => new Date(notification.created_at).getDay() == new Date().getDay()).length} notifications
               </span>
             </div>
             {notificationsOpen ? (

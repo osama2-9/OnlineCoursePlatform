@@ -40,8 +40,9 @@ export const useGetLearnerQuizzes = () => {
       );
       return data;
     } catch (error: any) {
-      console.log(error);
-      toast.error(error?.response?.data?.error);
+      if (data != null) {
+        toast.error(error.response.data.error);
+      }
     } finally {
       setIsQuizzesLoading(false);
     }
@@ -49,28 +50,26 @@ export const useGetLearnerQuizzes = () => {
 
   useEffect(() => {
     qureyClinet.prefetchQuery({
-      queryKey: ["userquizzes" ,user?.userId],
+      queryKey: ["userquizzes", user?.userId],
       queryFn: getQuizzes,
-      staleTime: 12 *60* 60 * 1000, 
+      staleTime: 12 * 60 * 60 * 1000,
       retry: 2,
-    })
+    });
   }, [user?.userId]);
 
   const { data } = useQuery({
-    queryKey: ["userquizzes" ,user?.userId],
+    queryKey: ["userquizzes", user?.userId],
     queryFn: getQuizzes,
-    staleTime: 12 *60* 60 * 1000,
-    refetchInterval: 12 *60* 60 * 1000,
+    staleTime: 12 * 60 * 60 * 1000,
+    refetchInterval: 12 * 60 * 60 * 1000,
     retry: 2,
   });
-
-  
 
   useEffect(() => {
     if (data) {
       setQuizzes(data.quizzes);
     }
-  }, [data ,user?.userId]);
+  }, [data, user?.userId]);
 
   return { quizzs, quizzesLoading };
 };
