@@ -28,8 +28,8 @@ export const AddLessonToCourse = () => {
     lesson_order: 1,
   });
   const [loading, setLoading] = useState(false);
-  const [videoUploadProgress, setVideoUploadProgress] = useState(0); 
-  const [fileUploadProgress, setFileUploadProgress] = useState(0); 
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [fileUploadProgress, setFileUploadProgress] = useState(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -390,7 +390,6 @@ export const AddLessonToCourse = () => {
                 name="attachments"
                 onChange={handleFileChange}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                required
                 placeholder="pdf,dox,docx,pptx,etc..."
               />
             </div>

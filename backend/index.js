@@ -102,8 +102,8 @@ app.use(
     removeEmojis: true,
     lowercaseEmails: true,
     normalizeFields: ["email", "full_name"],
-    allowedChars: /[a-zA-Z0-9@. ]/,
-    stripSQLMeta: true,
+    // allowedChars: /[a-zA-Z0-9@. ]/,
+    // stripSQLMeta: true,
   })
 );
 app.use("/api/auth", authRoute);
