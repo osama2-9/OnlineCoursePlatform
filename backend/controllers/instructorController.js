@@ -3,6 +3,7 @@ import { genreateQuestionAttempt } from "../openAI/openAi.js";
 import { prisma } from "../prisma/prismaClint.js";
 import { newQuizNotification } from "../services/notifications.js";
 import { v2 as cloudinary } from "cloudinary";
+import { getCache, setCache, deleteCache, updateQuestionInCache } from "../services/redis/cache.js";
 const isHavePermession = async (course_id, instructor_id) => {
   try {
     const courseId = parseInt(course_id);
@@ -15,7 +16,6 @@ const isHavePermession = async (course_id, instructor_id) => {
       },
     });
 
-    console.log("Course found:", course);
 
     const userRole = await prisma.users.findUnique({
       where: {
@@ -23,18 +23,15 @@ const isHavePermession = async (course_id, instructor_id) => {
       },
     });
 
-    console.log("User role found:", userRole);
+
 
     if (userRole && userRole.role === "admin") {
-      console.log("User is admin, permission granted.");
       return true;
     }
 
     if (course) {
-      console.log("Course exists, permission granted.");
       return true;
     } else {
-      console.log("No course found, permission denied.");
       throw new Error("You don't have permission to handle this course");
     }
   } catch (error) {
@@ -591,6 +588,23 @@ export const createQuiz = async (req, res) => {
         error: "Feild to create this quiz",
       });
     }
+    const metaKey = `quiz:${newQuiz.quiz_id}:meta`;
+    let cachedMeta = await getCache(metaKey);
+    if (!cachedMeta) {
+      const dataFormated = {
+        quiz_id: newQuiz.quiz_id,
+        total_marks: newQuiz.total_marks,
+        title: title,
+        is_published: false,
+        description: description,
+        duration: duration,
+        max_attempts: maxAttempts,
+
+      }
+      await setCache(metaKey, dataFormated);
+    }
+
+
     try {
       await newQuizNotification(courseId);
     } catch (notificationError) {
@@ -606,7 +620,6 @@ export const createQuiz = async (req, res) => {
     });
   }
 };
-
 export const createQuestion = async (req, res) => {
   try {
     const {
@@ -621,69 +634,159 @@ export const createQuestion = async (req, res) => {
     } = req.body;
 
     if (!quizId || !question_text || !question_type || !mark) {
-      return res.status(400).json({
-        error: "Please fill all inputs",
-      });
+      return res.status(400).json({ error: "Please fill all inputs" });
     }
 
     await isHavePermession(courseId, instructorId);
 
-    if (question_type === "mcq" || question_type === "truefalse") {
+    if (["mcq", "truefalse"].includes(question_type)) {
       if (correct_answer === undefined || correct_answer === null) {
-        return res.status(400).json({
-          error: "Please select the correct answer.",
-        });
+        return res
+          .status(400)
+          .json({ error: "Please select the correct answer." });
       }
-
       if (question_type === "mcq" && correct_answer >= choices.length) {
-        return res.status(400).json({
-          error: "Invalid correct_answer.",
-        });
+        return res.status(400).json({ error: "Invalid correct_answer." });
       }
     }
 
-    const createQuestion = await prisma.question.create({
+    const newQuestion = await prisma.question.create({
       data: {
         quiz_id: parseInt(quizId),
-        question_text: question_text,
-        question_type: question_type,
-        marks: mark,
+        question_text,
+        question_type,
+        marks: parseFloat(mark),
       },
     });
 
-    if (!createQuestion) {
-      return res.status(400).json({
-        error: "Error while trying to add question",
-      });
-    }
-
-    if (question_type === "mcq" || question_type === "truefalse") {
-      for (const choice of choices) {
-        await prisma.choice.create({
+    let choicesData = [];
+    if (["mcq", "truefalse"].includes(question_type)) {
+      for (let i = 0; i < choices.length; i++) {
+        const createdChoice = await prisma.choice.create({
           data: {
-            question_id: createQuestion.question_id,
-            choice_text: choice,
-            is_correct: choice === choices[correct_answer],
+            question_id: newQuestion.question_id,
+            choice_text: choices[i],
+            is_correct: i === correct_answer,
           },
         });
+        choicesData.push(createdChoice);
       }
     }
 
+    const questionWithChoices = {
+      ...newQuestion,
+      choices: choicesData,
+    };
+
+    let pageNumber = 1;
+    let pageKey = `quiz:${quizId}:page:${pageNumber}`;
+    let cachedPage = await getCache(pageKey);
+
+    while (cachedPage && cachedPage.length >= 5) {
+      pageNumber++;
+      pageKey = `quiz:${quizId}:page:${pageNumber}`;
+      cachedPage = await getCache(pageKey);
+    }
+
+    if (cachedPage) {
+      cachedPage.push(questionWithChoices);
+    } else {
+      cachedPage = [questionWithChoices];
+    }
+
+    await setCache(pageKey, cachedPage);
+
+
+
     return res.status(201).json({
-      message: "Question Created and Choices Added",
+      message: "Question Created and Cached",
+      pageNumber,
+      question: questionWithChoices,
     });
   } catch (error) {
-    if (error.message === "You don't have permission to handle this course") {
-      return res.status(401).json({
-        error: error.message,
-      });
-    }
-    console.log(error);
-    return res.status(500).json({
-      error: "Internal server error",
-    });
+    console.error("Error in createQuestion:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const testCache = async (req, res) => {
+  try {
+
+    const cachedPage = await getCache(`quiz:14:meta`)
+    console.log(cachedPage);
+
+    return res.status(200).json({
+      cachedPage
+    })
+  } catch (error) {
+    console.error("Error in testCache:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export const deleteQuiz = async (req, res) => {
+  try {
+    const { quizId, courseId } = req.params
+
+    const userId = req.user.userId
+
+    await isHavePermession(courseId, userId)
+
+
+    if (!quizId) {
+      return res.status(400).json({
+        error: "Missing required params: quizId",
+      })
+    }
+
+    const quizIdInt = parseInt(quizId)
+
+    const deleteAnswers = await prisma.answer.deleteMany({
+      where: {
+        question: {
+          quiz_id: quizIdInt,
+        },
+      },
+    })
+    const deletequizAttempts = await prisma.attempt.deleteMany({
+      where: {
+        quiz_id: quizIdInt,
+      },
+    })
+
+    const deletequizChoices = await prisma.choice.deleteMany({
+      where: {
+        question: {
+          quiz_id: quizIdInt,
+        },
+      },
+    })
+    const deletequizQuestions = await prisma.question.deleteMany({
+      where: {
+        quiz_id: quizIdInt,
+      },
+    })
+    const deletequiz = await prisma.quizzes.delete({
+      where: {
+        quiz_id: quizIdInt,
+      },
+    })
+
+    if (!deletequizAttempts || !deletequizChoices || !deletequizQuestions || !deletequiz || !deleteAnswers) {
+      return res.status(400).json({
+        error: "Error while try to delete quiz",
+      })
+    }
+
+    return res.status(200).json({
+      message: "Quiz deleted successfully",
+    })
+  } catch (error) {
+    console.log(error);
+
+  }
+}
+
 
 export const getQuizzes = async (req, res) => {
   try {
@@ -898,7 +1001,7 @@ export const deleteQuestion = async (req, res) => {
 
 export const updateQuestion = async (req, res) => {
   try {
-    console.log(req.body);
+
 
     const {
       questionId,
@@ -941,25 +1044,41 @@ export const updateQuestion = async (req, res) => {
 
     await isHavePermession(parseInt(courseId), parseInt(instructorId));
 
-    let choices = null;
-    if (question_type === "mcq" || question_type === "truefalse") {
-      choices = {
-        options: answers,
-        correctIndex: correct_answer,
-      };
-    }
+    const existingChoices = await prisma.choice.findMany({
+      where: { question_id: parseInt(questionId) },
+    });
+    console.log(existingChoices);
+    const choicesData = answers.map((answer, index) => ({
+      choice_id: existingChoices[index]?.choice_id || undefined,
+      choice_text: answer,
+      question_id: parseInt(questionId),
+      is_correct: index === parseInt(correct_answer)
+    }));
+
 
     const updatedQuestion = await prisma.question.update({
-      where: {
-        question_id: parseInt(questionId),
-      },
+      where: { question_id: parseInt(questionId) },
       data: {
-        question_text: question_text,
-        question_type: question_type,
+        question_text,
+        question_type,
         marks: parseFloat(mark),
-        choices: choices,
+        choices: {
+          upsert: choicesData.map((choice) => ({
+            where: { choice_id: choice.choice_id || 0 },
+            update: {
+              choice_text: choice.choice_text,
+              is_correct: choice.is_correct,
+            },
+            create: {
+              choice_text: choice.choice_text,
+              is_correct: choice.is_correct,
+            },
+          })),
+        },
       },
+      include: { choices: true },
     });
+
 
     if (!updatedQuestion) {
       return res.status(400).json({
@@ -967,29 +1086,11 @@ export const updateQuestion = async (req, res) => {
       });
     }
 
-    if (question_type === "mcq" || question_type === "truefalse") {
-      await prisma.answer.deleteMany({
-        where: {
-          question_id: parseInt(questionId),
-        },
-      });
 
-      const answerPromises = answers.map((answer, index) => {
-        return prisma.answer.create({
-          data: {
-            question_id: parseInt(questionId),
-            answer_text: answer,
-            is_correct: index === correct_answer,
-          },
-        });
-      });
-
-      await Promise.all(answerPromises);
-    }
 
     return res.status(200).json({
       message: "Question updated successfully",
-      question: updatedQuestion,
+
     });
   } catch (error) {
     console.log(error);
@@ -1037,9 +1138,8 @@ export const toggleQuizPublish = async (req, res) => {
     });
 
     return res.status(200).json({
-      message: `Quiz ${
-        is_published ? "published" : "unpublished"
-      } successfully!`,
+      message: `Quiz ${is_published ? "published" : "unpublished"
+        } successfully!`,
       quiz: updatedQuiz,
     });
   } catch (error) {

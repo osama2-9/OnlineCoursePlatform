@@ -1,5 +1,7 @@
 import { prisma } from "../prisma/prismaClint.js";
+import { getCache } from "../services/redis/cache.js";
 import { verifyAccessToken } from "../utils/verifyAccessToken.js";
+// import { getCache, setCache } from "../services/redis/cache.js";
 
 export const getEnrolledInCourses = async (req, res) => {
   try {
@@ -532,6 +534,16 @@ export const startQuizAttempt = async (req, res) => {
 export const getQuizQuestions = async (req, res) => {
   try {
     const { quizId, courseId, userId, attemptId, enrollmentId } = req.params;
+    const { page = 1 } = req.query;
+    const pageInt = parseInt(page);
+    const limit = 5;
+    const offset = (pageInt - 1) * limit;
+
+    if (isNaN(pageInt) || pageInt < 1) {
+      return res.status(400).json({
+        error: "Invalid page number. Page must be a positive integer.",
+      });
+    }
 
     if (!quizId || !courseId || !userId || !attemptId || !enrollmentId) {
       return res.status(400).json({
@@ -547,9 +559,7 @@ export const getQuizQuestions = async (req, res) => {
       },
     });
     if (!isUserEnrolled) {
-      return res.status(403).json({
-        error: "You are not enrolled in this course.",
-      });
+      return res.status(403).json({ error: "You are not enrolled in this course." });
     }
 
     const verifyAccess = await verifyAccessToken(
@@ -558,9 +568,7 @@ export const getQuizQuestions = async (req, res) => {
       isUserEnrolled.enrollment_id
     );
     if (!verifyAccess) {
-      return res.status(403).json({
-        error: "Access denied. Invalid access token.",
-      });
+      return res.status(403).json({ error: "Access denied. Invalid access token." });
     }
 
     const isAttemptValid = await prisma.attempt.findUnique({
@@ -576,64 +584,118 @@ export const getQuizQuestions = async (req, res) => {
       });
     }
 
-    const quiz = await prisma.quizzes.findUnique({
-      where: {
-        quiz_id: parseInt(quizId),
-      },
-      include: {
-        questions: {
-          select: {
-            question_id: true,
-            question_text: true,
-            question_type: true,
-            marks: true,
-            choices: true,
-          },
-        },
-      },
+    const totalQuestions = await prisma.question.count({
+      where: { quiz_id: parseInt(quizId) },
     });
+    const totalPages = Math.ceil(totalQuestions / limit);
 
-    if (!quiz) {
-      return res.status(404).json({
-        error: "Quiz not found.",
+    if (pageInt > totalPages && totalQuestions > 0) {
+      return res.status(400).json({
+        error: `Page ${pageInt} does not exist. Total pages: ${totalPages}.`,
       });
     }
 
-    const transformedQuiz = {
-      ...quiz,
-      questions: quiz.questions.map((question) => ({
-        ...question,
-        choices: question.choices
-          ? question.choices.map((choice) => ({
-              choice_id: choice.choice_id,
-              choice_text: choice.choice_text,
-            }))
-          : [],
-      })),
-    };
+    const pageKey = `quiz:${quizId}:page:${pageInt}`;
+    const quizMetaKey = `quiz:${quizId}:meta`;
+    const cachedQuestions = await getCache(pageKey);
+    const cachedQuizMeta = await getCache(quizMetaKey);
 
-    const totalQuestions = quiz.questions.length;
-    const limit = 5;
-    const totalPages = Math.ceil(totalQuestions / limit);
+    if (cachedQuestions && cachedQuizMeta) {
+      const transformedQuestions = cachedQuestions.map((q) => ({
+        question_id: q.question_id,
+        question_text: q.question_text,
+        question_type: q.question_type,
+        marks: q.marks,
+        choices: q.choices ? q.choices.map((choice) => ({
+          choice_id: choice.choice_id,
+          choice_text: choice.choice_text,
+        })) : [],
+      }));
 
-    return res.status(200).json({
-      quiz: {
-        ...transformedQuiz,
+      const transformedCachedData = {
+        quiz_id: cachedQuizMeta.quiz_id,
+        course_id: cachedQuizMeta.course_id || parseInt(courseId),
+        title: cachedQuizMeta.title,
+        description: cachedQuizMeta.description,
+        duration: cachedQuizMeta.duration,
+        max_attempts: cachedQuizMeta.max_attempts,
+        created_at: cachedQuizMeta.created_at,
+        updated_at: cachedQuizMeta.updated_at,
+        total_marks: cachedQuizMeta.total_marks,
+        questions: transformedQuestions,
         pagination: {
-          currentPage: 1,
-          totalPages: totalPages,
-          totalQuestions: totalQuestions,
+          currentPage: pageInt,
+          totalPages,
+          totalQuestions,
           questionsPerPage: limit,
         },
-      },
-    });
+      };
+
+      return res.status(200).json({
+        quiz: transformedCachedData,
+        cached: true,
+      });
+    } else {
+      const quiz = await prisma.quizzes.findUnique({
+        where: { quiz_id: parseInt(quizId) },
+        include: {
+          questions: {
+            select: {
+              question_id: true,
+              question_text: true,
+              question_type: true,
+              marks: true,
+              choices: {
+                select: { choice_id: true, choice_text: true },
+              },
+            },
+            skip: offset,
+            take: limit,
+          },
+        },
+      });
+
+      if (!quiz) {
+        return res.status(404).json({ error: "Quiz not found." });
+      }
+
+      const transformedQuiz = {
+        quiz_id: quiz.quiz_id,
+        course_id: quiz.course_id,
+        title: quiz.title,
+        description: quiz.description,
+        duration: quiz.duration,
+        max_attempts: quiz.max_attempts,
+        is_published: quiz.is_published,
+        created_at: quiz.created_at,
+        updated_at: quiz.updated_at,
+        total_marks: quiz.total_marks,
+        questions: quiz.questions.map((q) => ({
+          ...q,
+          choices: q.choices || [],
+        })),
+        pagination: {
+          currentPage: pageInt,
+          totalPages,
+          totalQuestions,
+          questionsPerPage: limit,
+        },
+      };
+
+   
+
+      return res.status(200).json({
+        quiz: transformedQuiz,
+      });
+    }
+
   } catch (error) {
     console.error("Error in getQuizQuestions:", error);
-    return res.status(500).json({
-      error: "Internal server error. Please try again later.",
-    });
+    return res.status(500).json({ error: "Internal server error. Please try again later." });
   }
 };
+
+
 export const submitQuizAnswers = async (req, res) => {
   try {
     const { attemptId, userAnswers, end_time } = req.body;
@@ -699,6 +761,8 @@ export const submitQuizAnswers = async (req, res) => {
     });
   }
 };
+
+
 
 export const getCourseReviews = async (req, res) => {
   try {

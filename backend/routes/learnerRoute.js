@@ -73,4 +73,5 @@ learnerRoute.get(
 );
 learnerRoute.post("/submit-review", checkRole("learner"), submitReview);
 learnerRoute.get("/get-notifications", checkRole("learner"), getNotifications);
+
 export default learnerRoute;

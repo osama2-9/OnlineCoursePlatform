@@ -49,6 +49,7 @@ model Users {
   Article Article[]
   @@index([email])
   @@index([googleId])
+  @@index([role])
   @@map("users")
   AssignmentSubmission AssignmentSubmission[]
   Assignments Assignments[]
@@ -83,6 +84,9 @@ model Courses {
   likes             Like[]
   bookmarks         Bookmark[]
   assignments       Assignments[]
+  @@index([instructor_id])
+  @@index([course_id])
+  @@index([title])
   @@map("courses")
   Notifications Notifications[]
   CertificateRequest CertificateRequest[]
@@ -164,6 +168,8 @@ model Category {
   description   String?
   articles      Article[]
 
+  @@index([name])
+  
   @@map("categories")
 }
 
@@ -219,6 +225,8 @@ model ContentBlock {
 
   article       Article        @relation(fields: [article_id], references: [article_id])
 
+  @@index([article_id])
+ 
   @@map("content_blocks")
 }
 
@@ -274,7 +282,7 @@ model Lessons {
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
   lesson_order Int
-
+ @@index([course_id])
   course       Courses        @relation(fields: [course_id], references: [course_id])
   userProgress UserProgress[]
   lessonsApprovel LessonsApprovel[]
@@ -297,6 +305,7 @@ model LessonsApprovel{
   status ApprovelStatus @default(pending)
   reason String?
   lesson Lessons @relation(fields: [lesson_id], references: [lesson_id] ,onDelete: Cascade)
+  @@index([lesson_id])
   @@map("lessons_approvel")
 
 }
@@ -309,6 +318,7 @@ model ArticleApporvel{
   reason String?
   status ApprovelStatus @default(pending)
   article Article @relation(fields: [article_id], references: [article_id] ,onDelete: Cascade)
+  @@index([article_id])
   @@map("articles_approvel")
 
 }
@@ -328,6 +338,9 @@ model UserProgress {
   course Courses  @relation(fields: [course_id], references: [course_id])
   lesson Lessons? @relation(fields: [lesson_id], references: [lesson_id])
 
+  @@index([user_id])
+  @@index([course_id])
+  @@index([lesson_id])
   @@map("user_progress")
 }
 
@@ -346,6 +359,8 @@ model Payments {
   user   Users    @relation(fields: [user_id], references: [user_id] ,onDelete: Cascade)
   course Courses? @relation(fields: [course_id], references: [course_id])
 
+  @@index([user_id])
+  @@index([course_id])
   @@map("payments")
 }
 
@@ -372,6 +387,9 @@ model Enrollments {
   user   Users   @relation(fields: [user_id], references: [user_id] ,onDelete: Cascade)
   course Courses @relation(fields: [course_id], references: [course_id])
 
+  @@index([user_id])
+  
+  @@index([course_id])
   @@map("enrollments")
 }
 
@@ -391,6 +409,8 @@ model Reviews {
   user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
   course Courses @relation(fields: [course_id], references: [course_id])
 
+  @@index([user_id])
+  @@index([course_id])
   @@map("reviews")
 }
 
@@ -410,6 +430,7 @@ model Quizzes {
   questions    Question[]     
   Attempt      Attempt[]
 
+  @@index([course_id])
   @@map("quizzes")
 }
 
@@ -426,6 +447,7 @@ model Question {
   choices       Choice[]       
   Answer        Answer[]
 
+  @@index([quiz_id])
   @@map("questions")
 }
 
@@ -444,6 +466,7 @@ model Choice {
   question     Question @relation(fields: [question_id], references: [question_id])
   Answer       Answer[]
 
+  @@index([question_id])
   @@map("choices")
 }
 
@@ -458,6 +481,8 @@ model Attempt {
   quiz         Quizzes       @relation(fields: [quiz_id], references: [quiz_id])
   answers      Answer[]      
 
+  @@index([user_id])
+  @@index([quiz_id])
   @@map("quiz_attempts")
 }
 
@@ -472,6 +497,9 @@ model Answer {
   question     Question    @relation(fields: [question_id], references: [question_id])
   choice       Choice?     @relation(fields: [answer_id_choice], references: [choice_id])
 
+  @@index([attempt_id])
+  @@index([question_id])
+  @@index([answer_id_choice])
   @@map("answers")
 }
 
@@ -488,6 +516,9 @@ model Like {
 
   @@unique([user_id, article_id]) 
   @@unique([user_id, course_id])  
+  @@index([user_id])
+  @@index([article_id])
+  @@index([course_id])
   @@map("likes")
 }
 
@@ -504,6 +535,9 @@ model Bookmark {
 
   @@unique([user_id, article_id]) 
   @@unique([user_id, course_id])  
+  @@index([user_id])
+  @@index([article_id])
+  @@index([course_id])
   @@map("bookmarks")
 }
 
@@ -517,6 +551,8 @@ model Seen {
   article Article @relation(fields: [article_id], references: [article_id])
 
   @@unique([user_id, article_id]) 
+  @@index([user_id])
+  @@index([article_id])
   @@map("seen")
 }
 
@@ -536,6 +572,8 @@ model Assignments {
   instructor      Users     @relation(fields: [instructor_id], references: [user_id],onDelete: Cascade)
   submissions     AssignmentSubmission[]
 
+  @@index([course_id])
+  @@index([instructor_id])
   @@map("assignments")
   Users Users[] @relation("InstructorAssignments")
 }
@@ -552,6 +590,8 @@ model AssignmentSubmission {
   assignment      Assignments @relation(fields: [assignment_id], references: [assignment_id])
   student         Users       @relation(fields: [student_id], references: [user_id],onDelete: Cascade)
 
+  @@index([assignment_id])
+  @@index([student_id])
   @@map("assignment_submissions")
   Users Users[] @relation("StudentSubmissions")
 }
@@ -567,6 +607,8 @@ model SupportTicketAccessToken {
   ticket      SupportTicket @relation(fields: [ticket_id], references: [ticket_id])
   user        Users @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
 
+  @@index([ticket_id])
+  @@index([user_id])
   @@map("support_ticket_access_tokens")
 }
 
@@ -583,6 +625,8 @@ model SupportTicket {
   user Users @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
   accessTokens SupportTicketAccessToken[]
 
+  @@index([user_id])
+  @@index([assign_to])
   @@map("support_tickets")
   SupportTicketMessage SupportTicketMessage[]
 }
@@ -604,6 +648,8 @@ model SupportTicketMessage {
   ticket SupportTicket @relation(fields: [ticket_id], references: [ticket_id])
   user Users @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
 
+  @@index([ticket_id])
+  @@index([user_id])
   @@map("support_ticket_messages")
 }
 model Notifications {
@@ -637,6 +683,8 @@ model CertificateRequest {
   course Courses @relation(fields: [course_id], references: [course_id])
 
   @@unique([user_id, course_id])
+  @@index([user_id])
+  @@index([course_id])
   @@map("certificate_requests")
 }
 

@@ -5,6 +5,7 @@ import {
   createQuiz,
   deleteLesson,
   deleteQuestion,
+  deleteQuiz,
   getAnalysticsForCharts,
   getEnrollmentData,
   getInstructorCourses,
@@ -16,6 +17,8 @@ import {
   getUsersAttempts,
   reviewQuiz,
   sendEmail,
+  testCache,
+  // testCahce,
   toggleQuizPublish,
   updateAttemptScore,
   updateMyCourse,
@@ -137,6 +140,18 @@ instructorRoute.delete(
   "/delete-lesson",
   checkRole("instructor"),
   deleteLesson
+);
+
+instructorRoute.delete(
+  "/delete-quiz/:quizId/course/:courseId",
+  checkRole("instructor"),
+  deleteQuiz
+);
+
+instructorRoute.get(
+  "/test-cache",
+  checkRole("instructor"),
+  testCache
 );
 
 export default instructorRoute;

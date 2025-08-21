@@ -12,10 +12,9 @@ export const AddQuestions = () => {
     quizId: string;
     quizname: string;
     coursename: string;
-    courseId:string
+    courseId: string;
   }>();
 
-  
   const [question, setQuestion] = useState("");
   const [questionType, setQuestionType] = useState<
     "mcq" | "truefalse" | "text"
@@ -89,8 +88,17 @@ export const AddQuestions = () => {
     try {
       setLoading(true);
 
-      const payloadChoices =
-        questionType === "truefalse" ? ["True", "False"] : choices;
+      let payloadChoices: string[] = [];
+      let payloadCorrectAnswer = correctAnswer;
+
+      if (questionType === "truefalse") {
+        payloadChoices = ["True", "False"];
+      } else if (questionType === "mcq") {
+        payloadChoices = choices;
+      } else if (questionType === "text") {
+        payloadChoices = []; 
+        payloadCorrectAnswer = null;
+      }
 
       const res = await axios.post(
         `${API}/instructor/create-question`,
@@ -102,7 +110,7 @@ export const AddQuestions = () => {
           question_type: questionType,
           mark: mark,
           choices: payloadChoices,
-          correct_answer: correctAnswer,
+          correct_answer: payloadCorrectAnswer,
         },
         {
           headers: {
@@ -168,11 +176,11 @@ export const AddQuestions = () => {
 
         if (questionType === "mcq") {
           setChoices(data.options);
-
           setCorrectAnswer(data.correctAnswer);
         } else if (questionType === "truefalse") {
           setCorrectAnswer(data.correctAnswer);
         }
+        // Text questions only need the question, no other data
 
         toast.success("AI suggestion applied successfully!");
       }
@@ -324,78 +332,95 @@ export const AddQuestions = () => {
             </div>
 
             {/* Choices Section */}
-            {questionType !== "text" && (
+            {questionType === "mcq" && (
               <div className="mb-8">
                 <label className="block text-sm font-medium text-gray-700 mb-4">
                   Answer Options
                 </label>
-
-                {questionType === "mcq" && (
-                  <div className="space-y-3">
-                    {choices.map((choice, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <div className="flex-1 flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <input
-                            type="radio"
-                            name="correctAnswer"
-                            checked={correctAnswer === index}
-                            onChange={() => setCorrectAnswer(index)}
-                            className="w-4 h-4 text-orange-500"
-                          />
-                          <input
-                            type="text"
-                            value={choice}
-                            onChange={(e) =>
-                              handleChoiceChange(index, e.target.value)
-                            }
-                            placeholder={`Option ${index + 1}`}
-                            className="flex-1 bg-transparent border-0 focus:ring-0"
-                          />
-                        </div>
-                        <button
-                          onClick={() => handleRemoveChoice(index)}
-                          className="p-2 text-gray-400 hover:text-red-500"
-                        >
-                          ✕
-                        </button>
+                <div className="space-y-3">
+                  {choices.map((choice, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="flex-1 flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <input
+                          type="radio"
+                          name="correctAnswer"
+                          checked={correctAnswer === index}
+                          onChange={() => setCorrectAnswer(index)}
+                          className="w-4 h-4 text-orange-500"
+                        />
+                        <input
+                          type="text"
+                          value={choice}
+                          onChange={(e) =>
+                            handleChoiceChange(index, e.target.value)
+                          }
+                          placeholder={`Option ${index + 1}`}
+                          className="flex-1 bg-transparent border-0 focus:ring-0"
+                        />
                       </div>
-                    ))}
-
-                    <button
-                      onClick={handleAddChoice}
-                      className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-orange-500 hover:text-orange-500 transition-colors"
-                    >
-                      + Add Another Option
-                    </button>
-                  </div>
-                )}
-
-                {questionType === "truefalse" && (
-                  <div className="flex gap-4">
-                    {["True", "False"].map((option, index) => (
-                      <div
-                        key={option}
-                        className={`flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                          correctAnswer === index
-                            ? "border-orange-500 bg-orange-50"
-                            : "border-gray-200 hover:border-gray-300"
-                        }`}
-                        onClick={() => setCorrectAnswer(index)}
+                      <button
+                        onClick={() => handleRemoveChoice(index)}
+                        className="p-2 text-gray-400 hover:text-red-500"
                       >
-                        <div className="flex items-center justify-center gap-3">
-                          <input
-                            type="radio"
-                            name="correctAnswer"
-                            checked={correctAnswer === index}
-                            onChange={() => setCorrectAnswer(index)}
-                            className="w-4 h-4 text-orange-500"
-                          />
-                          <span className="font-medium">{option}</span>
-                        </div>
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+
+                  <button
+                    onClick={handleAddChoice}
+                    className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-orange-500 hover:text-orange-500 transition-colors"
+                  >
+                    + Add Another Option
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {questionType === "truefalse" && (
+              <div className="mb-8">
+                <label className="block text-sm font-medium text-gray-700 mb-4">
+                  Answer Options
+                </label>
+                <div className="flex gap-4">
+                  {["True", "False"].map((option, index) => (
+                    <div
+                      key={option}
+                      className={`flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        correctAnswer === index
+                          ? "border-orange-500 bg-orange-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      onClick={() => setCorrectAnswer(index)}
+                    >
+                      <div className="flex items-center justify-center gap-3">
+                        <input
+                          type="radio"
+                          name="correctAnswer"
+                          checked={correctAnswer === index}
+                          onChange={() => setCorrectAnswer(index)}
+                          className="w-4 h-4 text-orange-500"
+                        />
+                        <span className="font-medium">{option}</span>
                       </div>
-                    ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {questionType === "text" && (
+              <div className="mb-8">
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2 text-blue-800 mb-2">
+                    <span className="text-lg">💭</span>
+                    <span className="font-medium">Open-ended Question</span>
                   </div>
-                )}
+                  <p className="text-blue-700 text-sm">
+                    This is a text-based question that allows students to provide written answers. 
+                    There are no predefined choices, and students can express their understanding freely.
+                  </p>
+                </div>
               </div>
             )}
 

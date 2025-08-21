@@ -7,7 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, User, Filter, ChevronLeft, ChevronRight, Eye, FileText, Trophy, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Clock, User, Filter, ChevronLeft, ChevronRight, Eye, FileText, Trophy, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 interface User {
   full_name: string;
@@ -95,7 +95,7 @@ const QuizzesAttempts = () => {
     }
   };
 
-  const { data } = useQuery({
+  const { data ,isLoading } = useQuery({
     queryKey: ["quizzes", user?.userId, pagination.page, pagination.limit],
     queryFn: () => getUsersAttempts(pagination.page, pagination.limit),
     staleTime: 15 * 60 * 1000,
@@ -168,6 +168,11 @@ const QuizzesAttempts = () => {
   const avgScore = totalAttempts > 0 ? 
     (filteredAttempts.reduce((sum, quiz) => sum + quiz.Attempt[0].score, 0) / totalAttempts).toFixed(1) : "0";
 
+
+    if(isLoading){
+      return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin" size={24} /></div>
+    }
+
   return (
     <InstructorLayout>
       <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -197,7 +202,7 @@ const QuizzesAttempts = () => {
           <StatsCard
             icon={<Trophy className="w-6 h-6 text-purple-600" />}
             title="Average Score"
-            value={`${avgScore}%`}
+            value={`${avgScore}/full mark`}
             color="bg-purple-100"
           />
         </div>

@@ -22,12 +22,11 @@ import certificationRoute from "./routes/certificationsRoute.js";
 import { rescheduleAllReminders } from "./services/schedule.js";
 import moderatorRoute from "./routes/moderatorRoute.js";
 import helmet from "helmet";
-import { autoSanitize } from "express-pure-sanitize";
+import { redis } from "./services/redis/redis.js";
 
 dotenv.config();
 
 const app = express();
-
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -41,20 +40,23 @@ app.use(
         ],
         "style-src": [
           "'self'",
-          "'unsafe-inline'",
+          "'unsafe-inline'", 
           "https://fonts.googleapis.com",
         ],
+        "font-src": ["'self'", "https://fonts.gstatic.com"],
         "img-src": [
           "'self'",
           "data:",
           "blob:",
-          "https://res.cloudinary.com/dk5kncp7q",
+          "https://res.cloudinary.com/*", 
         ],
         "connect-src": [
           "'self'",
           "https://api.stripe.com",
           "http://localhost:5173",
+          "http://localhost:3000",
           "https://uplearn-website.vercel.app",
+          "https://res.cloudinary.com", 
         ],
         "frame-src": ["'self'", "https://js.stripe.com"],
         "object-src": ["'none'"],
@@ -63,6 +65,7 @@ app.use(
     },
   })
 );
+
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -96,16 +99,7 @@ cloudinary.config({
   api_key: process.env.CLOUDE_API,
   api_secret: process.env.CLOUDE_API_SECRET,
 });
-app.use(
-  autoSanitize({
-    removeHTML: true,
-    removeEmojis: true,
-    lowercaseEmails: true,
-    normalizeFields: ["email", "full_name"],
-    // allowedChars: /[a-zA-Z0-9@. ]/,
-    // stripSQLMeta: true,
-  })
-);
+
 app.use("/api/auth", authRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/course", courseRoute);

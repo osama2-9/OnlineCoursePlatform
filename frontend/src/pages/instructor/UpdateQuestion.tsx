@@ -181,7 +181,7 @@ export const UpdateQuestion = () => {
                 Answers
               </label>
               {questionType === "mcq" &&
-                answers.map((answer, index) => (
+                answers?.map((answer, index) => (
                   <div key={index} className="flex items-center mb-3">
                     <input
                       type="text"

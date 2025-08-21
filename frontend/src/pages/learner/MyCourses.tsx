@@ -83,13 +83,11 @@ export const MyCourses = () => {
       ) : (
         <div className="min-h-screen bg-gray-50 p-6">
           <div className="max-w-7xl mx-auto">
-            {/* Header */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
               <h2 className="text-2xl font-bold text-gray-900">My Courses</h2>
               <p className="text-gray-600 mt-1">Manage your enrolled courses</p>
             </div>
 
-            {/* Course Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {enrolledCourses?.map((course) => (
                 <div
@@ -148,7 +146,6 @@ export const MyCourses = () => {
               ))}
             </div>
 
-            {/* Empty State */}
             {enrolledCourses?.length === 0 && (
               <div className="text-center py-12 bg-white rounded-xl shadow-sm">
                 <div className="mb-4">

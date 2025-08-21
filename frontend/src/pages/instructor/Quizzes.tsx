@@ -6,8 +6,9 @@ import axios from "axios";
 import { API } from "../../API/ApiBaseUrl";
 import { Loading } from "../../components/Loading";
 import Switch from "react-switch";
-import { FaEye, FaEdit } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { useGetInstructorQuizzes } from "../../hooks/useGetInstructorQuizzes";
+import { DeleteModal } from "../../components/DeleteModal";
 
 interface Quiz {
   quiz_id: number;
@@ -25,6 +26,7 @@ interface Quiz {
 
 export const Quizzes = () => {
   const navigate = useNavigate();
+  const [selectedQuizId, setSelectedQuizId] = useState<number | null>(null);
   const { quizzes, quizzesLoading, pagination, changePage } =
     useGetInstructorQuizzes();
   const [statusFilter, setStatusFilter] = useState("all");
@@ -51,15 +53,28 @@ export const Quizzes = () => {
   const handleManageClick = (quizId: number, event: React.MouseEvent) => {
     event.stopPropagation();
     navigate(
-      `/instructor/add-questions/${quizId}/quiz/${
-        quizzes.find((q) => q.quiz_id === quizId)?.title
-      }/c/${quizzes.find((q) => q.quiz_id === quizId)?.course.title}/cid/${
-        quizzes.find((q) => q.quiz_id == quizId)?.course?.course_id
+      `/instructor/add-questions/${quizId}/quiz/${quizzes.find((q) => q.quiz_id === quizId)?.title
+      }/c/${quizzes.find((q) => q.quiz_id === quizId)?.course.title}/cid/${quizzes.find((q) => q.quiz_id == quizId)?.course?.course_id
       }`
     );
   };
   const handleReviewClick = (quizId: number, courseId: number) => {
     navigate(`/instructor/review-quiz/${quizId}/course/${courseId}`);
+  };
+  const handleDeleteClick = (quizId: number) => {
+    setSelectedQuizId(quizId);
+  };
+  const handleDeleteConfirm = async () => {
+    if (!selectedQuizId) return;
+    try {
+      await handleDeleteQuiz(selectedQuizId);
+      setSelectedQuizId(null);
+    } catch (error) {
+      console.error("Error deleting quiz:", error);
+    }
+  };
+  const handleDeleteCancel = () => {
+    setSelectedQuizId(null);
   };
   const handleTogglePublish = async (quizId: number, isPublished: boolean) => {
     try {
@@ -101,9 +116,27 @@ export const Quizzes = () => {
       },
     });
   };
+
+  const handleDeleteQuiz = async (quizId: number) => {
+    try {
+      const res = await axios.delete(`${API}/instructor/delete-quiz/${quizId}/course/${quizzes.find((q) => q.quiz_id === quizId)?.course?.course_id}`, {
+        withCredentials: true,
+      });
+
+      if (res.data) {
+        toast.success("Quiz deleted successfully!");
+      }
+    } catch (error: any) {
+      console.log(error);
+
+      toast.error(error?.response?.data?.error || "Failed to delete quiz");
+    }
+  };
   if (!pagination) {
     return null;
   }
+
+
   return (
     <InstructorLayout>
       <div className="p-6 bg-gray-100 min-h-screen">
@@ -161,7 +194,7 @@ export const Quizzes = () => {
                       Review
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Edit
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -218,18 +251,30 @@ export const Quizzes = () => {
                         }
                       >
                         <FaEye
-                          size={25}
+                          size={20}
                           className="cursor-pointer hover:text-gray-700"
                         />
                       </td>
                       <td
                         className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-500"
-                        onClick={() => handleUpdateQuiz(quiz)}
+
                       >
-                        <FaEdit
-                          size={22}
-                          className="cursor-pointer hover:text-blue-600"
-                        />
+                        <div className="flex flex-row items-center justify-center space-x-4 ">
+                          <div>
+                            <FaEdit
+                              onClick={() => handleUpdateQuiz(quiz)}
+                              size={20}
+                              className="cursor-pointer hover:text-blue-600"
+                            />
+                          </div>
+                          <div>
+                            <FaTrash
+                              onClick={() => handleDeleteClick(quiz.quiz_id)}
+                              size={20}
+                              className="cursor-pointer hover:text-red-600"
+                            />
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -237,7 +282,6 @@ export const Quizzes = () => {
               </table>
             </div>
 
-            {/* Keep only one pagination control */}
             <div className="flex justify-between items-center mt-6">
               <button
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
@@ -282,6 +326,12 @@ export const Quizzes = () => {
           </>
         )}
       </div>
+      {selectedQuizId && (
+        <DeleteModal
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
+      )}
     </InstructorLayout>
   );
 };
