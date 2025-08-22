@@ -85,7 +85,11 @@ export const QuizPage: React.FC = () => {
     page,
   ];
 
-  const { data, isLoading: isQuestionsLoading, error } = useQuery({
+  const {
+    data,
+    isLoading: isQuestionsLoading,
+    error,
+  } = useQuery({
     queryKey: getQueryKey(pagination.currentPage),
     queryFn: () => fetchQuestions(pagination.currentPage),
     enabled: !!quizId && !!courseId && !!user?.userId && !!attemptId,
@@ -99,7 +103,6 @@ export const QuizPage: React.FC = () => {
       return failureCount < 3;
     },
   });
-
 
   useEffect(() => {
     if (error?.response?.data?.isCompleted) {
@@ -147,7 +150,6 @@ export const QuizPage: React.FC = () => {
 
   useEffect(() => {
     if (data?.quiz) {
-      
       setQuestions(data.quiz.questions || []);
       setPagination({
         currentPage: data.quiz.pagination?.currentPage || 1,
@@ -159,24 +161,29 @@ export const QuizPage: React.FC = () => {
       setQuizTitle(data.quiz.title || "Untitled Quiz");
 
       if (!isTimerInitialized) {
-        const storedTimeLeft = localStorage.getItem(`quizTimeLeft_${attemptId}`);
+        const storedTimeLeft = localStorage.getItem(
+          `quizTimeLeft_${attemptId}`
+        );
         let initialTime = 0;
 
-        if (data.quiz.duration > 0) {
+        if (quizDuration > 0) {
           const backendRemainingTime = data.quiz.remainingTime;
           if (backendRemainingTime !== undefined && backendRemainingTime >= 0) {
             initialTime = backendRemainingTime;
           } else if (storedTimeLeft) {
             const parsedStoredTime = parseInt(storedTimeLeft, 10);
-            const maxTime = data.quiz.duration * 60;
+            const maxTime = quizDuration * 60;
             initialTime = Math.min(Math.max(0, parsedStoredTime), maxTime);
           } else {
-            initialTime = data.quiz.duration * 60;
+            initialTime = quizDuration * 60;
           }
         }
 
         setTimeLeft(initialTime);
-        localStorage.setItem(`quizTimeLeft_${attemptId}`, initialTime.toString());
+        localStorage.setItem(
+          `quizTimeLeft_${attemptId}`,
+          initialTime.toString()
+        );
         setIsTimerInitialized(true);
       }
     }
@@ -276,7 +283,13 @@ export const QuizPage: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, isQuestionsLoading, attemptId, questions.length, submitQuizMutation]);
+  }, [
+    timeLeft,
+    isQuestionsLoading,
+    attemptId,
+    questions.length,
+    submitQuizMutation,
+  ]);
 
   const handleQuestionNavigation = async (index: number) => {
     const page = Math.floor(index / pagination.questionsPerPage) + 1;
@@ -298,7 +311,9 @@ export const QuizPage: React.FC = () => {
     const question = questionsRef.current[localIndex];
     if (question) {
       setTimeout(() => {
-        const element = document.getElementById(`question-${question.question_id}`);
+        const element = document.getElementById(
+          `question-${question.question_id}`
+        );
         element?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 50);
     }
@@ -318,7 +333,11 @@ export const QuizPage: React.FC = () => {
         queryFn: () => fetchQuestions(nextPage),
       });
 
-      console.log("Fetched new questions for page", nextPage, newData.quiz.questions);
+      console.log(
+        "Fetched new questions for page",
+        nextPage,
+        newData.quiz.questions
+      );
       setQuestions(newData.quiz.questions || []);
 
       if (nextPage < pagination.totalPages) {
@@ -345,7 +364,11 @@ export const QuizPage: React.FC = () => {
         queryFn: () => fetchQuestions(prevPage),
       });
 
-      console.log("Fetched new questions for page", prevPage, newData.quiz.questions);
+      console.log(
+        "Fetched new questions for page",
+        prevPage,
+        newData.quiz.questions
+      );
       setQuestions(newData.quiz.questions || []);
 
       if (prevPage > 1) {
@@ -385,11 +408,18 @@ export const QuizPage: React.FC = () => {
 
   // Early returns
   if (!attemptId || !quizId || !courseId || !enrollmentId) {
-    console.log("Invalid parameters:", { attemptId, quizId, courseId, enrollmentId });
+    console.log("Invalid parameters:", {
+      attemptId,
+      quizId,
+      courseId,
+      enrollmentId,
+    });
     return (
       <div className="flex justify-center items-center h-screen bg-gray-100">
         <div className="text-center bg-white p-8 rounded-lg shadow-lg">
-          <p className="text-red-600 text-lg font-semibold">Invalid quiz parameters</p>
+          <p className="text-red-600 text-lg font-semibold">
+            Invalid quiz parameters
+          </p>
           <button
             onClick={() => navigate("/learner/dashboard")}
             className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -406,7 +436,9 @@ export const QuizPage: React.FC = () => {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-100">
         <div className="text-center bg-white p-8 rounded-lg shadow-sm">
-          <p className="text-red-600 text-lg font-semibold">Failed to load quiz data</p>
+          <p className="text-red-600 text-lg font-semibold">
+            Failed to load quiz data
+          </p>
           <button
             onClick={() => navigate("/learner/dashboard")}
             className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -477,11 +509,13 @@ export const QuizPage: React.FC = () => {
                   />
                 ))
               )}
-              {questions.length < 5 && pagination.currentPage === pagination.totalPages && (
-                <div className="text-center text-gray-600 text-lg">
-                  Only {questions.length} question{questions.length === 1 ? "" : "s"} available on this page.
-                </div>
-              )}
+              {questions.length < 5 &&
+                pagination.currentPage === pagination.totalPages && (
+                  <div className="text-center text-gray-600 text-lg">
+                    Only {questions.length} question
+                    {questions.length === 1 ? "" : "s"} available on this page.
+                  </div>
+                )}
               <QuizControls
                 currentPage={pagination.currentPage}
                 totalPages={pagination.totalPages}
@@ -495,7 +529,9 @@ export const QuizPage: React.FC = () => {
         )}
         <div className="p-6 bg-gray-50 border-t border-gray-200 flex items-center justify-center text-sm text-gray-600">
           <FiHelpCircle className="h-5 w-5 mr-2" />
-          <span>Need help? Use the question navigator to move between questions</span>
+          <span>
+            Need help? Use the question navigator to move between questions
+          </span>
         </div>
       </div>
     </div>

@@ -559,7 +559,9 @@ export const getQuizQuestions = async (req, res) => {
       },
     });
     if (!isUserEnrolled) {
-      return res.status(403).json({ error: "You are not enrolled in this course." });
+      return res
+        .status(403)
+        .json({ error: "You are not enrolled in this course." });
     }
 
     const verifyAccess = await verifyAccessToken(
@@ -568,7 +570,9 @@ export const getQuizQuestions = async (req, res) => {
       isUserEnrolled.enrollment_id
     );
     if (!verifyAccess) {
-      return res.status(403).json({ error: "Access denied. Invalid access token." });
+      return res
+        .status(403)
+        .json({ error: "Access denied. Invalid access token." });
     }
 
     const isAttemptValid = await prisma.attempt.findUnique({
@@ -606,10 +610,12 @@ export const getQuizQuestions = async (req, res) => {
         question_text: q.question_text,
         question_type: q.question_type,
         marks: q.marks,
-        choices: q.choices ? q.choices.map((choice) => ({
-          choice_id: choice.choice_id,
-          choice_text: choice.choice_text,
-        })) : [],
+        choices: q.choices
+          ? q.choices.map((choice) => ({
+              choice_id: choice.choice_id,
+              choice_text: choice.choice_text,
+            }))
+          : [],
       }));
 
       const transformedCachedData = {
@@ -682,19 +688,17 @@ export const getQuizQuestions = async (req, res) => {
         },
       };
 
-   
-
       return res.status(200).json({
         quiz: transformedQuiz,
       });
     }
-
   } catch (error) {
     console.error("Error in getQuizQuestions:", error);
-    return res.status(500).json({ error: "Internal server error. Please try again later." });
+    return res
+      .status(500)
+      .json({ error: "Internal server error. Please try again later." });
   }
 };
-
 
 export const submitQuizAnswers = async (req, res) => {
   try {
@@ -761,8 +765,6 @@ export const submitQuizAnswers = async (req, res) => {
     });
   }
 };
-
-
 
 export const getCourseReviews = async (req, res) => {
   try {

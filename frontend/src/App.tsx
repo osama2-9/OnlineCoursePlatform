@@ -75,6 +75,7 @@ import MyContentRequests from "./pages/instructor/MyContentRequests";
 import SearchPage from "./pages/SearchPage";
 import { Certifications } from "./pages/learner/Certifications";
 import { CertificationsRequests } from "./pages/instructor/CertificationsRequests";
+import CertificateVerification from "./pages/VerifyCertification";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -234,7 +235,9 @@ function App() {
         />
         <Route
           path="/instructor/certifications"
-          element={<ProtectedInstractourRoute element={<CertificationsRequests />} />}
+          element={
+            <ProtectedInstractourRoute element={<CertificationsRequests />} />
+          }
         />
 
         <Route
@@ -317,6 +320,10 @@ function App() {
             <ProtectedModeratorRoute element={<ContentModeratorDashboard />} />
           }
         ></Route>
+        <Route
+          path="certification-verification"
+          element={<CertificateVerification />}
+        />
         <Route path="/course-page/:course_id" element={<CoursePage />} />
         <Route path="/payment/success" element={<SuccessPayment />} />
         <Route path="/payment/cancel" element={<CancelPayment />} />

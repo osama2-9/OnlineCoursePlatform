@@ -11,4 +11,19 @@ interface Certification {
 
 }
 
-export type { Certification }
+
+interface CertificationVerifyData{
+    id:number;
+    issued_at:Date,
+    certification_url:string,
+    user:{
+        full_name: string,
+        email: string,
+    },
+    course:{
+        title:string,
+        description:string,
+        learning_outcomes:string[]
+    }
+}
+export type { Certification  ,CertificationVerifyData}

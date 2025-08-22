@@ -670,3 +670,52 @@ export const changePassword = async (req, res) => {
     });
   }
 };
+
+export const verifyCertification = async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) {
+      return res.status(400).json({
+        error: "Please provied a valid code",
+      });
+    }
+    const certification = await prisma.certificateRequest.findFirst({
+      where: {
+        verification_code: code,
+        status: "approved",
+      },
+      select: {
+        user: {
+          select: {
+            full_name: true,
+            email: true,
+          },
+        },
+        course: {
+          select: {
+            title: true,
+            description: true,
+            learning_outcomes: true,
+          },
+        },
+        id: true,
+        issued_at: true,
+        certificate_url: true,
+      },
+    });
+    if (!certification) {
+      return res.status(404).json({
+        error: "No certificate found",
+      });
+    }
+
+    return res.status(200).json({
+      certification,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};

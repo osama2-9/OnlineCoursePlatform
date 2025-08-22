@@ -14,6 +14,7 @@ import {
   towFADisable,
   towFAEnable,
   verify2FA,
+  verifyCertification,
   verifyEmail,
 } from "../controllers/authController.js";
 import protectedRoute from "../middlewares/protectedRoute.js";
@@ -42,4 +43,5 @@ authRoute.get("/google-auth-url", generateAuthUrl);
 
 authRoute.get("/google/callback", handleGoogleCallback);
 
+authRoute.get("/certification-verify" ,verifyCertification)
 export default authRoute;

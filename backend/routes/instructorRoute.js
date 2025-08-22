@@ -17,8 +17,6 @@ import {
   getUsersAttempts,
   reviewQuiz,
   sendEmail,
-  testCache,
-  // testCahce,
   toggleQuizPublish,
   updateAttemptScore,
   updateMyCourse,
@@ -136,22 +134,12 @@ instructorRoute.get(
   getMyContentRequests
 );
 
-instructorRoute.delete(
-  "/delete-lesson",
-  checkRole("instructor"),
-  deleteLesson
-);
+instructorRoute.delete("/delete-lesson", checkRole("instructor"), deleteLesson);
 
 instructorRoute.delete(
   "/delete-quiz/:quizId/course/:courseId",
   checkRole("instructor"),
   deleteQuiz
-);
-
-instructorRoute.get(
-  "/test-cache",
-  checkRole("instructor"),
-  testCache
 );
 
 export default instructorRoute;
