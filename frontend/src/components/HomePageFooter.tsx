@@ -16,7 +16,6 @@ export const HomePageFooter = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           <div className="space-y-4">
             <div className="flex items-center">
-              
               <h3 className="text-2xl font-bold">UpLearn</h3>
             </div>
             <p className="text-gray-400 leading-relaxed">
@@ -86,6 +85,10 @@ export const HomePageFooter = () => {
                 { name: "Help Center", path: "/support" },
                 { name: "Privacy Policy", path: "/privacy" },
                 { name: "Terms of Service", path: "/terms" },
+                {
+                  name: "Verify Certification",
+                  path: "/certification-verification",
+                },
               ].map((link) => (
                 <li key={link.name}>
                   <a

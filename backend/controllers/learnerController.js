@@ -245,25 +245,167 @@ export const markLessonsAsCompleted = async (req, res) => {
 export const getCompletedLessons = async (req, res) => {
   try {
     const { userId, courseId } = req.params;
+
+    // Validate required parameters
     if (!userId || !courseId) {
       return res.status(400).json({
-        error: "Missing required data",
+        error: "Missing required parameters: userId and courseId",
       });
     }
-    const progress = await prisma.userProgress.findMany({
+
+    // Validate parameter formats
+    const userIdInt = parseInt(userId);
+    const courseIdInt = parseInt(courseId);
+
+    if (isNaN(userIdInt) || isNaN(courseIdInt)) {
+      return res.status(400).json({
+        error: "Invalid parameter format: userId and courseId must be numbers",
+      });
+    }
+
+    // Verify user exists and is enrolled in the course
+    const enrollment = await prisma.enrollments.findFirst({
       where: {
-        user_id: parseInt(userId),
-        course_id: parseInt(courseId),
+        user_id: userIdInt,
+        course_id: courseIdInt,
+      },
+      include: {
+        course: {
+          select: {
+            title: true,
+            course_id: true,
+          },
+        },
+        user: {
+          select: {
+            full_name: true,
+            user_id: true,
+          },
+        },
       },
     });
-    if (!progress) {
+
+    if (!enrollment) {
       return res.status(404).json({
-        error: "No progress found",
+        error: "User is not enrolled in this course",
       });
     }
-    return res.status(200).json(progress);
+
+    const progress = await prisma.userProgress.findMany({
+      where: {
+        user_id: userIdInt,
+        course_id: courseIdInt,
+        lesson: {
+          course_id: courseIdInt,
+        },
+      },
+      include: {
+        lesson: {
+          select: {
+            lesson_id: true,
+            title: true,
+            lesson_order: true,
+            course_id: true,
+          },
+        },
+      },
+      orderBy: [{ lesson: { lesson_order: "asc" } }, { last_accessed: "desc" }],
+    });
+
+    if (!progress || progress.length === 0) {
+      return res.status(200).json({
+        message: "No progress found for this course",
+        data: [],
+        metadata: {
+          user_id: userIdInt,
+          course_id: courseIdInt,
+          course_title: enrollment.course.title,
+          user_name: enrollment.user.full_name,
+          total_progress_entries: 0,
+          completed_lessons: 0,
+          in_progress_lessons: 0,
+        },
+      });
+    }
+
+    const uniqueProgress = [];
+    const seenLessons = new Set();
+
+    progress.forEach((progressEntry) => {
+      if (!seenLessons.has(progressEntry.lesson_id)) {
+        seenLessons.add(progressEntry.lesson_id);
+        uniqueProgress.push({
+          progress_id: progressEntry.progress_id,
+          lesson_id: progressEntry.lesson_id,
+          user_id: progressEntry.user_id,
+          course_id: progressEntry.course_id,
+          is_completed: progressEntry.is_completed,
+          progress_percentage: progressEntry.progress_percentage || 0,
+          last_accessed: progressEntry.last_accessed,
+          time_spent: progressEntry.time_spent || 0,
+          created_at: progressEntry.created_at,
+          updated_at: progressEntry.updated_at,
+          lesson: progressEntry.lesson,
+        });
+      }
+    });
+
+    const uniqueCompletedLessons = uniqueProgress.filter((p) => p.is_completed);
+    const uniqueInProgressLessons = uniqueProgress.filter(
+      (p) => !p.is_completed
+    );
+
+    const totalLessonsInCourse = await prisma.lessons.count({
+      where: {
+        course_id: courseIdInt,
+      },
+    });
+
+    const responseData = {
+      data: uniqueProgress,
+      metadata: {
+        user_id: userIdInt,
+        course_id: courseIdInt,
+        course_title: enrollment.course.title,
+        user_name: enrollment.user.full_name,
+        total_lessons_in_course: totalLessonsInCourse,
+        total_progress_entries: uniqueProgress.length,
+        completed_lessons: uniqueCompletedLessons.length,
+        in_progress_lessons: uniqueInProgressLessons.length,
+        completion_percentage:
+          totalLessonsInCourse > 0
+            ? Math.round(
+                (uniqueCompletedLessons.length / totalLessonsInCourse) * 100
+              )
+            : 0,
+        last_activity:
+          progress.length > 0
+            ? Math.max(
+                ...progress.map((p) => new Date(p.last_accessed).getTime())
+              )
+            : null,
+      },
+      summary: {
+        completed: uniqueCompletedLessons.map((p) => ({
+          lesson_id: p.lesson_id,
+          lesson_title: p.lesson.title,
+          lesson_order: p.lesson.lesson_order,
+          completed_at: p.last_accessed,
+          progress_percentage: p.progress_percentage,
+        })),
+        in_progress: uniqueInProgressLessons.map((p) => ({
+          lesson_id: p.lesson_id,
+          lesson_title: p.lesson.title,
+          lesson_order: p.lesson.lesson_order,
+          last_accessed: p.last_accessed,
+          progress_percentage: p.progress_percentage,
+        })),
+      },
+    };
+
+    return res.status(200).json(responseData);
   } catch (error) {
-    console.log(error);
+    console.error("Error in getCompletedLessons:", error);
     return res.status(500).json({
       error: "Internal server error",
     });
@@ -279,74 +421,121 @@ export const getCoursesProgress = async (req, res) => {
       });
     }
 
-    const getEnrolledCourses = await prisma.enrollments.findMany({
+    const userIdInt = parseInt(userId);
+    if (isNaN(userIdInt)) {
+      return res.status(400).json({
+        error: "Invalid User Id format",
+      });
+    }
+
+    // Single query to get all enrolled courses with their lesson counts and progress
+    const enrolledCoursesWithProgress = await prisma.enrollments.findMany({
       where: {
-        user_id: parseInt(userId),
+        user_id: userIdInt,
       },
       include: {
-        course: true,
+        course: {
+          include: {
+            lessons: {
+              select: {
+                lesson_id: true,
+              },
+            },
+            _count: {
+              select: {
+                lessons: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    if (!getEnrolledCourses || getEnrolledCourses.length === 0) {
+    if (
+      !enrolledCoursesWithProgress ||
+      enrolledCoursesWithProgress.length === 0
+    ) {
       return res.status(404).json({
         error: "You are not enrolled in any courses",
       });
     }
 
-    const courseProgress = await Promise.all(
-      getEnrolledCourses.map(async (enrollment) => {
-        const courseId = enrollment.course_id;
-        const enrollmentId = enrollment.enrollment_id;
-
-        const totalLessons = await prisma.lessons.count({
-          where: {
-            course_id: courseId,
+    // Get all user progress for all enrolled courses in one query
+    const allUserProgress = await prisma.userProgress.findMany({
+      where: {
+        user_id: userIdInt,
+        course_id: {
+          in: enrolledCoursesWithProgress.map((e) => e.course_id),
+        },
+      },
+      include: {
+        lesson: {
+          select: {
+            title: true,
+            lesson_id: true,
+            course_id: true,
           },
-        });
+        },
+      },
+      orderBy: {
+        last_accessed: "desc",
+      },
+    });
 
-        const completedLessons = await prisma.userProgress.count({
-          where: {
-            user_id: parseInt(userId),
-            course_id: courseId,
-            is_completed: true,
-          },
-        });
+    const courseProgress = enrolledCoursesWithProgress.map((enrollment) => {
+      const courseId = enrollment.course_id;
+      const totalLessons = enrollment.course._count.lessons;
+      const courseLessonIds = new Set(
+        enrollment.course.lessons.map((l) => l.lesson_id)
+      );
 
-        const progressPercentage =
-          totalLessons > 0
-            ? Math.round((completedLessons / totalLessons) * 100)
-            : 0;
+      // Filter progress for this specific course and only for lessons that exist
+      const courseProgressEntries = allUserProgress.filter(
+        (p) => p.course_id === courseId && courseLessonIds.has(p.lesson_id)
+      );
 
-        const lastAccessedProgress = await prisma.userProgress.findFirst({
-          where: {
-            user_id: parseInt(userId),
-            course_id: courseId,
-          },
-          orderBy: {
-            last_accessed: "desc",
-          },
-          include: {
-            lesson: true,
-          },
-        });
+      // Count unique completed lessons
+      const completedLessonsSet = new Set();
+      courseProgressEntries.forEach((progress) => {
+        if (progress.is_completed) {
+          completedLessonsSet.add(progress.lesson_id);
+        }
+      });
 
-        return {
-          course_id: courseId,
-          enrollmentId: enrollmentId,
-          course_title: enrollment.course.title,
-          course_thumbnail: enrollment.course.course_img,
-          progress: progressPercentage,
-          last_accessed: lastAccessedProgress?.last_accessed || null,
-          current_lesson: lastAccessedProgress?.lesson?.title || null,
-          is_completed: progressPercentage === 100,
-        };
-      })
-    );
+      const completedLessons = completedLessonsSet.size;
+
+      // Calculate progress with bounds checking
+      let progressPercentage = 0;
+      if (totalLessons > 0) {
+        const validCompletedLessons = Math.min(completedLessons, totalLessons);
+        progressPercentage = Math.round(
+          (validCompletedLessons / totalLessons) * 100
+        );
+        progressPercentage = Math.max(0, Math.min(100, progressPercentage));
+      }
+
+      // Get last accessed lesson
+      const lastAccessedProgress =
+        courseProgressEntries.length > 0 ? courseProgressEntries[0] : null;
+
+      return {
+        course_id: courseId,
+        enrollmentId: enrollment.enrollment_id,
+        course_title: enrollment.course.title,
+        course_thumbnail: enrollment.course.course_img,
+        progress: progressPercentage,
+        total_lessons: totalLessons,
+        completed_lessons: completedLessons,
+        last_accessed: lastAccessedProgress?.last_accessed || null,
+        current_lesson: lastAccessedProgress?.lesson?.title || null,
+        current_lesson_id: lastAccessedProgress?.lesson?.lesson_id || null,
+        is_completed: progressPercentage === 100,
+      };
+    });
 
     return res.status(200).json(courseProgress);
   } catch (error) {
-    console.error("Error in getCoursesProgress:", error);
+    console.error("Error in getCoursesProgressOptimized:", error);
     return res.status(500).json({
       error: "Internal server error",
     });

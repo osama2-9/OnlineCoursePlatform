@@ -1,12 +1,11 @@
 import axios from "axios";
 import toast from "react-hot-toast";
 import { API } from "../../API/ApiBaseUrl";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/Loading";
 import { UpdateEnrollment } from "../../components/admin/UpdateEnrollment";
-import { useQuery } from "@tanstack/react-query";
-import { qureyClinet } from "../../main";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 
 interface Enrollment {
@@ -32,138 +31,228 @@ interface FilterOptions {
 interface EnrollmentResponse {
   enrollments: Enrollment[];
   totalPages: number;
+  totalCount: number;
+  currentPage: number;
+}
+
+interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  limit: number;
 }
 
 export const ShowEnrollments = () => {
   const { user } = useAuth();
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [rowsPerPage, setRowsPerPage] = useState<number>(10);
-  const [loading, setIsLoading] = useState<boolean>(false);
+  const queryClient = useQueryClient();
+
+  // State management
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    limit: 10,
+  });
 
   const [filters, setFilters] = useState<FilterOptions>({
     status: "all",
     searchTerm: "",
   });
 
-  const getFilteredEnrollments = () => {
-    return enrollments?.filter((enrollment) => {
-      const matchesStatus =
-        filters.status === "all" || enrollment.status === filters.status;
-      const matchesSearch =
-        enrollment.user.full_name
-          .toLowerCase()
-          .includes(filters.searchTerm.toLowerCase()) ||
-        enrollment.course.title
-          .toLowerCase()
-          .includes(filters.searchTerm.toLowerCase());
-      return matchesStatus && matchesSearch;
-    });
-  };
-
-  const getEnrollments = async () => {
-    setIsLoading(true);
-    try {
-      const { data } = await axios.get<EnrollmentResponse>(
-        `${API}/enrollment/get-enrollments`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          params: {
-            page: currentPage,
-            limit: 15,
-            status: filters.status !== "all" ? filters.status : undefined,
-            search: filters.searchTerm || undefined,
-          },
-          withCredentials: true,
-        }
-      );
-      return data;
-    } catch (error: any) {
-      console.log(error);
-      toast.error(error?.response?.data?.error || "An error occurred");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const { data } = useQuery({
-    queryKey: ["enrollmentsData", currentPage],
-    queryFn: getEnrollments,
-    staleTime: 15 * 60 * 1000,
-    refetchInterval: 15 * 60 * 1000,
-    retry: 2,
-  });
-
-
-  useEffect(()=>{
-    qureyClinet.prefetchQuery({
-      queryKey: ["enrollmentsData", currentPage],
-      queryFn: getEnrollments,
-      staleTime: 15 * 60 * 1000,
-      retry: 2,
-    })
-  }, [user?.userId, currentPage]);
-
-  useEffect(() => {
-    if (data) {
-      setEnrollments(data.enrollments || []);
-      setTotalPages(data.totalPages || 1);
-    } else {
-      console.error("No data received from the API");
-      setEnrollments([]);
-      setTotalPages(1);
-    }
-  }, [data]);
-
-  const [selectdEnrollment, setSelectedEnrollment] =
+  const [selectedEnrollment, setSelectedEnrollment] =
     useState<Enrollment | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
 
-  const onClickManage = (enrollment: Enrollment) => {
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+  }, [filters.status, filters.searchTerm]);
+
+  const fetchEnrollments = async ({
+    page,
+    limit,
+  
+  }: {
+    page: number;
+    limit: number;
+  
+  }): Promise<EnrollmentResponse> => {
+    const { data } = await axios.get<EnrollmentResponse>(
+      `${API}/enrollment/get-enrollments`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        params: {
+          page,
+          limit,
+        
+        },
+        withCredentials: true,
+      }
+    );
+    return data;
+  };
+
+  const {
+    data: enrollmentData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: [
+      "enrollments",
+      pagination.currentPage,
+      pagination.limit,
+      filters.status,
+      filters.searchTerm,
+      user?.userId,
+    ],
+    queryFn: () =>
+      fetchEnrollments({
+        page: pagination.currentPage,
+        limit: pagination.limit,
+       
+      }),
+    staleTime: 5 * 60 * 1000, 
+    refetchInterval: 10 * 60 * 1000,
+    retry: 2,
+    enabled: !!user?.userId,
+  });
+
+  useEffect(() => {
+    if (enrollmentData) {
+      setPagination((prev) => ({
+        ...prev,
+        totalPages: enrollmentData.totalPages || 1,
+      }));
+    }
+  }, [enrollmentData]);
+
+  const enrollments = useMemo(() => {
+    return enrollmentData?.enrollments || [];
+  }, [enrollmentData]);
+
+  const handleManageClick = (enrollment: Enrollment) => {
     setSelectedEnrollment(enrollment);
     setShowUpdateModal(true);
   };
 
-  const onClickCancel = () => {
+  const handleModalCancel = () => {
     setSelectedEnrollment(null);
     setShowUpdateModal(false);
   };
+
+  const updateEnrollmentOptimistically = (
+    enrollmentId: number,
+    newStatus: "active" | "completed" | "dropped",
+    newAccessGranted: boolean
+  ) => {
+    const queryKey = [
+      "enrollments",
+      pagination.currentPage,
+      pagination.limit,
+      filters.status,
+      filters.searchTerm,
+      user?.userId,
+    ];
+
+    queryClient.setQueryData(
+      queryKey,
+      (oldData: EnrollmentResponse | undefined) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          enrollments: oldData.enrollments.map((enrollment) =>
+            enrollment.enrollment_id === enrollmentId
+              ? {
+                  ...enrollment,
+                  status: newStatus,
+                  access_granted: newAccessGranted,
+                }
+              : enrollment
+          ),
+        };
+      }
+    );
+  };
+
   const handleUpdate = async (
     status: "active" | "completed" | "dropped",
     accessGranted: boolean
   ) => {
-    if (!selectdEnrollment) return;
+    if (!selectedEnrollment) return;
+
+
+
+    updateEnrollmentOptimistically(
+      selectedEnrollment.enrollment_id,
+      status,
+      accessGranted
+    );
 
     try {
-      const res = await axios.put(
+      const response = await axios.put(
         `${API}/enrollment/update-enrollment`,
         {
-          enrollmentId: selectdEnrollment.enrollment_id,
+          enrollmentId: selectedEnrollment.enrollment_id,
           status: status,
           access_granted: accessGranted,
         },
         { withCredentials: true }
       );
-      if (res.data) {
-        toast.success(res.data?.message);
-        getEnrollments();
-        onClickCancel(); 
+
+      if (response.data) {
+        toast.success(
+          response.data.message || "Enrollment updated successfully"
+        );
+        handleModalCancel();
       }
     } catch (error: any) {
-      console.log(error);
-      toast.error(error?.response?.data?.error || "An error occurred");
-    }
+      const queryKey = [
+        "enrollments",
+        pagination.currentPage,
+        pagination.limit,
+        filters.status,
+        filters.searchTerm,
+        user?.userId,
+      ];
+
+      queryClient.invalidateQueries({ queryKey });
+
+      console.error("Update error:", error);
+      toast.error(
+        error?.response?.data?.error || "Failed to update enrollment"
+      );
+    } 
   };
 
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
+    if (page < 1 || page > pagination.totalPages) return;
+    setPagination((prev) => ({ ...prev, currentPage: page }));
   };
 
+  const handleLimitChange = (newLimit: number) => {
+    setPagination((prev) => ({
+      ...prev,
+      limit: newLimit,
+      currentPage: 1,
+    }));
+  };
+
+  const handleSearchChange = (searchTerm: string) => {
+    setFilters((prev) => ({ ...prev, searchTerm }));
+  };
+
+  const handleStatusFilterChange = (status: FilterOptions["status"]) => {
+    setFilters((prev) => ({ ...prev, status }));
+  };
+
+  // Export function
   const exportToCSV = () => {
+    if (!enrollments.length) {
+      toast.error("No data to export");
+      return;
+    }
+
     const csvContent = [
       [
         "Enrollment ID",
@@ -185,197 +274,328 @@ export const ShowEnrollments = () => {
       .map((row) => row.join(","))
       .join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "enrollments.csv";
-    a.click();
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `enrollments_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
   };
 
+  // Render pagination component
+  const renderPagination = () => {
+    const { currentPage, totalPages } = pagination;
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return (
+      <div className="flex items-center justify-between mt-6 px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center">
+            <p className="text-sm text-gray-700">
+              Showing{" "}
+              <span className="font-medium">
+                {(currentPage - 1) * pagination.limit + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(
+                  currentPage * pagination.limit,
+                  enrollmentData?.totalCount || 0
+                )}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium">
+                {enrollmentData?.totalCount || 0}
+              </span>{" "}
+              results
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              First
+            </button>
+
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+
+            {pages.map((page) => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`px-3 py-2 text-sm font-medium rounded-md ${
+                  page === currentPage
+                    ? "text-blue-600 bg-blue-50 border border-blue-300"
+                    : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Last
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Error handling
+  if (isError) {
+    return (
+      <AdminLayout>
+        <div className="container mx-auto p-5">
+          <div className="text-center text-red-600">
+            <h2 className="text-xl font-semibold mb-2">
+              Error loading enrollments
+            </h2>
+            <p>{(error as any)?.message || "An unexpected error occurred"}</p>
+            <button
+              onClick={() =>
+                queryClient.invalidateQueries({ queryKey: ["enrollments"] })
+              }
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
-      {loading ? (
-        <Loading />
-      ) : (
-        <div className="container mx-auto p-5">
-          <div className="mb-5 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <input
-                type="text"
-                placeholder="Search by student or course..."
-                value={filters.searchTerm}
-                onChange={(e) =>
-                  setFilters({ ...filters, searchTerm: e.target.value })
-                }
-                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+      <div className="container mx-auto p-5 space-y-6">
+        {/* Header */}
+        <div className="bg-white shadow-sm rounded-lg p-6">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Enrollment Management
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Manage student enrollments and course access
+          </p>
+        </div>
+
+        {/* Filters and Controls */}
+        <div className="bg-white shadow-sm rounded-lg p-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 flex-1">
+              <div className="flex-1 max-w-md">
+                <input
+                  type="text"
+                  placeholder="Search by student name or course title..."
+                  value={filters.searchTerm}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                />
+              </div>
+
               <select
                 value={filters.status}
                 onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    status: e.target.value as FilterOptions["status"],
-                  })
+                  handleStatusFilterChange(
+                    e.target.value as FilterOptions["status"]
+                  )
                 }
-                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
-                <option value="all">All Status</option>
+                <option value="all">All Statuses</option>
                 <option value="active">Active</option>
                 <option value="completed">Completed</option>
                 <option value="dropped">Dropped</option>
               </select>
             </div>
-            <div className="flex gap-4">
-              <button onClick={exportToCSV}>Export CSV</button>
-              <div className="relative inline-block w-full sm:w-auto">
-                <select
-                  value={rowsPerPage}
-                  onChange={(e) => setRowsPerPage(Number(e.target.value))}
-                  className="appearance-none block w-full p-3 pr-10 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out"
-                >
-                  <option value={5}>5 Rows</option>
-                  <option value={10}>10 Rows</option>
-                  <option value={15}>15 Rows</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white shadow-md rounded-lg ">
-            <div className="p-6">
-              <h2 className="text-2xl font-semibold text-gray-800">
-                Enrollments
-              </h2>
-            </div>
-            <div  className="overflow-x-auto">
 
-            <table className="w-full divide-y divide-gray-200 overflow-x-auto">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Enrollment ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Student Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Course
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Access Granted
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Enrollment Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200 overflow-x-auto">
-                {getFilteredEnrollments().length > 0 ? (
-                  getFilteredEnrollments().map((enrollment) => (
-                    <tr
-                      key={enrollment.enrollment_id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {enrollment.enrollment_id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {enrollment.user.full_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {enrollment.course.title}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            enrollment.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : enrollment.status === "completed"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {enrollment.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            enrollment.access_granted
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {enrollment.access_granted ? "Yes" : "No"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(
-                          enrollment.enrollment_date
-                        ).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                        <button
-                          onClick={() => onClickManage(enrollment)}
-                          className="p-2 shadow-md bg-blue-500 hover:bg-blue-600 transition-all rounded-md"
-                        >
-                          Manage
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-4 text-center text-gray-500"
-                    >
-                      No enrollments available.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={exportToCSV}
+                disabled={!enrollments.length}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Export CSV
+              </button>
 
-          </div>
-          {selectdEnrollment && (
-            <UpdateEnrollment
-              isOpen={showUpdateModal}
-              enrollmentStatus={selectdEnrollment.status}
-              enrollmentAccessGranted={selectdEnrollment.access_granted}
-              onUpdate={handleUpdate}
-              onCancel={onClickCancel}
-            />
-          )}
-          <div className="flex justify-between items-center mt-6">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-gray-700">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
+              <select
+                value={pagination.limit}
+                onChange={(e) => handleLimitChange(Number(e.target.value))}
+                className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value={5}>5 per page</option>
+                <option value={10}>10 per page</option>
+                <option value={15}>15 per page</option>
+                <option value={25}>25 per page</option>
+              </select>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* Table */}
+        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+          {isLoading ? (
+            <div className="p-8">
+              <Loading />
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Student
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Course
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Access
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Enrolled
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {enrollments.length > 0 ? (
+                      enrollments.map((enrollment) => (
+                        <tr
+                          key={enrollment.enrollment_id}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            #{enrollment.enrollment_id}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {enrollment.user.full_name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {enrollment.course.title}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                enrollment.status === "active"
+                                  ? "bg-green-100 text-green-800"
+                                  : enrollment.status === "completed"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {enrollment.status.charAt(0).toUpperCase() +
+                                enrollment.status.slice(1)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                enrollment.access_granted
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {enrollment.access_granted ? "Granted" : "Denied"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {new Date(
+                              enrollment.enrollment_date
+                            ).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <button
+                              onClick={() => handleManageClick(enrollment)}
+                              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            >
+                              Manage
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-6 py-8 text-center text-gray-500"
+                        >
+                          <div className="flex flex-col items-center">
+                            <p className="text-lg font-medium mb-1">
+                              No enrollments found
+                            </p>
+                            <p className="text-sm">
+                              Try adjusting your search criteria
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {enrollments.length > 0 && renderPagination()}
+            </>
+          )}
+        </div>
+
+        {/* Update Modal */}
+        {selectedEnrollment && (
+          <UpdateEnrollment
+            isOpen={showUpdateModal}
+            enrollmentStatus={selectedEnrollment.status}
+            enrollmentAccessGranted={selectedEnrollment.access_granted}
+            onUpdate={handleUpdate}
+            onCancel={handleModalCancel}
+          />
+        )}
+      </div>
     </AdminLayout>
   );
 };

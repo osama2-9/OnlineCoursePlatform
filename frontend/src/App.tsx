@@ -321,7 +321,7 @@ function App() {
           }
         ></Route>
         <Route
-          path="certification-verification"
+          path="/certification-verification"
           element={<CertificateVerification />}
         />
         <Route path="/course-page/:course_id" element={<CoursePage />} />

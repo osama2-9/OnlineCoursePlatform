@@ -119,7 +119,7 @@ export const getEnrollments = async (req, res) => {
 export const updateEnrollment = async (req, res) => {
   try {
     console.log(req.body);
-    
+
     const { enrollmentId, status, access_granted } = req.body;
     if (!enrollmentId) {
       return res.status(400).json({
@@ -148,7 +148,7 @@ export const updateEnrollment = async (req, res) => {
         enrollment_id: parseInt(enrollmentId),
       },
       data: {
-        access_granted: access_granted ,
+        access_granted: access_granted,
         status: status || enrollment.status,
       },
     });
@@ -165,10 +165,7 @@ export const updateEnrollment = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error:"Internal server error"
-    })
-    
+      error: "Internal server error",
+    });
   }
 };
-
-
