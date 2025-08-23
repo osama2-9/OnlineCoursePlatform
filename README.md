@@ -47,7 +47,7 @@ A full-featured **online learning platform** built for learners and instructors 
 - Tracks payment status and methods
 - Used to manage access to paid courses
 
-### 8. 📈 User Progress Tracking
+### 8. User Progress Tracking
 - Tracks lesson completion, quiz scores, and assignment results
 - Visual dashboards for learners
 
