@@ -1,6 +1,7 @@
 import express from "express";
 import {
   aiSuggestionsQuestion,
+  coursesStats,
   createQuestion,
   createQuiz,
   deleteLesson,
@@ -9,6 +10,7 @@ import {
   getAnalysticsForCharts,
   getEnrollmentData,
   getInstructorCourses,
+  getLearnerScores,
   getLessonsByCourseId,
   getMyContentRequests,
   getQuizzes,
@@ -76,6 +78,18 @@ instructorRoute.get(
   "/review-quiz/:quizId/course/:courseId/instructor/:instructorId",
   checkRole("instructor"),
   reviewQuiz
+);
+
+instructorRoute.get(
+  "/students-marks",
+  checkRole("instructor"),
+  getLearnerScores
+);
+
+instructorRoute.get(
+  "/courses-stats",
+  checkRole("instructor"),
+  coursesStats
 );
 
 instructorRoute.delete(

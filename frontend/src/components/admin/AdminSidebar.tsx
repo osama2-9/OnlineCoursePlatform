@@ -355,19 +355,7 @@ export const AdminSidebar = () => {
           </button>
           {isSettingsOpen && (
             <div className="ml-8 space-y-2 mt-2">
-              <NavLink
-                to="/admin/settings/profile"
-                className={({ isActive }) =>
-                  `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`
-                }
-                onClick={closeSidebar}
-              >
-                <span>Profile Settings</span>
-              </NavLink>
+           
               <NavLink
                 to="/admin/settings/account"
                 className={({ isActive }) =>

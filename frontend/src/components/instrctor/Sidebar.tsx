@@ -6,6 +6,7 @@ import {
   FaUsers,
   FaBars,
   FaHammer,
+  FaClipboardCheck,
 } from "react-icons/fa";
 import { LiaCertificateSolid } from "react-icons/lia";
 
@@ -173,6 +174,22 @@ export const InstructorSidebar = () => {
               >
                 <FaChartLine className="w-5 h-5" />
                 <span>Students Progress</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/instructor/learners-scores"
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`
+                }
+                onClick={closeSidebar}
+              >
+                <FaClipboardCheck className="w-5 h-5" />
+                <span>Learners Scores</span>
               </NavLink>
             </li>
             <li>

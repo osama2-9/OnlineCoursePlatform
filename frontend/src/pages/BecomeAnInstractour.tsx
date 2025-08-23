@@ -29,6 +29,7 @@ const BecomeMentor = () => {
   const [uploadProfileImgProgress, setUploadProfileImgProgress] =
     useState<number>(0);
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
+  const [profileImageUrl, setProfileImageUrl] = useState<string>("");
   const [formData, setFormData] = useState<MentorFormData>({
     full_name: "",
     email: "",
@@ -67,17 +68,28 @@ const BecomeMentor = () => {
     setErrors((prev) => ({ ...prev, phone_number: "" }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.size > 5 * 1024 * 1024) {
         toast.error("File size should not exceed 5MB");
         return;
       }
-      setFormData((prev) => ({
-        ...prev,
-        profile_picture: file,
-      }));
+
+      // Upload immediately when file is selected
+      setIsLoadingUpload(true);
+      const uploadedUrl = await uploadProfileImg(file);
+
+      if (uploadedUrl) {
+        setProfileImageUrl(uploadedUrl);
+        setFormData((prev) => ({
+          ...prev,
+          profile_picture: file, // Keep file for preview
+        }));
+        toast.success("Profile picture uploaded successfully!");
+      }
+      setIsLoadingUpload(false);
+      setUploadProfileImgProgress(0);
     }
   };
 
@@ -183,23 +195,11 @@ const BecomeMentor = () => {
     setIsSubmitting(true);
 
     try {
-      let profileImgUrl = formData.profile_picture;
-      if (formData.profile_picture) {
-        setIsLoadingUpload(true);
-        profileImgUrl = await uploadProfileImg(formData.profile_picture);
-        if (!profileImgUrl) {
-          setIsSubmitting(false);
-          setIsLoadingUpload(false);
-          return;
-        }
-        setIsLoadingUpload(false);
-      }
-
       const response = await axios.post(
         `${API}/application/send-application`,
         {
           ...formData,
-          profile_picture: profileImgUrl,
+          profile_picture: profileImageUrl, 
         },
         {
           headers: {
@@ -228,6 +228,7 @@ const BecomeMentor = () => {
           language_skills: [],
           preferred_schedule: "",
         });
+        setProfileImageUrl("");
         setUploadProfileImgProgress(0);
         setStep(1);
       }
@@ -237,7 +238,6 @@ const BecomeMentor = () => {
       );
     } finally {
       setIsSubmitting(false);
-      setIsLoadingUpload(false);
     }
   };
 
@@ -260,11 +260,16 @@ const BecomeMentor = () => {
           Application Review
         </h2>
         <div className="space-y-6">
-          {formData.profile_picture && (
+          {(formData.profile_picture || profileImageUrl) && (
             <div className="flex justify-center mb-6">
               <div className="w-32 h-32 rounded-full overflow-hidden">
                 <img
-                  src={URL.createObjectURL(formData.profile_picture)}
+                  src={
+                    profileImageUrl ||
+                    (formData.profile_picture
+                      ? URL.createObjectURL(formData.profile_picture)
+                      : "")
+                  }
                   alt="Profile Preview"
                   className="w-full h-full object-cover"
                 />
@@ -409,7 +414,7 @@ const BecomeMentor = () => {
               </label>
               <div
                 className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
-                  formData.profile_picture
+                  profileImageUrl
                     ? "border-green-500 bg-green-50"
                     : isLoadingUpload
                     ? "border-blue-500 bg-blue-50"
@@ -442,16 +447,19 @@ const BecomeMentor = () => {
                       disabled={isLoadingUpload}
                     />
                   </div>
-                  {formData.profile_picture && !isLoadingUpload && (
-                    <p className="mt-2 text-sm text-gray-500">
-                      Selected: {formData.profile_picture.name}
-                    </p>
-                  )}
+                  {formData.profile_picture &&
+                    !isLoadingUpload &&
+                    profileImageUrl && (
+                      <p className="mt-2 text-sm text-green-600">
+                        ✓ Image uploaded successfully:{" "}
+                        {formData.profile_picture.name}
+                      </p>
+                    )}
                 </div>
               </div>
             </div>
 
-            {uploadProfileImgProgress > 0 && (
+            {uploadProfileImgProgress > 0 && isLoadingUpload && (
               <div className="mt-4">
                 <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
                   <div
@@ -479,6 +487,9 @@ const BecomeMentor = () => {
                 rows={4}
                 placeholder="Tell us about your teaching experience and passion..."
               />
+              <p className="text-sm text-gray-500 mt-1">
+                {formData.bio.length}/100 characters minimum
+              </p>
               {errors.bio && (
                 <p className="mt-1 text-sm text-red-500">{errors.bio}</p>
               )}
@@ -516,6 +527,9 @@ const BecomeMentor = () => {
                   } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   placeholder="JavaScript, React, Node.js"
                 />
+                <p className="text-sm text-gray-500 mt-1">
+                  Separate multiple areas with commas
+                </p>
                 {errors.expertise_area && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.expertise_area}
@@ -546,6 +560,7 @@ const BecomeMentor = () => {
                 )}
               </div>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -560,8 +575,11 @@ const BecomeMentor = () => {
                       ? "border-red-500"
                       : "border-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  placeholder="Arabic,English,French"
+                  placeholder="Arabic, English, French"
                 />
+                <p className="text-sm text-gray-500 mt-1">
+                  Separate multiple languages with commas
+                </p>
                 {errors.language_skills && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.language_skills}
@@ -578,8 +596,7 @@ const BecomeMentor = () => {
                   name="degree"
                   value={formData.degree}
                   onChange={handleInputChange}
-                  min="0"
-                  placeholder="BS in computer saince"
+                  placeholder="BS in Computer Science"
                   className={`w-full px-4 py-2 rounded-lg border ${
                     errors.degree ? "border-red-500" : "border-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -589,6 +606,7 @@ const BecomeMentor = () => {
                 )}
               </div>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -601,8 +619,11 @@ const BecomeMentor = () => {
                   className={`w-full px-4 py-2 rounded-lg border ${
                     errors.certifications ? "border-red-500" : "border-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  placeholder="Google Cloud,AWS"
+                  placeholder="Google Cloud, AWS"
                 />
+                <p className="text-sm text-gray-500 mt-1">
+                  Separate multiple certifications with commas
+                </p>
                 {errors.certifications && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.certifications}
@@ -625,8 +646,11 @@ const BecomeMentor = () => {
                       ? "border-red-500"
                       : "border-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  placeholder="React + Redux , MERN stack"
+                  placeholder="React + Redux, MERN Stack"
                 />
+                <p className="text-sm text-gray-500 mt-1">
+                  Separate multiple courses with commas
+                </p>
                 {errors.previous_courses && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.previous_courses}
@@ -695,6 +719,20 @@ const BecomeMentor = () => {
               )}
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Preferred Schedule
+              </label>
+              <input
+                type="text"
+                name="preferred_schedule"
+                value={formData.preferred_schedule}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Weekdays 9 AM - 5 PM"
+              />
+            </div>
+
             <div className="flex justify-between">
               <button
                 type="button"
@@ -728,19 +766,17 @@ const BecomeMentor = () => {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting || isLoadingUpload}
+                disabled={isSubmitting}
                 className={`px-6 py-3 flex items-center space-x-2 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  isSubmitting || isLoadingUpload
+                  isSubmitting
                     ? "bg-blue-400 cursor-not-allowed"
                     : "bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"
                 }`}
               >
-                {isSubmitting || isLoadingUpload ? (
+                {isSubmitting ? (
                   <>
                     <Loader className="animate-spin" size={16} />
-                    <span>
-                      {isLoadingUpload ? "Uploading Image..." : "Submitting..."}
-                    </span>
+                    <span>Submitting...</span>
                   </>
                 ) : (
                   <span>Submit Application</span>

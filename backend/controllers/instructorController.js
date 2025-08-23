@@ -1764,3 +1764,208 @@ export const deleteLesson = async (req, res) => {
     });
   }
 };
+export const getLearnerScores = async (req, res) => {
+  const userId = req.user.userId;
+  const { type = "quiz", page = 1, limit = 10 } = req.query;
+  const limitNumber = parseInt(limit);
+  const pageNumber = parseInt(page);
+
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const instructorCourses = await prisma.courses.findMany({
+    where: {
+      instructor_id: userId,
+    },
+    select: {
+      course_id: true,
+    },
+  });
+  const instructorCourseIds = instructorCourses.map(
+    (course) => course.course_id
+  );
+
+  if (type === "quiz") {
+    const quizScores = await prisma.attempt.findMany({
+      where: {
+        quiz: {
+          course_id: {
+            in: instructorCourseIds,
+          },
+        },
+      },
+      select: {
+        user: {
+          select: {
+            user_id: true,
+            full_name: true,
+            email: true,
+          },
+        },
+        attempt_id: true,
+        score: true,
+        start_time: true,
+        quiz: { select: { title: true, total_marks: true } },
+      },
+      orderBy: { start_time: "desc" },
+      skip,
+      take: limitNumber,
+    });
+
+    const total = await prisma.attempt.count({
+      where: {
+        quiz: {
+          course_id: {
+            in: instructorCourseIds,
+          },
+        },
+      },
+    });
+
+    const data = quizScores.map((q) => ({
+      id: q.attempt_id,
+
+      type: "quiz",
+      title: q.quiz.title,
+      score: q.score,
+      max_score: q.quiz.total_marks,
+      submitted_at: q.start_time,
+      user: {
+        user_id: q.user.user_id,
+        full_name: q.user.full_name,
+        email: q.user.email,
+      },
+    }));
+
+    return res.status(200).json({
+      data,
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages: Math.ceil(total / limitNumber),
+      },
+    });
+  }
+
+  const assignmentScores = await prisma.assignmentSubmission.findMany({
+    where: {
+      assignment: {
+        course_id: {
+          in: instructorCourseIds,
+        },
+      },
+    },
+    select: {
+      student: {
+        select: {
+          user_id: true,
+          full_name: true,
+          email: true,
+        },
+      },
+      submission_id: true,
+      grade: true,
+      submitted_at: true,
+      assignment: { select: { title: true, points: true } },
+    },
+    orderBy: { submitted_at: "desc" },
+    skip,
+    take: limitNumber,
+  });
+
+  const total = await prisma.assignmentSubmission.count({
+    where: {
+      assignment: {
+        course_id: {
+          in: instructorCourseIds,
+        },
+      },
+    },
+  });
+
+  const data = assignmentScores.map((a) => {
+    return {
+      id: a.submission_id,
+      type: "assignment",
+      title: a.assignment.title,
+      score: a.grade,
+      max_score: a.assignment.points,
+      submitted_at: a.submitted_at,
+      user: {
+        user_id: a.student.user_id,
+        full_name: a.student.full_name,
+        email: a.student.email,
+      },
+    };
+  });
+  return res.status(200).json({
+    data,
+    pagination: {
+      total,
+      page: pageNumber,
+      limit: limitNumber,
+      totalPages: Math.ceil(total / limitNumber),
+    },
+  });
+};
+export const coursesStats = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        error: "Instructor Id required",
+      });
+    }
+
+    const courses = await prisma.courses.findMany({
+      where: {
+        instructor_id: userId,
+      },
+      select: {
+        title: true,
+        course_id: true,
+        required_marks: true,
+        quizzes: {
+          select: {
+            total_marks: true,
+          },
+        },
+        assignments: {
+          select: {
+            points: true,
+          },
+        },
+      },
+    });
+
+    const coursesWithTotalMarks = courses.map((course) => {
+      const totalQuizzesMarks = course.quizzes.reduce(
+        (sum, quiz) => sum + quiz.total_marks,
+        0
+      );
+      const totalAssignmentsMarks = course.assignments.reduce(
+        (sum, assignment) => sum + assignment.points,
+        0
+      );
+      return {
+        course_id: course.course_id,
+        title: course.title,
+        required_marks: course.required_marks,
+
+        totalMarks: totalQuizzesMarks + totalAssignmentsMarks,
+        quizzesMarks: totalQuizzesMarks,
+        assignmentsMarks: totalAssignmentsMarks,
+      };
+    });
+
+    return res.status(200).json({
+      courses: coursesWithTotalMarks,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
