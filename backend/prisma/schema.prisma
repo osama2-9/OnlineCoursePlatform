@@ -67,6 +67,7 @@ model Courses {
   course_img        String
   category          String?
   price             Float          @default(0.00)
+  required_marks Int?
   is_published      Boolean        @default(false)
   course_type       CourseType?
   created_at        DateTime       @default(now())
@@ -383,6 +384,8 @@ model Enrollments {
   status          EnrollmentStatus @default(active)
   access_granted  Boolean          @default(false)
   access_token    String?
+  total_score Int? @default(0)
+  is_eligible_for_certificate Boolean @default(false)
 
   user   Users   @relation(fields: [user_id], references: [user_id] ,onDelete: Cascade)
   course Courses @relation(fields: [course_id], references: [course_id])
@@ -425,7 +428,7 @@ model Quizzes {
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
   total_marks Int            @default(10)
-
+  publish_marks Boolean      @default(false)
   course       Courses        @relation(fields: [course_id], references: [course_id])
   questions    Question[]     
   Attempt      Attempt[]
@@ -567,6 +570,7 @@ model Assignments {
   end_date        DateTime
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
+  publish_marks   Boolean   @default(false)
 
   course          Courses   @relation(fields: [course_id], references: [course_id])
   instructor      Users     @relation(fields: [instructor_id], references: [user_id],onDelete: Cascade)

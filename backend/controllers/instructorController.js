@@ -3,7 +3,12 @@ import { genreateQuestionAttempt } from "../openAI/openAi.js";
 import { prisma } from "../prisma/prismaClint.js";
 import { newQuizNotification } from "../services/notifications.js";
 import { v2 as cloudinary } from "cloudinary";
-import { getCache, setCache, deleteCache, updateQuestionInCache } from "../services/redis/cache.js";
+import {
+  getCache,
+  setCache,
+  deleteCache,
+  updateQuestionInCache,
+} from "../services/redis/cache.js";
 const isHavePermession = async (course_id, instructor_id) => {
   try {
     const courseId = parseInt(course_id);
@@ -16,14 +21,11 @@ const isHavePermession = async (course_id, instructor_id) => {
       },
     });
 
-
     const userRole = await prisma.users.findUnique({
       where: {
         user_id: instructorId,
       },
     });
-
-
 
     if (userRole && userRole.role === "admin") {
       return true;
@@ -392,7 +394,7 @@ export const getAnalysticsForCharts = async (req, res) => {
 };
 export const getStudentProgress = async (req, res) => {
   try {
-    const { instructorId } = req.params;
+    const instructorId = req.user.userId;
     const { page = 1, limit = 5, courseTitle } = req.query;
     const instructorIdInt = parseInt(instructorId);
     const pageNumber = parseInt(page);
@@ -426,6 +428,11 @@ export const getStudentProgress = async (req, res) => {
       select: {
         user_id: true,
         course_id: true,
+        enrollment_date: true,
+        status: true,
+        total_score: true,
+        is_eligible_for_certificate: true,
+        access_granted: true,
       },
     });
 
@@ -444,25 +451,52 @@ export const getStudentProgress = async (req, res) => {
       select: {
         user_id: true,
         full_name: true,
-        userProgress: {
-          select: {
-            progress: true,
-            course_id: true,
+        email: true,
+        is_active: true,
+        isEmailVerified: true,
+        lastLogin: true,
+        enrollments: {
+          where: {
+            course_id: { in: coursesIds },
           },
-        },
-        attempts: {
           select: {
-            score: true,
-            quiz: {
+            course_id: true,
+            enrollment_date: true,
+            status: true,
+            total_score: true,
+            is_eligible_for_certificate: true,
+            access_granted: true,
+            course: {
               select: {
-                course_id: true,
+                title: true,
               },
             },
           },
         },
-        enrollments: {
+        userProgress: {
+          where: {
+            course_id: { in: coursesIds },
+          },
           select: {
-            course: {
+            course_id: true,
+            progress: true,
+            is_completed: true,
+            last_accessed: true,
+          },
+        },
+        attempts: {
+          where: {
+            quiz: {
+              course_id: { in: coursesIds },
+            },
+          },
+          select: {
+            attempt_id: true,
+            quiz_id: true,
+            score: true,
+            start_time: true,
+            end_time: true,
+            quiz: {
               select: {
                 title: true,
                 course_id: true,
@@ -478,47 +512,74 @@ export const getStudentProgress = async (req, res) => {
     const courseWiseData = courses.map((course) => {
       const usersInCourse = users.filter((user) =>
         user.enrollments.some(
-          (enrollment) => enrollment.course.course_id === course.course_id
+          (enrollment) => enrollment.course_id === course.course_id
         )
       );
 
-      const studentProgress = usersInCourse.map((user) => {
-        const userProgressInCourse = user.userProgress.filter(
-          (progress) => progress.course_id === course.course_id
+      const students = usersInCourse.map((user) => {
+        const enrollment = user.enrollments.find(
+          (en) => en.course_id === course.course_id
         );
-        const totalProgress = userProgressInCourse.reduce(
-          (sum, progress) => sum + progress.progress,
+
+        const progressArr = user.userProgress.filter(
+          (prog) => prog.course_id === course.course_id
+        );
+        const totalProgress = progressArr.reduce(
+          (sum, prog) => sum + prog.progress,
           0
         );
-        const averageProgress =
-          userProgressInCourse.length > 0
-            ? (totalProgress / userProgressInCourse.length).toFixed(2)
+        const avgProgress =
+          progressArr.length > 0
+            ? (totalProgress / progressArr.length).toFixed(2)
             : "0.00";
 
-        const userAttemptsInCourse = user.attempts.filter(
-          (attempt) => attempt.quiz.course_id === course.course_id
-        );
-        const totalQuizScore = userAttemptsInCourse.reduce(
-          (sum, attempt) => sum + attempt.score,
+        const attempts = user.attempts
+          .filter((att) => att.quiz.course_id === course.course_id)
+          .map((att) => ({
+            attempt_id: att.attempt_id,
+            quiz_id: att.quiz_id,
+            quiz_title: att.quiz.title,
+            score: att.score,
+            start_time: att.start_time,
+            end_time: att.end_time,
+          }));
+
+        const totalQuizScore = attempts.reduce(
+          (sum, att) => sum + att.score,
           0
         );
-        const averageQuizScore =
-          userAttemptsInCourse.length > 0
-            ? (totalQuizScore / userAttemptsInCourse.length).toFixed(2)
+        const avgQuizScore =
+          attempts.length > 0
+            ? (totalQuizScore / attempts.length).toFixed(2)
             : "0.00";
 
         return {
           user_id: user.user_id,
           full_name: user.full_name,
-          progress: averageProgress,
-          quiz_score: averageQuizScore,
+          email: user.email,
+          is_active: user.is_active,
+          isEmailVerified: user.isEmailVerified,
+          lastLogin: user.lastLogin,
+          enrollment: {
+            enrollment_date: enrollment?.enrollment_date,
+            status: enrollment?.status,
+            total_score: enrollment?.total_score,
+            is_eligible_for_certificate:
+              enrollment?.is_eligible_for_certificate,
+            access_granted: enrollment?.access_granted,
+            course_title: enrollment?.course?.title,
+          },
+          progress: avgProgress,
+          progress_details: progressArr,
+          avg_quiz_score: avgQuizScore,
+          quiz_attempts: attempts,
         };
       });
 
       return {
         course_id: course.course_id,
         course_title: course.title,
-        students: studentProgress,
+        students,
       };
     });
 
@@ -599,11 +660,9 @@ export const createQuiz = async (req, res) => {
         description: description,
         duration: duration,
         max_attempts: maxAttempts,
-
-      }
+      };
       await setCache(metaKey, dataFormated);
     }
-
 
     try {
       await newQuizNotification(courseId);
@@ -696,8 +755,6 @@ export const createQuestion = async (req, res) => {
 
     await setCache(pageKey, cachedPage);
 
-
-
     return res.status(201).json({
       message: "Question Created and Cached",
       pageNumber,
@@ -709,37 +766,21 @@ export const createQuestion = async (req, res) => {
   }
 };
 
-export const testCache = async (req, res) => {
-  try {
-
-    const cachedPage = await getCache(`quiz:14:meta`)
-    console.log(cachedPage);
-
-    return res.status(200).json({
-      cachedPage
-    })
-  } catch (error) {
-    console.error("Error in testCache:", error);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-}
-
 export const deleteQuiz = async (req, res) => {
   try {
-    const { quizId, courseId } = req.params
+    const { quizId, courseId } = req.params;
 
-    const userId = req.user.userId
+    const userId = req.user.userId;
 
-    await isHavePermession(courseId, userId)
-
+    await isHavePermession(courseId, userId);
 
     if (!quizId) {
       return res.status(400).json({
         error: "Missing required params: quizId",
-      })
+      });
     }
 
-    const quizIdInt = parseInt(quizId)
+    const quizIdInt = parseInt(quizId);
 
     const deleteAnswers = await prisma.answer.deleteMany({
       where: {
@@ -747,12 +788,12 @@ export const deleteQuiz = async (req, res) => {
           quiz_id: quizIdInt,
         },
       },
-    })
+    });
     const deletequizAttempts = await prisma.attempt.deleteMany({
       where: {
         quiz_id: quizIdInt,
       },
-    })
+    });
 
     const deletequizChoices = await prisma.choice.deleteMany({
       where: {
@@ -760,33 +801,37 @@ export const deleteQuiz = async (req, res) => {
           quiz_id: quizIdInt,
         },
       },
-    })
+    });
     const deletequizQuestions = await prisma.question.deleteMany({
       where: {
         quiz_id: quizIdInt,
       },
-    })
+    });
     const deletequiz = await prisma.quizzes.delete({
       where: {
         quiz_id: quizIdInt,
       },
-    })
+    });
 
-    if (!deletequizAttempts || !deletequizChoices || !deletequizQuestions || !deletequiz || !deleteAnswers) {
+    if (
+      !deletequizAttempts ||
+      !deletequizChoices ||
+      !deletequizQuestions ||
+      !deletequiz ||
+      !deleteAnswers
+    ) {
       return res.status(400).json({
         error: "Error while try to delete quiz",
-      })
+      });
     }
 
     return res.status(200).json({
       message: "Quiz deleted successfully",
-    })
+    });
   } catch (error) {
     console.log(error);
-
   }
-}
-
+};
 
 export const getQuizzes = async (req, res) => {
   try {
@@ -1001,8 +1046,6 @@ export const deleteQuestion = async (req, res) => {
 
 export const updateQuestion = async (req, res) => {
   try {
-
-
     const {
       questionId,
       instructorId,
@@ -1052,9 +1095,8 @@ export const updateQuestion = async (req, res) => {
       choice_id: existingChoices[index]?.choice_id || undefined,
       choice_text: answer,
       question_id: parseInt(questionId),
-      is_correct: index === parseInt(correct_answer)
+      is_correct: index === parseInt(correct_answer),
     }));
-
 
     const updatedQuestion = await prisma.question.update({
       where: { question_id: parseInt(questionId) },
@@ -1079,18 +1121,14 @@ export const updateQuestion = async (req, res) => {
       include: { choices: true },
     });
 
-
     if (!updatedQuestion) {
       return res.status(400).json({
         error: "Failed to update the question",
       });
     }
 
-
-
     return res.status(200).json({
       message: "Question updated successfully",
-
     });
   } catch (error) {
     console.log(error);
@@ -1138,8 +1176,9 @@ export const toggleQuizPublish = async (req, res) => {
     });
 
     return res.status(200).json({
-      message: `Quiz ${is_published ? "published" : "unpublished"
-        } successfully!`,
+      message: `Quiz ${
+        is_published ? "published" : "unpublished"
+      } successfully!`,
       quiz: updatedQuiz,
     });
   } catch (error) {

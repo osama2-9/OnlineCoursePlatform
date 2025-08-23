@@ -7,10 +7,12 @@ export interface Course {
     is_published: boolean;
     course_type: 'free' | 'paid';
     description: string
-    start_date:Date;
+    start_date: Date;
     end_date: Date;
     created_at: Date;
-    content:string
+    content: string
+    required_marks: number | null
+
     learning_outcomes: string[]
     instructor: {
         full_name: string;

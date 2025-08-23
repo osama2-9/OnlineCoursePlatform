@@ -29,9 +29,9 @@ interface Pagination {
 }
 interface InstructorEnrollmentsReponse {
   enrollments: EnrollmentsData[];
-  pagintion: Pagination;
+  pagination: Pagination;
 }
-export const useGetInstructorEnrollments = () => {
+export const useGetInstructorEnrollments = (currentPage:number) => {
   const { user } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrollmentsData[] | null>([]);
   const [pagintion, setPagination] = useState<Pagination>({
@@ -49,7 +49,8 @@ export const useGetInstructorEnrollments = () => {
         `${API}/instructor/instructor-courses-enrollments/${user?.userId}`,
         {
           params: {
-            limit: 100,
+            page:currentPage,
+            limit: 8,
           },
           headers: {
             "Content-Type": "application/json",
@@ -67,7 +68,7 @@ export const useGetInstructorEnrollments = () => {
   };
 
   const { data } = useQuery({
-    queryKey: ["instructorenrollments", user?.userId],
+    queryKey: ["instructorenrollments", user?.userId, currentPage],
     queryFn: getEnrollmentsData,
     staleTime: 1 * 1000 * 60,
     refetchInterval: 1 * 1000 * 60,
@@ -76,7 +77,7 @@ export const useGetInstructorEnrollments = () => {
   useEffect(() => {
     if (data) {
       setEnrollments(data.enrollments || []);
-      setPagination(data.pagintion || null);
+      setPagination(data.pagination || null);
     }
   }, [data]);
 

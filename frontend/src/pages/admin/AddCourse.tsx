@@ -21,6 +21,7 @@ export const AddCourse = () => {
     category: "",
     start_date: "",
     end_date: "",
+    required_marks: 100,
   });
 
   useEffect(() => {
@@ -95,7 +96,6 @@ export const AddCourse = () => {
     { value: "project-management", label: "Project Management" },
   ];
 
-  // Convert date string to ISO format for Prisma
   const formatDateForPrisma = (dateString: string) => {
     if (!dateString) return null;
     const date = new Date(dateString);
@@ -106,7 +106,6 @@ export const AddCourse = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Validation
     if (formData.start_date && formData.end_date) {
       const startDate = new Date(formData.start_date);
       const endDate = new Date(formData.end_date);
@@ -118,7 +117,6 @@ export const AddCourse = () => {
       }
     }
 
-    // Filter out empty learning outcomes
     const filteredOutcomes = learnOutcomes.filter(
       (outcome) => outcome.trim() !== ""
     );
@@ -147,7 +145,6 @@ export const AddCourse = () => {
       const data = await res.data;
       if (data) {
         toast.success(data.message);
-        // Reset form
         setFormData({
           title: "",
           description: "",
@@ -158,6 +155,7 @@ export const AddCourse = () => {
           category: "",
           start_date: "",
           end_date: "",
+          required_marks: 100,
         });
         setLearnOutcomes([""]);
       }
@@ -231,6 +229,24 @@ export const AddCourse = () => {
                       name="title"
                       type="text"
                       value={formData.title}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 placeholder-gray-400"
+                      placeholder="e.g., Advanced React Development"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label
+                      className="block text-sm font-semibold text-gray-700"
+                      htmlFor="title"
+                    >
+                      Total Marks *
+                    </label>
+                    <input
+                      id="Total Marks"
+                      name="required_marks"
+                      type="number"
+                      value={formData.required_marks}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 placeholder-gray-400"
                       placeholder="e.g., Advanced React Development"

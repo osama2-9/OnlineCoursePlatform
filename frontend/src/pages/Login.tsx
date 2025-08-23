@@ -22,9 +22,12 @@ export const Login = () => {
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const errorParam = queryParams.get('error');
-    if (errorParam === 'google_auth_failed' || errorParam === 'auth_verification_failed') {
-      setError('Google authentication failed. Please try again.');
+    const errorParam = queryParams.get("error");
+    if (
+      errorParam === "google_auth_failed" ||
+      errorParam === "auth_verification_failed"
+    ) {
+      setError("Google authentication failed. Please try again.");
     }
   }, [location]);
 
@@ -90,28 +93,30 @@ export const Login = () => {
     }
   };
 
-  const handleGoogleLogin = async() => {
+  const handleGoogleLogin = async () => {
     try {
-      setGoogleLoading(true)
-      const res = await axios.get(`${API}/auth/google-auth-url` ,{
+      setGoogleLoading(true);
+      const res = await axios.get(`${API}/auth/google-auth-url`, {
         withCredentials: true,
       });
-      const data = await res.data
-      if(data){
+      const data = await res.data;
+      if (data) {
         window.location.replace(data.url);
       }
     } catch (error) {
       console.log(error);
       setError("Failed to login with Google");
-    }finally{
-      setGoogleLoading(false)
+    } finally {
+      setGoogleLoading(false);
     }
-  
   };
 
   const activeLink = () => {
     return (
-      <Link to={"/active-account-request"} className="text-green-600 font-semibold">
+      <Link
+        to={"/active-account-request"}
+        className="text-green-600 font-semibold"
+      >
         Reactivate your account
       </Link>
     );
@@ -276,7 +281,9 @@ export const Login = () => {
               onClick={handleGoogleLogin}
               disabled={googleLoading}
               className={`w-full py-2.5 text-sm bg-white text-gray-700 font-medium rounded-md border border-gray-300 transition-all flex items-center justify-center space-x-2 ${
-                googleLoading ? "cursor-not-allowed opacity-70" : "hover:bg-gray-50"
+                googleLoading
+                  ? "cursor-not-allowed opacity-70"
+                  : "hover:bg-gray-50"
               }`}
             >
               {googleLoading ? (

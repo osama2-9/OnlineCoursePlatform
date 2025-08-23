@@ -56,7 +56,7 @@ instructorRoute.get(
   getAnalysticsForCharts
 );
 instructorRoute.get(
-  "/get-users-progress/:instructorId",
+  "/get-students-progress",
   checkRole("instructor"),
   getStudentProgress
 );

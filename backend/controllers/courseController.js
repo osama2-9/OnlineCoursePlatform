@@ -38,6 +38,7 @@ export const createCourse = async (req, res) => {
       category,
       start_date,
       end_date,
+      required_marks,
     } = req.body;
 
     if (
@@ -49,7 +50,8 @@ export const createCourse = async (req, res) => {
       !learn_outcome ||
       !category ||
       !start_date ||
-      !end_date
+      !end_date ||
+      !required_marks
     ) {
       return res.status(400).json({
         error: "Please fill all inputs",
@@ -82,6 +84,7 @@ export const createCourse = async (req, res) => {
         category: category,
         start_date: start_date,
         end_date: end_date,
+        required_marks: required_marks,
       },
     });
 
@@ -260,6 +263,7 @@ export const updateCourse = async (req, res) => {
       is_published,
       start_date,
       end_date,
+      required_marks,
     } = req.body;
 
     let { course_img } = req.body;
@@ -318,6 +322,7 @@ export const updateCourse = async (req, res) => {
       ...(course_img && { course_img }),
       ...(start_date && { start_date }),
       ...(end_date && { end_date }),
+      ...(required_marks && { required_marks }),
       ...(instructor?.user_id && {
         instructor_id: parseInt(instructor.user_id),
       }),

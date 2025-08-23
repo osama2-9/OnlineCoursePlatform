@@ -76,6 +76,7 @@ import SearchPage from "./pages/SearchPage";
 import { Certifications } from "./pages/learner/Certifications";
 import { CertificationsRequests } from "./pages/instructor/CertificationsRequests";
 import CertificateVerification from "./pages/VerifyCertification";
+import StudentsProgress from "./pages/instructor/StudentsProgress";
 function App() {
   const { checkAuth } = useAuth();
   checkAuth();
@@ -238,6 +239,11 @@ function App() {
           element={
             <ProtectedInstractourRoute element={<CertificationsRequests />} />
           }
+        />
+
+        <Route
+          path="/instructor/students-progress"
+          element={<ProtectedInstractourRoute element={<StudentsProgress />} />}
         />
 
         <Route

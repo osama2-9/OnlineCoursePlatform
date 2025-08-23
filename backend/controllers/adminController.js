@@ -37,11 +37,7 @@ export const createNewUser = async (req, res) => {
     }
     const loginUrl = `https://uplearn-website.vercel.app/login`;
     try {
-      await sendNewAccountEmail(
-        email,
-        loginUrl,
-        rawPassword
-      );
+      await sendNewAccountEmail(email, loginUrl, rawPassword);
     } catch (emailerror) {
       console.log(emailerror);
     }
@@ -1003,6 +999,10 @@ export const getCourses = async (req, res) => {
           is_published: true,
           created_at: true,
           description: true,
+          required_marks: true,
+          start_date: true,
+          end_date: true,
+
           learning_outcomes: true,
           instructor: {
             select: {

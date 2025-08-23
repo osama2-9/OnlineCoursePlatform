@@ -27,6 +27,7 @@ export const UpdateCourse = ({
   const [instructorId, setInstructorId] = useState<number | null>(null);
   const [learnOutcomes, setLearnOutcomes] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date>(new Date());
+  const [requiredMarks, setRequiredMarks] = useState<number>(0);
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [courseType, setCourseType] = useState<"free" | "paid">("paid");
   const { instractors } = useGetInstructor();
@@ -62,6 +63,9 @@ export const UpdateCourse = ({
       setInstructorId(courseData.instructor.user_id);
       setLearnOutcomes(courseData.learning_outcomes || []);
       setCourseType(courseData.course_type || "paid");
+      setRequiredMarks(courseData.required_marks || 0);
+      setStartDate(new Date(courseData.start_date));
+      setEndDate(new Date(courseData.end_date));
     }
   }, [courseData]);
 
@@ -121,6 +125,7 @@ export const UpdateCourse = ({
         end_date: endDate,
         is_published: courseData.is_published,
         course_img: img || courseData.course_img,
+        required_marks: requiredMarks,
         instructor: {
           ...courseData.instructor,
           user_id: instructorId,
@@ -168,6 +173,18 @@ export const UpdateCourse = ({
                 placeholder="Course Title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Total Mraks
+              </label>
+              <input
+                type="number"
+                placeholder="Course Total Mraks"
+                value={requiredMarks}
+                onChange={(e) => setRequiredMarks(parseInt(e.target.value))}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -327,7 +344,7 @@ export const UpdateCourse = ({
                 </label>
                 <input
                   type="date"
-                  value={startDate.toISOString().split("T")[0]}
+                  value={startDate ? startDate.toISOString().split("T")[0] : ""}
                   onChange={(e) => setStartDate(new Date(e.target.value))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -339,7 +356,7 @@ export const UpdateCourse = ({
                 </label>
                 <input
                   type="date"
-                  value={endDate.toISOString().split("T")[0]}
+                  value={endDate ? endDate.toISOString().split("T")[0] : ""}
                   onChange={(e) => setEndDate(new Date(e.target.value))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -379,7 +396,11 @@ export const UpdateCourse = ({
               onClick={handleUpdate}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
             >
-              {isUpdating ? <Loader2 className="animate-spin text-white" size={15}/> : "Update"}
+              {isUpdating ? (
+                <Loader2 className="animate-spin text-white" size={15} />
+              ) : (
+                "Update"
+              )}
             </button>
           </div>
         </div>

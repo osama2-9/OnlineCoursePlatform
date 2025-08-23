@@ -1,12 +1,12 @@
 import {
-  FaFacebookF,
-  FaTwitter,
   FaLinkedinIn,
-  FaInstagram,
   FaEnvelope,
   FaPhone,
   FaMapMarkerAlt,
   FaArrowRight,
+  FaFacebookF,
+  FaTwitter,
+  FaInstagram,
 } from "react-icons/fa";
 
 export const HomePageFooter = () => {

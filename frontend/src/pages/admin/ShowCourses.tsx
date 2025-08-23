@@ -128,7 +128,6 @@ export const ShowCourses = () => {
     }
   }, [courses]);
 
-
   const handleAddLesson = (courseId: number, instructorId: number) => {
     navigate(
       `/admin/courses/${courseId}/instractor/${instructorId}/add-lessons`
@@ -299,7 +298,7 @@ export const ShowCourses = () => {
         <Loading />
       ) : (
         <div className="min-h-screen bg-gray-50">
-          <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          <div className=" mx-auto py-8 px-4 sm:px-6 lg:px-8">
             {/* Header */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -467,6 +466,15 @@ export const ShowCourses = () => {
                         Category
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Total Mraks
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Start Date
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        End Date
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -538,6 +546,17 @@ export const ShowCourses = () => {
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                               {course.category}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {course.required_marks || 0}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {new Date(course.start_date).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {new Date(course.end_date).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <CourseActionsDropdown
