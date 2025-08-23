@@ -92,7 +92,7 @@ A full-featured **online learning platform** built for learners and instructors 
 - **Google Cloud Platform (GCP)** for google auth
 
 ###  Frontend
-- **React.js**
+- **React + Vite **
 - **Redux Toolkit** for state management
 - **Tailwind CSS** for styling
 
