@@ -31,7 +31,7 @@ interface InstructorEnrollmentsReponse {
   enrollments: EnrollmentsData[];
   pagination: Pagination;
 }
-export const useGetInstructorEnrollments = (currentPage:number) => {
+export const useGetInstructorEnrollments = (currentPage?:number) => {
   const { user } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrollmentsData[] | null>([]);
   const [pagintion, setPagination] = useState<Pagination>({
