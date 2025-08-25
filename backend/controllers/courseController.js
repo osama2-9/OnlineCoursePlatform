@@ -184,6 +184,7 @@ export const getCourses = async (req, res) => {
           created_at: true,
           description: true,
           learning_outcomes: true,
+
           instructor: {
             select: {
               full_name: true,
@@ -197,6 +198,7 @@ export const getCourses = async (req, res) => {
           },
         },
       }),
+
       prisma.courses.count({
         where: whereClause,
       }),

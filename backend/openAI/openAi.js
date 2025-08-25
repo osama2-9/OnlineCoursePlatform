@@ -2,33 +2,30 @@ import OpenAI from "openai";
 import dotenv from "dotenv";
 dotenv.config();
 
-const token = process.env.OPENAI_API_KEY;
-
 const client = new OpenAI({
   baseURL: "https://models.inference.ai.azure.com",
-  apiKey: token,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function genreateQuestionAttempt(
-  questionType,
-  quizname,
-  course
-) {
+export async function genreateQuestionAttempt(questionType, quizname, course) {
   try {
     let systemPrompt = "";
 
     if (questionType === "mcq") {
       systemPrompt =
-        "Return the response in this format: {\"question\": \"...\", \"options\": [\"A) ...\", \"B) ...\", \"C) ...\", \"D) ...\"], \"correctAnswer\": \"A\"} where correctAnswer is the letter (A, B, C, or D) of the correct option.";
+        'Return response as JSON: {"question": "...", "options": ["A) ...","B) ...","C) ...","D) ..."], "correctAnswer": "A"}';
     } else if (questionType === "truefalse") {
       systemPrompt =
-        "Return the response in this format: {\"question\": \"...\", \"answer\": true/false}";
+        'Return response as JSON: {"question": "...", "answer": true/false}';
     } else if (questionType === "text") {
       systemPrompt =
-        "Return the response in this format: {\"question\": \"...\"}. Generate an open-ended question that requires a written response and allows for multiple valid answers. Focus on practical application, analysis, or explanation-based questions.";
+        'Return response as JSON: {"question": "..."} with an open-ended, explanation-based question.';
     }
 
     const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      temperature: 1,
+      max_tokens: 4096,
       messages: [
         { role: "system", content: systemPrompt },
         {
@@ -36,47 +33,83 @@ export async function genreateQuestionAttempt(
           content: `Generate a ${questionType} question for the quiz "${quizname}" in the course "${course}". 
           
           Requirements:
-          - Make the question specific to ${course} concepts and topics
-          - Ensure the question is appropriate for a quiz called "${quizname}"
-          - Focus on practical knowledge and real-world application
-          - If it's a programming course, include specific technologies, frameworks, or concepts
-          - Make the difficulty level suitable for intermediate students
-          - Avoid generic questions - be specific to the subject matter`,
+          - Must be specific to ${course}
+          - Relevant to quiz "${quizname}"
+          - Focus on practical, real-world application
+          - Intermediate difficulty
+          - Avoid generic content`,
         },
       ],
-      model: "gpt-4o",
-      temperature: 1,
-      max_tokens: 4096,
-      top_p: 1,
     });
 
-    let content = response.choices[0].message.content
+    const content = response.choices[0].message.content
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
 
-    const parsedContent = JSON.parse(content);
+    const parsed = JSON.parse(content);
 
     if (questionType === "truefalse") {
       return {
-        question: parsedContent.question,
+        question: parsed.question,
         options: ["True", "False"],
-        correctAnswer: parsedContent.answer ? 0 : 1,
+        correctAnswer: parsed.answer ? 0 : 1,
       };
     } else if (questionType === "mcq") {
       return {
-        question: parsedContent.question,
-        options: parsedContent.options,
-        correctAnswer: parsedContent.correctAnswer.charCodeAt(0) - 65,
+        question: parsed.question,
+        options: parsed.options,
+        correctAnswer: parsed.correctAnswer.charCodeAt(0) - 65,
       };
     } else if (questionType === "text") {
       return {
-        question: parsedContent.question,
-        correctAnswer: null
+        question: parsed.question,
+        correctAnswer: null,
       };
     }
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    console.error(err);
     throw new Error("Error generating question");
+  }
+}
+
+export async function generateArticleSEOSetting(title, excerpt) {
+  try {
+    const systemPrompt = `
+      You are an expert SEO strategist. Follow these steps before answering:
+      1. Analyze the title, excerpt, and content of the article.
+      2. Research patterns from popular blogs, news websites, and top-ranking company pages.
+      3. Craft a strong, engaging SEO title (max ~60 chars).
+      4. Write a compelling meta description (150–160 chars) that encourages clicks.
+      5. Generate 8–12 SEO keywords based on trending, high-ranking search terms.
+      6. Return response strictly in this JSON format:
+      {"seo_title": "...", "seo_description": "...", "seo_keywords": ["...","..."]}
+    `;
+
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      temperature: 0.7,
+      max_tokens: 1024,
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: `Here is the article:
+          Title: ${title}
+          Excerpt: ${excerpt}
+          `,
+        },
+      ],
+    });
+
+    const contentRes = response.choices[0].message.content
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    return JSON.parse(contentRes);
+  } catch (err) {
+    console.error(err);
+    throw new Error("Error generating SEO settings");
   }
 }

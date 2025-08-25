@@ -2,7 +2,18 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { Loader2, Search, X, ChevronDown, Mail, Phone, GraduationCap, BookOpen, Award, MessageSquare } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  X,
+  ChevronDown,
+  Mail,
+  Phone,
+  GraduationCap,
+  BookOpen,
+  Award,
+  MessageSquare,
+} from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { API } from "../../API/ApiBaseUrl";
@@ -113,12 +124,11 @@ export const InstructorApplications = () => {
     setIsModalOpen((prev) => !prev);
   };
 
-  const renderEnhancedField = (label:any, value:any, icon:any) => {
+  const renderEnhancedField = (label: any, value: any) => {
     if (!value) return null;
 
     return (
       <div className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-        <span className="text-lg flex-shrink-0 mt-0.5">{icon}</span>
         <div className="flex-1 min-w-0">
           <dt className="text-sm font-medium text-gray-600 mb-1">{label}</dt>
           <dd className="text-gray-900 break-words">{value}</dd>
@@ -136,7 +146,7 @@ export const InstructorApplications = () => {
         `${API}/application/update-status/${selectedApplication.application_id}`,
         {
           application_status: newStatus,
-          userId:user?.userId
+          userId: user?.userId,
         },
         {
           headers: {
@@ -428,7 +438,6 @@ export const InstructorApplications = () => {
       {isModalOpen && selectedApplication && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden shadow-2xl border border-gray-200">
-            {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 p-6">
               <div className="flex justify-between items-center">
                 <div>
@@ -448,9 +457,7 @@ export const InstructorApplications = () => {
               </div>
             </div>
 
-            {/* Content */}
             <div className="overflow-y-auto max-h-[calc(95vh-140px)]">
-              {/* Profile Header */}
               <div className="p-6 bg-gradient-to-r from-blue-50 to-white">
                 <div className="flex items-center space-x-6">
                   {selectedApplication.profile_picture_url && (
@@ -488,12 +495,9 @@ export const InstructorApplications = () => {
                 </div>
               </div>
 
-              {/* Main Content Grid */}
               <div className="p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Left Column */}
                   <div className="space-y-6">
-                    {/* Professional Information */}
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                       <div className="bg-gray- p-4">
                         <div className="flex items-center space-x-3">
@@ -506,33 +510,27 @@ export const InstructorApplications = () => {
                       <div className="p-6 space-y-4">
                         {renderEnhancedField(
                           "Expertise Areas",
-                          selectedApplication.expertise_area.join(", "),
-                          "💼"
+                          selectedApplication.expertise_area.join(", ")
                         )}
                         {renderEnhancedField(
                           "Experience",
-                          selectedApplication.years_of_experience,
-                          "⏱️"
+                          selectedApplication.years_of_experience
                         )}
                         {renderEnhancedField(
                           "Education",
-                          selectedApplication.education_background,
-                          "🎓"
+                          selectedApplication.education_background
                         )}
                         {renderEnhancedField(
                           "Institution",
-                          selectedApplication.institution,
-                          "🏫"
+                          selectedApplication.institution
                         )}
                         {renderEnhancedField(
                           "Degree",
-                          selectedApplication.degree,
-                          "📜"
+                          selectedApplication.degree
                         )}
                       </div>
                     </div>
 
-                    {/* Teaching Information */}
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                       <div className="bg-white p-4">
                         <div className="flex items-center space-x-3">
@@ -545,41 +543,33 @@ export const InstructorApplications = () => {
                       <div className="p-6 space-y-4">
                         {renderEnhancedField(
                           "Teaching Style",
-                          selectedApplication.teaching_style,
-                          "🎯"
+                          selectedApplication.teaching_style
                         )}
                         {renderEnhancedField(
                           "Languages",
-                          selectedApplication.language_skills.join(", "),
-                          "🌍"
+                          selectedApplication.language_skills.join(", ")
                         )}
                         {renderEnhancedField(
                           "Schedule",
-                          selectedApplication.preferred_schedule,
-                          "📅"
+                          selectedApplication.preferred_schedule
                         )}
                         {renderEnhancedField(
                           "Previous Courses",
-                          selectedApplication.previous_courses.join(", "),
-                          "📚"
+                          selectedApplication.previous_courses.join(", ")
                         )}
                         {renderEnhancedField(
                           "Certifications",
-                          selectedApplication.certifications.join(", "),
-                          "🏆"
+                          selectedApplication.certifications.join(", ")
                         )}
                         {renderEnhancedField(
                           "Course Type",
-                          selectedApplication.preferred_course_type,
-                          "💻"
+                          selectedApplication.preferred_course_type
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Right Column */}
                   <div className="space-y-6">
-                    {/* Application Status */}
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                       <div className="bg-white p-4">
                         <div className="flex items-center space-x-3">
@@ -591,7 +581,6 @@ export const InstructorApplications = () => {
                       </div>
                       <div className="p-6">
                         <div className="space-y-6">
-                          {/* Current Status Display */}
                           <div className="flex items-center justify-center p-6 bg-gray-50 rounded-lg">
                             <div className="text-center">
                               <div className="mb-3">
@@ -631,7 +620,6 @@ export const InstructorApplications = () => {
                             </div>
                           </div>
 
-                          {/* Status Change Controls */}
                           <div className="bg-white border-2 border-dashed border-gray-200 rounded-lg p-4">
                             <label className="block text-sm font-medium text-gray-700 mb-3">
                               Update Status
@@ -663,7 +651,6 @@ export const InstructorApplications = () => {
                       </div>
                     </div>
 
-                    {/* Notes Section */}
                     {selectedApplication.notes && (
                       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4">

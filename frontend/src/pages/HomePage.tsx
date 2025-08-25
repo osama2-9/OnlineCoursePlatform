@@ -24,7 +24,6 @@ export const HomePage = () => {
       <div className="relative p-4 bg-white overflow-hidden">
         <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="pt-20 pb-16 text-center lg:pt-32">
-            
             <div className="mx-auto max-w-fit">
               <div className="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-sm font-medium text-orange-600 ring-1 ring-inset ring-orange-500/10">
                 <BookOpen className="w-4 h-4 mr-2" />
@@ -61,7 +60,7 @@ export const HomePage = () => {
               </Link>
               <Link
                 to="/explore"
-                className="inline-flex items-center justify-center rounded-full py-2 px-4 text-sm font-semibold text-orange-700 hover:text-orange-900 transition"
+                className="inline-flex items-center justify-center rounded-full py-2 px-4 text-md font-semibold text-orange-600 transition"
               >
                 Browse Courses
               </Link>

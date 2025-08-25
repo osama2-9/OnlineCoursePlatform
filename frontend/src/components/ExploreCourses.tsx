@@ -3,6 +3,7 @@ import { useGetCourses } from "../hooks/useGetCourses";
 import { Loading } from "./Loading";
 import { FaFilter } from "react-icons/fa";
 import CourseCard from "./CourseCard";
+import { Link } from "react-router-dom";
 
 const ExploreCourses = () => {
   const [filter, setFilter] = useState<string>("all");
@@ -73,11 +74,19 @@ const ExploreCourses = () => {
             </select>
           </div>
         </div>
-        <div className="mb-6">
+        <div className="mb-6 flex justify-between items-center">
           <p className="text-gray-600">
             Showing {filteredCourses?.length}{" "}
             {filteredCourses?.length === 1 ? "course" : "courses"}
           </p>
+          <div>
+            <Link
+              to={"/explore"}
+              className="bg-orange-600 text-white font-semibold text-sm p-2 rounded-lg"
+            >
+              Explore All Courses
+            </Link>
+          </div>
         </div>
 
         {filteredCourses?.length === 0 ? (

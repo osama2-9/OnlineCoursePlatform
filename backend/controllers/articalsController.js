@@ -1,3 +1,4 @@
+import { generateArticleSEOSetting } from "../openAI/openAi.js";
 import { prisma } from "../prisma/prismaClint.js";
 
 export const createCategory = async (req, res) => {
@@ -345,8 +346,10 @@ export const getArticles = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const sortBy = req.query.sort || 'latest'; 
-    const categoryFilter = req.query.category ? { category: req.query.category } : {};
+    const sortBy = req.query.sort || "latest";
+    const categoryFilter = req.query.category
+      ? { category: req.query.category }
+      : {};
     const tagFilter = req.query.tag ? { tags: { has: req.query.tag } } : {};
     const searchFilter = req.query.search
       ? {
@@ -366,12 +369,10 @@ export const getArticles = async (req, res) => {
     let orderBy = { created_at: "desc" };
 
     if (sortBy === "popular") {
-     
       orderBy = { likes: { _count: "desc" } };
     } else if (sortBy === "mostDiscussed") {
-      
       orderBy = { comments: { _count: "desc" } };
-    } 
+    }
 
     const [totalArticles, articles] = await Promise.all([
       prisma.article.count({ where }),
@@ -545,7 +546,6 @@ export const deleteComment = async (req, res) => {
     });
   }
 };
-
 
 export const updateComment = async (req, res) => {
   try {
@@ -859,35 +859,62 @@ export const getBookMarkedArticles = async (req, res) => {
 
 export const seen = async (req, res) => {
   try {
-    const {userId ,articleId} =req.body
-    if(!userId || !articleId){
+    const { userId, articleId } = req.body;
+    if (!userId || !articleId) {
       return res.status(400).json({
-        error:"Missing required ids"
-      })
+        error: "Missing required ids",
+      });
     }
     const seen = await prisma.seen.findFirst({
-      where:{
-        user_id:userId,
-        article_id:parseInt(articleId)
-      }
-    })
-    if(!seen){
+      where: {
+        user_id: userId,
+        article_id: parseInt(articleId),
+      },
+    });
+    if (!seen) {
       await prisma.seen.create({
-        data:{
-          user_id:userId,
-          article_id:parseInt(articleId),
+        data: {
+          user_id: userId,
+          article_id: parseInt(articleId),
           seen_at: new Date(),
-          
-        }
-      })
+        },
+      });
       return res.status(200).json({
-        seen_success:true
-      })
+        seen_success: true,
+      });
     }
     return res.status(200).json({
-      seen_success:false
-    })
+      seen_success: false,
+    });
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const generateSeoSettings = async (req, res) => {
+  try {
+    const { title, excerpt } = req.body;
+    if (!title || !excerpt) {
+      return res.status(400).json({
+        error: "Please Provied, title, excerpt",
+      });
+    }
+    const seoSettings = await generateArticleSEOSetting(
+      title,
+      excerpt
+    );
+    if (!seoSettings) {
+      return res.status(400).json({
+        error: "Failed to generate seo settings",
+      });
+    }
+    return res.status(200).json({
+      seoSettings: seoSettings,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
   }
 };

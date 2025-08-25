@@ -158,15 +158,17 @@ export const ArticlePage: React.FC = () => {
           withCredentials: true,
         }
       );
-      console.log(response.data)
+      if (response.data) {
+        return response.data;
+      }
     } catch (error) {
       console.log(error);
     }
   };
 
-  useEffect(()=>{
-    handleSeen()
-  } ,[articalId ,user?.userId])
+  useEffect(() => {
+    handleSeen();
+  }, [articalId, user?.userId]);
 
   if (isLoading) {
     return (
@@ -236,7 +238,6 @@ export const ArticlePage: React.FC = () => {
     featured_image,
   } = article;
 
-  const readTime = article.read_time || 5;
   const views = article.views || Math.floor(Math.random() * 1000) + 100;
 
   let handleLikeRequest = allowLike ? handleClickLike : handleClickUnlike;
@@ -313,10 +314,7 @@ export const ArticlePage: React.FC = () => {
                   {created_at && new Date(created_at).toLocaleDateString()}
                 </span>
               </div>
-              <div className="flex items-center mr-6">
-                <Clock size={16} className="mr-1 text-gray-500" />
-                <span>{readTime} min read</span>
-              </div>
+             
               <div className="flex items-center">
                 <Eye size={16} className="mr-1 text-gray-500" />
                 <span>{views} views</span>
@@ -407,29 +405,6 @@ export const ArticlePage: React.FC = () => {
 
       <HomePageFooter />
     </div>
-  );
-};
-
-const Clock: React.FC<{ size: number; className?: string }> = ({
-  size,
-  className,
-}) => {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
   );
 };
 

@@ -76,7 +76,6 @@ const BecomeMentor = () => {
         return;
       }
 
-      // Upload immediately when file is selected
       setIsLoadingUpload(true);
       const uploadedUrl = await uploadProfileImg(file);
 
@@ -84,7 +83,7 @@ const BecomeMentor = () => {
         setProfileImageUrl(uploadedUrl);
         setFormData((prev) => ({
           ...prev,
-          profile_picture: file, // Keep file for preview
+          profile_picture: file,
         }));
         toast.success("Profile picture uploaded successfully!");
       }
@@ -113,10 +112,12 @@ const BecomeMentor = () => {
           },
         }
       );
-
-      if (response) {
-        return response.data.secure_url;
+      const data = await response.data;
+      if (data) {
+        setProfileImageUrl(data.secure_url);
+        return profileImageUrl;
       }
+
       throw new Error("Failed to upload image");
     } catch (error) {
       toast.error("Failed to upload image. Please try again.");
@@ -199,7 +200,7 @@ const BecomeMentor = () => {
         `${API}/application/send-application`,
         {
           ...formData,
-          profile_picture: profileImageUrl, 
+          profile_picture: profileImageUrl,
         },
         {
           headers: {
