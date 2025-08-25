@@ -63,7 +63,7 @@ A full-featured **online learning platform** built for learners and instructors 
 
 ### 11. Article CMS System
 - Rich blog/article creation with:
-  - SEO metadata
+  - SEO metadata and option to generate with AI
   - Tags and categories
   - Modular content blocks (text, code, image, etc.)
 - Article approval system and reader interactions
