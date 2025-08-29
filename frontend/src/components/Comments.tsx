@@ -27,7 +27,7 @@ interface FetchCommentsResponse {
   comments: Comment[];
 }
 
-export const Comments = ({ articleId }: { articleId: number }) => {
+export const Comments = ({ articleId }: { articleId: any }) => {
   const { user } = useAuth();
   const userId = user?.userId;
   const [showCommentForm, setShowCommentForm] = useState(false);
@@ -258,11 +258,11 @@ export const Comments = ({ articleId }: { articleId: number }) => {
                 <div className="flex flex-center flex-reverse justify-between">
                   <div className=" flex items-center  mb-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold mr-3 shadow-sm">
-                      {comment.author.full_name.charAt(0)}
+                      {comment?.author?.full_name?.charAt(0)}
                     </div>
                     <div>
                       <h4 className="font-medium">
-                        {comment.author.full_name}
+                        {comment.author?.full_name}
                       </h4>
                       <p className="text-sm text-gray-500">
                         {comment.created_at &&

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { API } from "../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -21,6 +21,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useBookmark } from "../hooks/Bookmark";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
+import { Comments } from "../components/Comments";
 
 interface Author {
   full_name: string;
@@ -247,13 +248,13 @@ export const ArticlePage: React.FC = () => {
     <div className="bg-gray-50 min-h-screen">
       <nav className="bg-white shadow-sm py-4 px-4 sm:px-6 lg:px-8 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <button
+          <Link
+            to={"/articels"}
             className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
-            onClick={() => window.location.replace("/articels")}
           >
             <ChevronLeft size={20} />
             <span>Back to Articles</span>
-          </button>
+          </Link>
 
           <div className="flex items-center gap-5">
             <button
@@ -314,7 +315,7 @@ export const ArticlePage: React.FC = () => {
                   {created_at && new Date(created_at).toLocaleDateString()}
                 </span>
               </div>
-             
+
               <div className="flex items-center">
                 <Eye size={16} className="mr-1 text-gray-500" />
                 <span>{views} views</span>
@@ -363,6 +364,7 @@ export const ArticlePage: React.FC = () => {
                 </div>
               )}
             </div>
+            <Comments articleId={articalId} />
           </div>
 
           <div className="lg:w-1/4">

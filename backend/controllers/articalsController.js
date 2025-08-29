@@ -248,6 +248,18 @@ export const getArticalById = async (req, res) => {
         featured_image: true,
         content_type: true,
         content: true,
+        comments: {
+          select: {
+            author: {
+              select: {
+                full_name: true,
+              },
+            },
+            comment_id: true,
+            content: true,
+            created_at: true,
+          },
+        },
         author: {
           select: {
             full_name: true,
@@ -343,7 +355,7 @@ export const getArticleComments = async (req, res) => {
 export const getArticles = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 9;
     const skip = (page - 1) * limit;
 
     const sortBy = req.query.sort || "latest";
@@ -899,10 +911,7 @@ export const generateSeoSettings = async (req, res) => {
         error: "Please Provied, title, excerpt",
       });
     }
-    const seoSettings = await generateArticleSEOSetting(
-      title,
-      excerpt
-    );
+    const seoSettings = await generateArticleSEOSetting(title, excerpt);
     if (!seoSettings) {
       return res.status(400).json({
         error: "Failed to generate seo settings",
