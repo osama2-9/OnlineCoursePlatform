@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
-import { 
-  User, 
-  Mail, 
-  UserPlus, 
-  AlertCircle, 
+import {
+  User,
+  Mail,
+  UserPlus,
+  AlertCircle,
   CheckCircle,
   ChevronDown,
-  Loader2
+  Loader2,
 } from "lucide-react";
+import axiosClient from "../../API/axios";
 
 interface FormData {
   full_name: string;
@@ -32,22 +31,21 @@ export const AddUser = () => {
 
   const validateForm = () => {
     const newErrors: Partial<FormData> = {};
-    
+
     if (!formData.full_name.trim()) {
       newErrors.full_name = "Full name is required";
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email is invalid";
     }
-    
-    
+
     if (!formData.role) {
       newErrors.role = "Role selection is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -60,26 +58,26 @@ export const AddUser = () => {
       ...prevData,
       [name]: value,
     }));
-    
+
     if (errors[name as keyof FormData]) {
       setErrors({
         ...errors,
-        [name]: undefined
+        [name]: undefined,
       });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API}/admin/create-user`, formData, {
+      const res = await axiosClient.post(`/admin/create-user`, formData, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -90,7 +88,7 @@ export const AddUser = () => {
       if (data) {
         toast.success("User created successfully!");
         setFormSubmitted(true);
-        
+
         // Reset form after short delay
         setTimeout(() => {
           setFormData({
@@ -102,14 +100,15 @@ export const AddUser = () => {
         }, 2000);
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.error || "Failed to create user";
+      const errorMessage =
+        error?.response?.data?.error || "Failed to create user";
       toast.error(errorMessage);
-      
+
       // Handle specific backend errors
       if (error?.response?.data?.field) {
         setErrors({
           ...errors,
-          [error.response.data.field]: errorMessage
+          [error.response.data.field]: errorMessage,
         });
       }
     } finally {
@@ -151,18 +150,31 @@ export const AddUser = () => {
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
-              <h3 className="mt-3 text-lg font-medium text-gray-900">User Created Successfully!</h3>
+              <h3 className="mt-3 text-lg font-medium text-gray-900">
+                User Created Successfully!
+              </h3>
               <div className="mt-4 bg-gray-50 p-4 rounded-md">
-                <p className="text-sm font-medium text-gray-500">User Details</p>
+                <p className="text-sm font-medium text-gray-500">
+                  User Details
+                </p>
                 <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                   <div className="text-gray-500">Name:</div>
-                  <div className="text-gray-900 font-medium">{formData.full_name}</div>
+                  <div className="text-gray-900 font-medium">
+                    {formData.full_name}
+                  </div>
                   <div className="text-gray-500">Email:</div>
-                  <div className="text-gray-900 font-medium">{formData.email}</div>
+                  <div className="text-gray-900 font-medium">
+                    {formData.email}
+                  </div>
                   <div className="text-gray-500">Role:</div>
                   <div>
-                    <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${getRoleColor(formData.role)}`}>
-                      {formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
+                    <span
+                      className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${getRoleColor(
+                        formData.role
+                      )}`}
+                    >
+                      {formData.role.charAt(0).toUpperCase() +
+                        formData.role.slice(1)}
                     </span>
                   </div>
                 </div>
@@ -193,7 +205,9 @@ export const AddUser = () => {
                     value={formData.full_name}
                     onChange={handleInputChange}
                     className={`block w-full pl-10 pr-3 py-2 border ${
-                      errors.full_name ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                      errors.full_name
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                     } rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm`}
                     placeholder="John Doe"
                   />
@@ -224,7 +238,9 @@ export const AddUser = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`block w-full pl-10 pr-3 py-2 border ${
-                      errors.email ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                      errors.email
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                     } rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm`}
                     placeholder="example@domain.com"
                   />
@@ -236,8 +252,6 @@ export const AddUser = () => {
                   </p>
                 )}
               </div>
-
-          
 
               <div>
                 <label
@@ -253,7 +267,9 @@ export const AddUser = () => {
                     value={formData.role}
                     onChange={handleInputChange}
                     className={`block w-full pl-3 pr-10 py-2 border ${
-                      errors.role ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                      errors.role
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                     } rounded-md shadow-sm focus:outline-none appearance-none bg-none sm:text-sm`}
                   >
                     <option value="">Select a role</option>
@@ -306,37 +322,46 @@ export const AddUser = () => {
         )}
 
         <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Role Information</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">
+            Role Information
+          </h2>
           <div className="border-t border-gray-200 pt-4">
             <dl className="divide-y divide-gray-200">
               <div className="py-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <dt className="text-sm font-medium text-gray-500">Learner</dt>
                 <dd className="text-sm text-gray-900 sm:col-span-2">
-                  Standard user account. Can access courses, submit assignments, and participate in discussions.
+                  Standard user account. Can access courses, submit assignments,
+                  and participate in discussions.
                 </dd>
               </div>
               <div className="py-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <dt className="text-sm font-medium text-gray-500">Instructor</dt>
+                <dt className="text-sm font-medium text-gray-500">
+                  Instructor
+                </dt>
                 <dd className="text-sm text-gray-900 sm:col-span-2">
-                  Can create and manage courses, grade assignments, and communicate with learners.
+                  Can create and manage courses, grade assignments, and
+                  communicate with learners.
                 </dd>
               </div>
               <div className="py-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <dt className="text-sm font-medium text-gray-500">Admin</dt>
                 <dd className="text-sm text-gray-900 sm:col-span-2">
-                  Full access to the platform. Can manage users, content, and system settings.
+                  Full access to the platform. Can manage users, content, and
+                  system settings.
                 </dd>
               </div>
               <div className="py-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <dt className="text-sm font-medium text-gray-500">Support</dt>
                 <dd className="text-sm text-gray-900 sm:col-span-2">
-                  Can access customer support features, resolve tickets, and assist users with platform issues.
+                  Can access customer support features, resolve tickets, and
+                  assist users with platform issues.
                 </dd>
               </div>
               <div className="py-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <dt className="text-sm font-medium text-gray-500">Moderator</dt>
                 <dd className="text-sm text-gray-900 sm:col-span-2">
-                  Can moderate content, manage user reports, and enforce community guidelines.
+                  Can moderate content, manage user reports, and enforce
+                  community guidelines.
                 </dd>
               </div>
             </dl>

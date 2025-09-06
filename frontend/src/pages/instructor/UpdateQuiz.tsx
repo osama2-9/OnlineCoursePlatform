@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useLocation, useNavigate } from "react-router-dom";
+import axiosClient from "../../API/axios";
 
 export const UpdateQuiz = () => {
   const { state } = useLocation();
@@ -30,22 +29,13 @@ export const UpdateQuiz = () => {
     try {
       setIsLoading(true);
 
-      const res = await axios.put(
-        `${API}/instructor/update-quiz`,
-        {
-          quizId: state?.quizId,
-          title,
-          description,
-          max_attempts: maxAttempts,
-          duration,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.put(`/instructor/update-quiz`, {
+        quizId: state?.quizId,
+        title,
+        description,
+        max_attempts: maxAttempts,
+        duration,
+      });
       const data = await res.data;
       if (data) {
         toast.success(data.message);

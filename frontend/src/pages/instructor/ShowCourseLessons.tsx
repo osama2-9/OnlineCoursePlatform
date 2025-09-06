@@ -1,10 +1,8 @@
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
 import { VideoPlayer } from "../../components/VideoPlayer";
-import { API } from "../../API/ApiBaseUrl";
 import { Loading } from "../../components/Loading";
 import { FaEllipsisV, FaArrowLeft } from "react-icons/fa";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
@@ -14,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { qureyClinet } from "../../main";
+import axiosClient from "../../API/axios";
 
 interface Response {
   lessons: Lesson[];
@@ -33,14 +32,8 @@ export const ShowCourseLessons = () => {
   const getLessons = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get<Response>(
-        `${API}/instructor/get-course-lessons/${user?.userId}/course/${courseId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const res = await axiosClient.get<Response>(
+        `/instructor/get-course-lessons/${user?.userId}/course/${courseId}`
       );
       const data = res.data;
       return data;
@@ -59,15 +52,14 @@ export const ShowCourseLessons = () => {
     retry: 2,
   });
 
-
-  useEffect(()=>{
+  useEffect(() => {
     qureyClinet.prefetchQuery({
       queryKey: ["lessons", user?.userId, courseId],
       queryFn: getLessons,
       staleTime: 15 * 1000 * 60,
       retry: 2,
-    })
-  }, [user?.userId, courseId])
+    });
+  }, [user?.userId, courseId]);
 
   useEffect(() => {
     setLessons(data && data.lessons ? data.lessons : []);
@@ -100,20 +92,17 @@ export const ShowCourseLessons = () => {
 
   const handleDeleteLesson = async () => {
     try {
-      await axios.delete(
-        `${API}/instructor/delete-lesson`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-          params: {
-            lessonId: selectedLesson?.lesson_id,
-            instructorId: user?.userId,
-            courseId: courseId,
-          },
-        }
-      );
+      await axiosClient.delete(`/instructor/delete-lesson`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+        params: {
+          lessonId: selectedLesson?.lesson_id,
+          instructorId: user?.userId,
+          courseId: courseId,
+        },
+      });
       toast.success("Lesson deleted successfully!");
       getLessons();
     } catch (error: any) {
@@ -134,16 +123,7 @@ export const ShowCourseLessons = () => {
         lesson_order: index + 1,
       }));
 
-      await axios.put(
-        `${API}/lesson/update-order`,
-        { lessons: updatedOrder },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      await axiosClient.put(`/lesson/update-order`, { lessons: updatedOrder });
       toast.success("Lesson order updated successfully!");
     } catch (error: any) {
       toast.error("Failed to update lesson order.");

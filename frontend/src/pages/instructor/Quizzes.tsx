@@ -2,13 +2,12 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { Loading } from "../../components/Loading";
 import Switch from "react-switch";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { useGetInstructorQuizzes } from "../../hooks/useGetInstructorQuizzes";
 import { DeleteModal } from "../../components/DeleteModal";
+import axiosClient from "../../API/axios";
 
 interface Quiz {
   quiz_id: number;
@@ -53,8 +52,10 @@ export const Quizzes = () => {
   const handleManageClick = (quizId: number, event: React.MouseEvent) => {
     event.stopPropagation();
     navigate(
-      `/instructor/add-questions/${quizId}/quiz/${quizzes.find((q) => q.quiz_id === quizId)?.title
-      }/c/${quizzes.find((q) => q.quiz_id === quizId)?.course.title}/cid/${quizzes.find((q) => q.quiz_id == quizId)?.course?.course_id
+      `/instructor/add-questions/${quizId}/quiz/${
+        quizzes.find((q) => q.quiz_id === quizId)?.title
+      }/c/${quizzes.find((q) => q.quiz_id === quizId)?.course.title}/cid/${
+        quizzes.find((q) => q.quiz_id == quizId)?.course?.course_id
       }`
     );
   };
@@ -78,19 +79,10 @@ export const Quizzes = () => {
   };
   const handleTogglePublish = async (quizId: number, isPublished: boolean) => {
     try {
-      const res = await axios.put(
-        `${API}/instructor/toggle-publish-quiz`,
-        {
-          quizId: quizId,
-          is_published: !isPublished,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.put(`/instructor/toggle-publish-quiz`, {
+        quizId: quizId,
+        is_published: !isPublished,
+      });
 
       if (res.data) {
         toast.success(
@@ -119,9 +111,12 @@ export const Quizzes = () => {
 
   const handleDeleteQuiz = async (quizId: number) => {
     try {
-      const res = await axios.delete(`${API}/instructor/delete-quiz/${quizId}/course/${quizzes.find((q) => q.quiz_id === quizId)?.course?.course_id}`, {
-        withCredentials: true,
-      });
+      const res = await axiosClient.delete(
+        `/instructor/delete-quiz/${quizId}/course/${
+          quizzes.find((q) => q.quiz_id === quizId)?.course?.course_id
+        }`,
+        {}
+      );
 
       if (res.data) {
         toast.success("Quiz deleted successfully!");
@@ -135,7 +130,6 @@ export const Quizzes = () => {
   if (!pagination) {
     return null;
   }
-
 
   return (
     <InstructorLayout>
@@ -255,10 +249,7 @@ export const Quizzes = () => {
                           className="cursor-pointer hover:text-gray-700"
                         />
                       </td>
-                      <td
-                        className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-500"
-
-                      >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-500">
                         <div className="flex flex-row items-center justify-center space-x-4 ">
                           <div>
                             <FaEdit

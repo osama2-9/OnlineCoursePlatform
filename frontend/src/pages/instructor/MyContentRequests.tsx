@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { FileText, Video, Filter, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
+import axiosClient from "../../API/axios";
 
 interface Lesson {
   apporval_date: string;
@@ -55,7 +54,7 @@ export default function MyContentRequests() {
 
   const fetchContentRequests = async () => {
     try {
-      const res = await axios.get(`${API}/instructor/get-my-content-requests`, {
+      const res = await axiosClient.get(`/instructor/get-my-content-requests`, {
         params: {
           instructorId: user?.userId,
         },

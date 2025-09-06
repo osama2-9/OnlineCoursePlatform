@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import { Loading } from "../../components/Loading";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
 import { UpdateUser } from "../../components/admin/UpdateUser";
 import { BsThreeDots } from "react-icons/bs";
 import { Loader2, Search, X, Filter } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../../API/axios";
 
 interface User {
   user_id: number;
@@ -53,14 +52,10 @@ export const ShowUsers = () => {
 
   const fetchUsers = async (page: number, pageSize: number) => {
     try {
-      const res = await axios.get<FetchUsersResponse>(
-        `${API}/admin/get-users`,
+      const res = await axiosClient.get<FetchUsersResponse>(
+        `/admin/get-users`,
         {
           params: { page, pageSize },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
         }
       );
       return res.data;
@@ -93,13 +88,13 @@ export const ShowUsers = () => {
 
   useEffect(() => {
     let result = [...allUsers];
-    
+
     if (googleUsersOnly) {
-      result = result.filter(user => user.authProvider === 'google');
+      result = result.filter((user) => user.authProvider === "google");
     }
-    
+
     if (isSearchActive && searchQuery) {
-      result = result.filter(user => 
+      result = result.filter((user) =>
         user.email.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
@@ -111,7 +106,7 @@ export const ShowUsers = () => {
     try {
       setIsSearching(true);
       setIsSearchActive(true);
-      const res = await axios.get(`${API}/admin/search`, {
+      const res = await axiosClient.get(`/admin/search`, {
         params: {
           email: searchQuery.trim(),
         },
@@ -169,7 +164,9 @@ export const ShowUsers = () => {
     }
   };
 
-  const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handlePageSizeChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const newPageSize = parseInt(event.target.value, 10);
     setPagination((prev) => ({
       ...prev,
@@ -191,7 +188,7 @@ export const ShowUsers = () => {
   const confirmDelete = async () => {
     if (selectedUser) {
       try {
-        await axios.delete(`${API}/admin/delete-user/${selectedUser.user_id}`, {
+        await axiosClient.delete(`/admin/delete-user/${selectedUser.user_id}`, {
           withCredentials: true,
         });
         toast.success("User deleted successfully");
@@ -212,8 +209,8 @@ export const ShowUsers = () => {
 
   const handleToggleActive = async (user: User) => {
     try {
-      await axios.put(
-        `${API}/admin/account-status`,
+      await axiosClient.put(
+        `/admin/account-status`,
         { user_id: user.user_id },
         { withCredentials: true }
       );
@@ -251,8 +248,10 @@ export const ShowUsers = () => {
         <div className="mt-4">
           <div className="bg-white shadow-md rounded-lg p-4">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Users Management</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-800">
+                Users Management
+              </h2>
+
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="flex items-center gap-2">
                   <div className="relative flex-1">
@@ -290,11 +289,13 @@ export const ShowUsers = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <div className={`flex items-center text-sm gap-1 px-3 py-1.5 rounded-md border transition-colors ${
-                    googleUsersOnly 
-                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
-                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-                  }`}>
+                  <div
+                    className={`flex items-center text-sm gap-1 px-3 py-1.5 rounded-md border transition-colors ${
+                      googleUsersOnly
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-700"
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
                     <input
                       type="checkbox"
                       checked={googleUsersOnly}
@@ -302,16 +303,19 @@ export const ShowUsers = () => {
                       className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 mr-2"
                       id="googleFilter"
                     />
-                    <label htmlFor="googleFilter" className="flex items-center cursor-pointer">
-                      <img 
-                        src="https://www.google.com/favicon.ico" 
-                        alt="Google" 
-                        className="h-4 w-4 mr-1.5" 
+                    <label
+                      htmlFor="googleFilter"
+                      className="flex items-center cursor-pointer"
+                    >
+                      <img
+                        src="https://www.google.com/favicon.ico"
+                        alt="Google"
+                        className="h-4 w-4 mr-1.5"
                       />
                       Google users only
                     </label>
                   </div>
-                  
+
                   <div className="flex items-center gap-1.5 text-sm">
                     <span className="text-xs text-gray-600">Show:</span>
                     <select
@@ -375,8 +379,8 @@ export const ShowUsers = () => {
                     </tr>
                   ) : (
                     filteredUsers.map((user) => (
-                      <tr 
-                        key={user.user_id} 
+                      <tr
+                        key={user.user_id}
                         className="hover:bg-gray-50 transition-colors"
                       >
                         <td className="py-2 px-3 text-xs text-gray-500">
@@ -389,13 +393,15 @@ export const ShowUsers = () => {
                           {user.email}
                         </td>
                         <td className="py-2 px-3">
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            user.role === 'admin' 
-                              ? 'bg-purple-100 text-purple-800' 
-                              : user.role === 'moderator'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full ${
+                              user.role === "admin"
+                                ? "bg-purple-100 text-purple-800"
+                                : user.role === "moderator"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
                             {user.role}
                           </span>
                         </td>
@@ -411,7 +417,7 @@ export const ShowUsers = () => {
                           )}
                         </td>
                         <td className="py-2 px-3">
-                          {user.authProvider === 'google' ? (
+                          {user.authProvider === "google" ? (
                             <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
                               Google
                             </span>
@@ -477,7 +483,7 @@ export const ShowUsers = () => {
                 )}
                 Showing {filteredUsers.length} of {pagination.totalUsers} users
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <button
                   className="px-3 py-1 bg-white border border-gray-300 rounded text-xs text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"

@@ -1,13 +1,12 @@
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useLocation, useParams } from "react-router-dom";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { useEffect, useState } from "react";
 import { ClipLoader } from "react-spinners";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
 import Markdown from "react-markdown";
 import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../../API/axios";
 
 interface QuizAnswers {
   quiz: {
@@ -80,17 +79,14 @@ export const ReviewAttempt = () => {
   const getUsersAnswers = async (page: number) => {
     try {
       setLoading(true);
-      const res = await axios.get<AttemptResponse>(
-        `${API}/instructor/get-user-answers/${attemptId}/quiz/${state.quizId}/course/${state.courseId}/ins/${user?.userId}`,
+      const res = await axiosClient.get<AttemptResponse>(
+        `/instructor/get-user-answers/${attemptId}/quiz/${state.quizId}/course/${state.courseId}/ins/${user?.userId}`,
         {
           params: {
             page,
             limit: questionsPerPage,
           },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
+         
         }
       );
       const data = res.data;
@@ -145,8 +141,8 @@ export const ReviewAttempt = () => {
 
   const submitScores = async () => {
     try {
-      await axios.post(
-        `${API}/instructor/update-scores`,
+      await axiosClient.post(
+        `/instructor/update-scores`,
         { scores, attemptId },
         {
           headers: { "Content-Type": "application/json" },

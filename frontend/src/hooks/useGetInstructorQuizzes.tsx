@@ -1,9 +1,8 @@
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { useState } from "react";
 import { useAuth } from "./useAuth";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../API/axios";
 
 interface Quiz {
   quiz_id: number;
@@ -40,14 +39,10 @@ export const useGetInstructorQuizzes = () => {
     if (!user?.userId) return null;
     setQuizzesLoading(true);
     try {
-      const res = await axios.get<QuizzesResponse>(
-        `${API}/instructor/get-quizzes/${user.userId}`,
+      const res = await axiosClient.get<QuizzesResponse>(
+        `/instructor/get-quizzes/${user.userId}`,
         {
           params: { page: currentPage, pageSize: quizzesPerPage },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
         }
       );
       return res.data;

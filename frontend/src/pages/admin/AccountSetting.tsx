@@ -1,7 +1,5 @@
 import toast from "react-hot-toast";
 import { AdminLayout } from "../../layouts/AdminLayout";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -16,11 +14,12 @@ import {
   X,
 } from "lucide-react";
 import { useLogout } from "../../hooks/useLogout";
+import axiosClient from "../../API/axios";
 
 export const AccountSetting = () => {
   const { user } = useAuth();
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string | null>(null);
-  
+
   const [is2FAEnabled, setIs2FAEnabled] = useState(user?.towFAStatus);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -35,23 +34,14 @@ export const AccountSetting = () => {
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 
   const dispatch = useDispatch();
-const {handleLogout} = useLogout()
+  const { handleLogout } = useLogout();
 
   const enable2FA = async () => {
     setIsLoading2FA(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/enable2FA`,
-        {
-          userId: user?.userId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/enable2FA`, {
+        userId: user?.userId,
+      });
 
       const data = res.data;
       if (data && data.qrCodeDataURL) {
@@ -73,18 +63,9 @@ const {handleLogout} = useLogout()
   const disable2FA = async () => {
     setIsLoading2FA(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/disable2FA`,
-        {
-          userId: user?.userId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/disable2FA`, {
+        userId: user?.userId,
+      });
       const data = await res.data;
       if (data) {
         setIs2FAEnabled(false);
@@ -107,20 +88,11 @@ const {handleLogout} = useLogout()
 
     setIsLoadingPassword(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/change-password`,
-        {
-          userId: user?.userId,
-          oldPassword,
-          newPassword,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/change-password`, {
+        userId: user?.userId,
+        oldPassword,
+        newPassword,
+      });
 
       const data = await res.data;
       if (data && data.message) {
@@ -151,21 +123,12 @@ const {handleLogout} = useLogout()
   const updateAccountStatus = async () => {
     setIsLoadingAccountStatus(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/deactive`,
-        {
-          userId: user?.userId,
-          accStatus: !isAccountActive,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/deactive`, {
+        userId: user?.userId,
+        accStatus: !isAccountActive,
+      });
 
-      handleLogout()
+      handleLogout();
       const data = await res.data;
       if (data && data.message) {
         setIsAccountActive(!isAccountActive);
@@ -176,7 +139,6 @@ const {handleLogout} = useLogout()
           }.`
         );
         setShowDeactivateModal(false);
-        
       }
     } catch (error: any) {
       console.log(error);

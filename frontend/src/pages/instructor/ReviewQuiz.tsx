@@ -1,8 +1,6 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { QuizDetails } from "../../types/QuizDetails";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
@@ -11,6 +9,7 @@ import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
 import ReactMarkdown from "react-markdown";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import axiosClient from "../../API/axios";
 
 export const ReviewQuiz = () => {
   const { courseId, quizId } = useParams();
@@ -26,14 +25,9 @@ export const ReviewQuiz = () => {
 
   const getQuizDetails = async () => {
     try {
-      const res = await axios.get(
-        `${API}/instructor/review-quiz/${quizId}/course/${courseId}/instructor/${user?.userId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const res = await axiosClient.get(
+        `/instructor/review-quiz/${quizId}/course/${courseId}/instructor/${user?.userId}`,
+       
       );
       const data = await res.data;
       return data;
@@ -96,14 +90,9 @@ export const ReviewQuiz = () => {
     if (!selectedQuestionId) return;
 
     try {
-      const res = await axios.delete(
-        `${API}/instructor/delete-question/${selectedQuestionId}/instrctor/${user?.userId}/quiz/${quizId}/course/${courseId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const res = await axiosClient.delete(
+        `/instructor/delete-question/${selectedQuestionId}/instrctor/${user?.userId}/quiz/${quizId}/course/${courseId}`,
+       
       );
 
       const data = await res.data;

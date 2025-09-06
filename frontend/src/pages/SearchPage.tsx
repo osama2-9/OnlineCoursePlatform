@@ -9,10 +9,9 @@ import {
   Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { HomePageFooter } from "../components/HomePageFooter";
 import { Link } from "react-router-dom";
+import axiosClient from "../API/axios";
 
 interface Instructor {
   full_name: string;
@@ -117,7 +116,7 @@ export default function SearchPage() {
     const handleSearch = async () => {
       try {
         setIsLoading(true);
-        const res = await axios.get<SeachResponse>(`${API}/course/search`, {
+        const res = await axiosClient.get<SeachResponse>(`/course/search`, {
           params: {
             q: searchqurey,
           },

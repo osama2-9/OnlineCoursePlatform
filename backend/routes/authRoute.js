@@ -43,5 +43,5 @@ authRoute.get("/google-auth-url", generateAuthUrl);
 
 authRoute.get("/google/callback", handleGoogleCallback);
 
-authRoute.get("/certification-verify" ,verifyCertification)
+authRoute.get("/certification-verify", verifyCertification);
 export default authRoute;

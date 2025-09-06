@@ -6,12 +6,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { Loader2 } from "lucide-react";
 import { QuizHeader } from "../../components/learnre/Quiz/QuizHeader";
 import { QuestionNavigator } from "../../components/learnre/Quiz/QuestionNavigator";
 import { QuestionCard } from "../../components/learnre/Quiz/QuestionCard";
+import axiosClient from "../../API/axios";
 
 export const QuizPage: React.FC = () => {
   const { attemptId, quizId, courseId, enrollmentId } = useParams();
@@ -65,12 +64,11 @@ export const QuizPage: React.FC = () => {
       throw new Error("Missing required parameters");
     }
 
-    const res = await axios.get(
-      `${API}/learner/quiz/${quizId}/c/${courseId}/u/${user.userId}/attempt/${attemptId}/e/${enrollmentId}`,
+    const res = await axiosClient.get(
+      `/learner/quiz/${quizId}/c/${courseId}/u/${user.userId}/attempt/${attemptId}/e/${enrollmentId}`,
       {
         params: { page },
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true,
+      
       }
     );
     return res.data;
@@ -224,16 +222,15 @@ export const QuizPage: React.FC = () => {
         }
       );
 
-      return axios.post(
-        `${API}/learner/submit-quiz`,
+      return axiosClient.post(
+        `/learner/submit-quiz`,
         {
           attemptId: attemptId,
           userAnswers: userAnswers,
           end_time: new Date().toISOString(),
         },
         {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
+        
           timeout: 500000,
         }
       );

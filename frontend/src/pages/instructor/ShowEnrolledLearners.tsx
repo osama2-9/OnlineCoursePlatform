@@ -4,8 +4,6 @@ import { InstructorLayout } from "../../layouts/InstructorLayout";
 import { EnrollmentsData } from "../../hooks/useGetInstructorEnrollments";
 import { Loading } from "../../components/Loading";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import {
   Loader2,
   Mail,
@@ -15,6 +13,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+import axiosClient from "../../API/axios";
 
 export const ShowEnrolledLearners = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -49,20 +48,11 @@ export const ShowEnrolledLearners = () => {
 
     setIsSendEmailLoading(true);
     try {
-      const res = await axios.post(
-        `${API}/instructor/send-email`,
-        {
-          userEmail: selectedEnrollment?.user.email,
-          subject,
-          text,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/instructor/send-email`, {
+        userEmail: selectedEnrollment?.user.email,
+        subject,
+        text,
+      });
 
       if (res.data.success) {
         handleCloseModal();

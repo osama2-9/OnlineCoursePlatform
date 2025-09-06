@@ -1,9 +1,8 @@
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../API/ApiBaseUrl";
 import { useAuth } from "./useAuth";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../API/axios";
 
 export interface EnrollmentsData {
   enrollment_id: number;
@@ -31,7 +30,7 @@ interface InstructorEnrollmentsReponse {
   enrollments: EnrollmentsData[];
   pagination: Pagination;
 }
-export const useGetInstructorEnrollments = (currentPage?:number) => {
+export const useGetInstructorEnrollments = (currentPage?: number) => {
   const { user } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrollmentsData[] | null>([]);
   const [pagintion, setPagination] = useState<Pagination>({
@@ -45,11 +44,11 @@ export const useGetInstructorEnrollments = (currentPage?:number) => {
   const getEnrollmentsData = async () => {
     try {
       setEnrollmentsLoading(true);
-      const res = await axios.get<InstructorEnrollmentsReponse>(
-        `${API}/instructor/instructor-courses-enrollments/${user?.userId}`,
+      const res = await axiosClient.get<InstructorEnrollmentsReponse>(
+        `/instructor/instructor-courses-enrollments/${user?.userId}`,
         {
           params: {
-            page:currentPage,
+            page: currentPage,
             limit: 8,
           },
           headers: {

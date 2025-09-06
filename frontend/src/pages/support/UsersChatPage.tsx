@@ -10,11 +10,10 @@ import {
   Calendar,
   Check,
 } from "lucide-react";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
 import useSocket from "../../socketIo/useSocket";
+import axiosClient from "../../API/axios";
 
 interface SupportTicket {
   ticket_id: number;
@@ -60,7 +59,7 @@ const UsersChatPage = () => {
         return;
       }
 
-      const res = await axios.get(`${API}/support/verify-access-token`, {
+      const res = await axiosClient.get(`/support/verify-access-token`, {
         params: {
           token: token,
           userId: user?.userId,
@@ -86,7 +85,7 @@ const UsersChatPage = () => {
     }
 
     try {
-      const res = await axios.get(`${API}/support/get-ticket`, {
+      const res = await axiosClient.get(`/support/get-ticket`, {
         params: {
           ticketId: ticketId,
         },
@@ -171,7 +170,7 @@ const UsersChatPage = () => {
     setMessage("");
 
     try {
-      const response = await axios.post(`${API}/support/send-message`, {
+      const response = await axiosClient.post(`/support/send-message`, {
         ticket_id: ticketId,
         user_id: user?.userId,
         message: message,

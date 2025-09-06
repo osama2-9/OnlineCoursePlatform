@@ -1,6 +1,4 @@
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   FaCopy,
@@ -10,6 +8,7 @@ import {
 } from "react-icons/fa";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/Loading";
+import axiosClient from "../../API/axios";
 
 interface Payment {
   payment_id: string;
@@ -33,7 +32,7 @@ export const ShowPayments = () => {
   const getPaymentsData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get(`${API}/payment/payment-data`, {
+      const res = await axiosClient.get(`/payment/payment-data`, {
         headers: {
           "Content-Type": "application/json",
         },

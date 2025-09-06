@@ -1,9 +1,8 @@
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../API/ApiBaseUrl";
 import { useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
 import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../API/axios";
 export interface CourseDetails {
   title: string;
   description: string;
@@ -41,14 +40,8 @@ export const useGetInstructorCourses = () => {
 
   const getInstructorCourses = async () => {
     try {
-      const res = await axios.get<InstructorCoursesResponse>(
-        `${API}/instructor/instructor-courses/${user?.userId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const res = await axiosClient.get<InstructorCoursesResponse>(
+        `/instructor/instructor-courses/${user?.userId}`
       );
       return res.data;
     } catch (error: any) {
@@ -65,8 +58,8 @@ export const useGetInstructorCourses = () => {
       pagination.totalPages,
     ],
     queryFn: getInstructorCourses,
-    staleTime: 24*60*60*1000 , 
-    refetchInterval: 24*60*60*1000,
+    staleTime: 24 * 60 * 60 * 1000,
+    refetchInterval: 24 * 60 * 60 * 1000,
     retry: 2,
   });
 
@@ -79,4 +72,3 @@ export const useGetInstructorCourses = () => {
 
   return { courses, isLoading, pagination };
 };
-   

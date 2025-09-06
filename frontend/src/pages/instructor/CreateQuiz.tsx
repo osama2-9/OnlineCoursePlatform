@@ -4,8 +4,7 @@ import Select from "react-select";
 import { useGetInstructorCourses } from "../../hooks/useGetInstructorCourses";
 import toast from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
+import axiosClient from "../../API/axios";
 
 interface CourseOptions {
   label: string;
@@ -40,7 +39,7 @@ export const CreateQuiz = () => {
       return;
     }
     try {
-      const res = await axios.post(`${API}/instructor/create-quiz`, {
+      const res = await axiosClient.post(`/instructor/create-quiz`, {
         instructorId: user?.userId,
         courseId: selectedCourse?.value,
         title: title,
@@ -48,11 +47,6 @@ export const CreateQuiz = () => {
         duration: duration,
         maxAttempts: maxAttempts,
         totalMarks: totalMarks,
-      }, {
-        headers: {
-          "Content-Type": "application/json"
-        },
-        withCredentials: true
       });
       const data = await res.data;
       if (data) {
@@ -151,7 +145,6 @@ export const CreateQuiz = () => {
               className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               min="1"
               max="100"
-
               placeholder="Enter total marks"
               required
             />

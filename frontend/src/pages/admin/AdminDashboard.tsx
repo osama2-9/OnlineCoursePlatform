@@ -3,11 +3,10 @@ import TopCoursesChart from "../../components/admin/TopCoursesChart";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { useAuth } from "../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
 import { qureyClinet } from "../../main";
+import axiosClient from "../../API/axios";
 
 interface Cards {
   totalLearners: number;
@@ -44,14 +43,8 @@ export const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const { data } = await axios.get<DashboardResponse>(
-        `${API}/admin/dashboard-summary`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const { data } = await axiosClient.get<DashboardResponse>(
+        `/admin/dashboard-summary`
       );
       return data;
     } catch (error: any) {
@@ -68,14 +61,13 @@ export const AdminDashboard = () => {
     retry: 2,
   });
 
-
-  useEffect(()=>{
+  useEffect(() => {
     qureyClinet.prefetchQuery({
       queryKey: ["adminDashboard"],
       queryFn: fetchDashboardData,
-      staleTime: 12 * 60 *60* 1000,
+      staleTime: 12 * 60 * 60 * 1000,
       retry: 2,
-    })
+    });
   }, [user?.userId]);
   if (isError) {
     return (

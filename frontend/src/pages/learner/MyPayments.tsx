@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { LearnerLayout } from "../../layouts/LearnerLayout";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { Loading } from "../../components/Loading";
 import { FaReceipt } from "react-icons/fa";
+import axiosClient from "../../API/axios";
 
 interface PaymentsData {
   payment_id: number;
@@ -30,8 +29,8 @@ export const MyPayments = () => {
   const getPaymentHistory = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(
-        `${API}/learner/get-payments-history/${user?.userId}`,
+      const res = await axiosClient.get(
+        `/learner/get-payments-history/${user?.userId}`,
         {
           headers: {
             "Content-Type": "application/json",

@@ -1,7 +1,6 @@
-import axios from "axios";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { API } from "../API/ApiBaseUrl";
+import axiosClient from "../API/axios";
 
 interface CommentProps {
     articleId: number;
@@ -26,7 +25,7 @@ export const useHandleComments = ({articleId, userId}: CommentProps) => {
     const handleDeleteComment = async (comment_id:number): Promise<DeleteCommentResponse> => {
         try {
             setIsDeleting(true)
-            const res = await axios.delete(`${API}/articels/delete-comment/${articleId}/${comment_id}/${userId}`, {
+            const res = await axiosClient.delete(`/articels/delete-comment/${articleId}/${comment_id}/${userId}`, {
                 headers:{
                     "Content-Type":"application/json"
                 },
@@ -49,7 +48,7 @@ export const useHandleComments = ({articleId, userId}: CommentProps) => {
     const handleEditComment = async(comment_id:number): Promise<EditCommentResponse> => {
         setIsEditing(true)
         try {
-            const res = await axios.put<EditCommentResponse>(`${API}/articels/edit-comment` ,{
+            const res = await axiosClient.put<EditCommentResponse>(`/articels/edit-comment` ,{
                 userId: userId,
                 articalId: articleId,
                 commentId: comment_id,

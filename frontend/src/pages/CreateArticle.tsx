@@ -11,12 +11,11 @@ import {
   Check,
   Loader2,
 } from "lucide-react";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { useGetCategories } from "../hooks/useGetCategories";
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
 import { RenderContentBlock } from "../components/instrctor/RenderContentBlock";
+import axiosClient from "../API/axios";
 
 const contentStatusOptions = ["draft", "published", "archived", "deleted"];
 const articleTypeOptions = [
@@ -244,8 +243,8 @@ const CreateArticel = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post(
-        `${API}/articels/create-articel`,
+      const res = await axiosClient.post(
+        `/articels/create-articel`,
         {
           formattedArticle,
         },
@@ -273,7 +272,7 @@ const CreateArticel = () => {
   const handleSEOSettingsGenerate = async () => {
     try {
       setIsSEOGenerating(true);
-      const res = await axios.post(`${API}/articels/ai-seo-suggest`, {
+      const res = await axiosClient.post(`/articels/ai-seo-suggest`, {
         title: article.title,
         excerpt: article.excerpt,
       });

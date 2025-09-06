@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { LearnerLayout } from "../../layouts/LearnerLayout";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
+import axiosClient from "../../API/axios";
 
 interface CourseToReview {
   course_id: number;
@@ -21,14 +20,8 @@ export const CourseReview = () => {
   const [courses, setCourses] = useState<CourseToReview[]>([]);
   const getCoursesToReview = async () => {
     try {
-      const res = await axios.get(
-        `${API}/learner/get-courses-toReview/${user?.userId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const res = await axiosClient.get(
+        `/learner/get-courses-toReview/${user?.userId}`
       );
 
       const data = await res.data;
@@ -54,21 +47,12 @@ export const CourseReview = () => {
 
   const handleSubmitReview = async (courseId: number) => {
     try {
-      const res = await axios.post(
-        `${API}/learner/submit-review`,
-        {
-          userId: user?.userId,
-          courseId,
-          rating,
-          comment,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/learner/submit-review`, {
+        userId: user?.userId,
+        courseId,
+        rating,
+        comment,
+      });
       const data = await res.data;
       if (data) {
         toast.success(data.message);

@@ -1,7 +1,6 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
-import { API } from "../API/ApiBaseUrl";
 import toast from "react-hot-toast";
+import axiosClient from "../API/axios";
 
 interface Instructor {
   user_id: number;
@@ -13,12 +12,7 @@ export const useGetInstructor = () => {
   useEffect(() => {
     const fetchInstructors = async () => {
       try {
-        const response = await axios.get(`${API}/admin/get-instructors`, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        });
+        const response = await axiosClient.get(`/admin/get-instructors`);
         const data = await response.data;
         if (data && data.instructors) {
           setInstructors(data.instructors);

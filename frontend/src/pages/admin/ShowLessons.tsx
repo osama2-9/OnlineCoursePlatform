@@ -1,16 +1,15 @@
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { VideoPlayer } from "../../components/VideoPlayer";
-import { API } from "../../API/ApiBaseUrl";
 import { Loading } from "../../components/Loading";
 import { FaEllipsisV } from "react-icons/fa";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
 import { UpdateLesson } from "../../components/admin/UpdateLesson";
 
 import { Lesson } from "../../types/Lesson";
+import axiosClient from "../../API/axios";
 
 interface Response {
   lessons: Lesson[];
@@ -28,14 +27,8 @@ export const ShowLessons = () => {
   const getLessons = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get<Response>(
-        `${API}/lesson/get-lesson/${courseId}/${instructorId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const res = await axiosClient.get<Response>(
+        `/lesson/get-lesson/${courseId}/${instructorId}`
       );
       const data = res.data;
       if (data) {
@@ -80,16 +73,7 @@ export const ShowLessons = () => {
         lesson_order: index + 1,
       }));
 
-      await axios.put(
-        `${API}/lesson/update-order`,
-        { lessons: updatedOrder },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      await axiosClient.put(`/lesson/update-order`, { lessons: updatedOrder });
       toast.success("Lesson order updated successfully!");
     } catch (error: any) {
       console.log(error);
@@ -123,14 +107,8 @@ export const ShowLessons = () => {
 
   const handleDeleteLesson = async () => {
     try {
-      await axios.delete(
-        `${API}/lesson/delete-lesson/${selectedLesson?.lesson_id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      await axiosClient.delete(
+        `/lesson/delete-lesson/${selectedLesson?.lesson_id}`
       );
       toast.success("Lesson deleted successfully!");
       getLessons(); // Refresh the lessons list

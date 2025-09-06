@@ -1,5 +1,4 @@
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
+import axiosClient from "../API/axios";
 import { useLogout } from "./useLogout";
 import toast from "react-hot-toast";
 
@@ -8,18 +7,9 @@ export const DeactiveAccount = () => {
 
   const handleConfiremDeactive = async (userId: any) => {
     try {
-      const res = await axios.post(
-        `${API}/auth/deactive`,
-        {
-          userId: userId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/deactive`, {
+        userId: userId,
+      });
 
       const data = await res.data;
       if (data && data.success) {

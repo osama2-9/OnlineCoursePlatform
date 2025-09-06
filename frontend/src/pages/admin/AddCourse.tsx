@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import toast from "react-hot-toast";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import Select from "react-select";
 import { ImgReader } from "../../hooks/ImgReader";
 import { useGetInstructor } from "../../hooks/useGetInstructor";
+import axiosClient from "../../API/axios";
 
 export const AddCourse = () => {
   const [learnOutcomes, setLearnOutcomes] = useState<string[]>([""]);
@@ -135,7 +134,7 @@ export const AddCourse = () => {
         end_date: formatDateForPrisma(formData.end_date),
       };
 
-      const res = await axios.post(`${API}/course/create-course`, submitData, {
+      const res = await axiosClient.post(`/course/create-course`, submitData, {
         headers: {
           "Content-Type": "application/json",
         },

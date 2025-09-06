@@ -13,11 +13,10 @@ import {
   Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { AdminLayout } from "../../layouts/AdminLayout";
+import axiosClient from "../../API/axios";
 
 interface Requests {
   type: string;
@@ -58,7 +57,7 @@ export default function AdminRequestsDashboard() {
 
   const fetchContentData = async () => {
     try {
-      const res = await axios.get(`${API}/admin/content-publish-requests`, {
+      const res = await axiosClient.get(`/admin/content-publish-requests`, {
         params: {
           userId: user?.userId,
           page: currentPage,

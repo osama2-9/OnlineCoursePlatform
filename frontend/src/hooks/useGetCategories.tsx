@@ -1,7 +1,6 @@
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import axiosClient from "../API/axios";
 
 interface Category {
   name: string;
@@ -17,14 +16,8 @@ export const useGetCategories = () => {
 
   const getCategories = async () => {
     try {
-      const res = await axios.get<CategoriesResponse>(
-        `${API}/articels/get-categories`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const res = await axiosClient.get<CategoriesResponse>(
+        `/articels/get-categories`
       );
       const data = res.data;
       if (data) {

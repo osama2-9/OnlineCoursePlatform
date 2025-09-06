@@ -1,16 +1,15 @@
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../API/ApiBaseUrl";
 import { useState } from "react";
+import axiosClient from "../API/axios";
 
 export const Likes = (articleId: any, userId: any) => {
- const [addLikeSuccess, setAddLikeSuccess] = useState<boolean>(false);
- const [removeLikeSuccess, setRemoveLikeSuccess] = useState<boolean>(false);
+  const [addLikeSuccess, setAddLikeSuccess] = useState<boolean>(false);
+  const [removeLikeSuccess, setRemoveLikeSuccess] = useState<boolean>(false);
 
   const handleClickLike = async () => {
     try {
-      const res = await axios.post(
-        `${API}/articels/like`,
+      const res = await axiosClient.post(
+        `/articels/like`,
         {
           articleId: articleId,
           userId: userId,
@@ -34,8 +33,8 @@ export const Likes = (articleId: any, userId: any) => {
 
   const handleClickUnlike = async () => {
     try {
-      const res = await axios.delete(
-        `${API}/articels/remove-like/${articleId}/${userId}`,
+      const res = await axiosClient.delete(
+        `/articels/remove-like/${articleId}/${userId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -53,5 +52,10 @@ export const Likes = (articleId: any, userId: any) => {
     }
   };
 
-  return { handleClickLike, handleClickUnlike ,addLikeSuccess, removeLikeSuccess};
+  return {
+    handleClickLike,
+    handleClickUnlike,
+    addLikeSuccess,
+    removeLikeSuccess,
+  };
 };

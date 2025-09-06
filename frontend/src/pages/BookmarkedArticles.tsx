@@ -1,20 +1,18 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Clock,
   User,
   Bookmark,
-  
   Calendar,
   Loader2,
   X,
   ArrowLeft,
 } from "lucide-react";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import axiosClient from "../API/axios";
 
 interface Article {
   article_id: number;
@@ -44,7 +42,7 @@ export const BookmarkedArticles = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [bookmarkArticles, setBookmarkArticles] = useState<Article[]>([])
+  const [bookmarkArticles, setBookmarkArticles] = useState<Article[]>([]);
 
   const fetchBookmarkedArticles = async () => {
     if (!user) {
@@ -52,12 +50,9 @@ export const BookmarkedArticles = () => {
     }
 
     try {
-      const res = await axios.get<ArticleResponse>(`${API}/articels/get-bookmarks/user/${user?.userId}`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true,
-      });
+      const res = await axiosClient.get<ArticleResponse>(
+        `/articels/get-bookmarks/user/${user?.userId}`
+      );
       return res.data;
     } catch (error) {
       console.error("Error fetching bookmarked articles:", error);
@@ -69,7 +64,7 @@ export const BookmarkedArticles = () => {
     queryKey: ["bookmarkedArticles"],
     queryFn: fetchBookmarkedArticles,
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, 
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   });
 
@@ -166,7 +161,8 @@ export const BookmarkedArticles = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-red-700">
-                  {(error as Error)?.message || "Error loading bookmarked articles"}
+                  {(error as Error)?.message ||
+                    "Error loading bookmarked articles"}
                 </p>
                 <button
                   onClick={() => refetch()}
@@ -249,7 +245,6 @@ export const BookmarkedArticles = () => {
                       </span>
                     </div>
 
-                   
                     <div className="flex items-center gap-3">
                       <span className="text-gray-400">
                         {article.likes_count} likes

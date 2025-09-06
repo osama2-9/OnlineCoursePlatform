@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { LearnerLayout } from "../../layouts/LearnerLayout";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { Loading } from "../../components/Loading";
 import { Link } from "react-router-dom";
 import { FaBook } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../../API/axios";
 
 interface EnrolledCourses {
   enrollment_id: number;
@@ -36,14 +35,8 @@ export const MyCourses = () => {
   const getCourses = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(
-        `${API}/learner/get-enrolled-courses/${user?.userId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const res = await axiosClient.get(
+        `/learner/get-enrolled-courses/${user?.userId}`
       );
       const data = await res.data;
       return data;

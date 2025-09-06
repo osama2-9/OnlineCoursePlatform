@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import { qureyClinet } from "../main";
+import axiosClient from "../API/axios";
 interface Quizzes {
   quiz_id: number;
   course_id: number;
@@ -29,14 +28,8 @@ export const useGetLearnerQuizzes = () => {
   const getQuizzes = async () => {
     try {
       setIsQuizzesLoading(true);
-      const { data } = await axios.get(
-        `${API}/learner/get-avliable-quizzes/${user?.userId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const { data } = await axiosClient.get(
+        `/learner/get-avliable-quizzes/${user?.userId}`
       );
       return data;
     } catch (error: any) {

@@ -1,9 +1,8 @@
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { useLogout } from "./useLogout";
 import { useEffect } from "react";
+import axiosClient from "../API/axios";
 interface AuthResponse {
   success: boolean;
 }
@@ -12,7 +11,7 @@ export const useAuth = () => {
   const { handleLogout } = useLogout();
   const checkAuth = async () => {
     try {
-      const res = await axios.get<AuthResponse>(`${API}/auth/check-auth`, {
+      const res = await axiosClient.get<AuthResponse>(`/auth/check-auth`, {
         headers: {
           "Content-Type": "application/json",
         },

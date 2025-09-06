@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import toast from "react-hot-toast";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
 import { useAuth } from "../../hooks/useAuth";
 import ReactMarkdown from "react-markdown";
+import axiosClient from "../../API/axios";
 
 export const UpdateQuestion = () => {
   const { quizId, quizname, questionId, courseId } = useParams<{
@@ -74,8 +73,8 @@ export const UpdateQuestion = () => {
       const payloadAnswers =
         questionType === "truefalse" ? ["True", "False"] : answers;
 
-      const res = await axios.put(
-        `${API}/instructor/update-question`,
+      const res = await axiosClient.put(
+        `/instructor/update-question`,
         {
           courseId: courseId,
           instructorId: user?.userId,

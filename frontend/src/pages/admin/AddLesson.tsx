@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { AdminLayout } from "../../layouts/AdminLayout";
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
+import axiosClient from "../../API/axios";
+import axios from "axios";
 
 export const AddLesson = () => {
   const { courseId, instructorId } = useParams();
@@ -105,8 +105,8 @@ export const AddLesson = () => {
         course_id: courseId,
       };
 
-      const response = await axios.post(
-        `${API}/lesson/create-lesson`,
+      const response = await axiosClient.post(
+        `/lesson/create-lesson`,
         payload,
         {
           headers: {

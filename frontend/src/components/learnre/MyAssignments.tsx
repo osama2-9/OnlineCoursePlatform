@@ -1,20 +1,19 @@
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Calendar, 
-  Clock, 
-  FileText, 
-  GraduationCap, 
-  Loader2, 
-  AlertCircle, 
-  ChevronRight 
+import {
+  Calendar,
+  Clock,
+  FileText,
+  GraduationCap,
+  Loader2,
+  AlertCircle,
+  ChevronRight,
 } from "lucide-react";
 import { format, isAfter, isBefore } from "date-fns";
 import { qureyClinet } from "../../main";
+import axiosClient from "../../API/axios";
 
 interface Assignment {
   assignment_id: number;
@@ -30,20 +29,18 @@ interface Assignment {
 }
 
 const MyAssignments = ({ userId }: { userId: any }) => {
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "all">("upcoming");
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "all">(
+    "upcoming"
+  );
   const navigate = useNavigate();
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const getAssignments = async () => {
     try {
-      const res = await axios.get(`${API}/assignments/get-assignments`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const res = await axiosClient.get(`/assignments/get-assignments`, {
         params: {
           userId,
         },
-        withCredentials: true,
       });
       return res.data?.data || [];
     } catch (error: any) {
@@ -58,8 +55,8 @@ const MyAssignments = ({ userId }: { userId: any }) => {
       qureyClinet.prefetchQuery({
         queryKey: ["assignments", userId],
         queryFn: getAssignments,
-        staleTime: 12 * 60 * 60 * 1000, 
-        gcTime: 24 * 60 * 60 * 1000, 
+        staleTime: 12 * 60 * 60 * 1000,
+        gcTime: 24 * 60 * 60 * 1000,
       });
     }
   }, [userId]);
@@ -82,8 +79,8 @@ const MyAssignments = ({ userId }: { userId: any }) => {
   const navigateToSubmission = (assignment: Assignment) => {
     navigate(`/learner/assignments/submission/${assignment.assignment_id}`, {
       state: {
-        assignment
-      }
+        assignment,
+      },
     });
   };
 
@@ -118,15 +115,15 @@ const MyAssignments = ({ userId }: { userId: any }) => {
     if (!assignments) return [];
 
     const now = new Date();
-    
+
     switch (activeTab) {
       case "upcoming":
-        return assignments.filter(assignment => {
+        return assignments.filter((assignment) => {
           const end = new Date(assignment.end_date);
           return isAfter(end, now);
         });
       case "past":
-        return assignments.filter(assignment => {
+        return assignments.filter((assignment) => {
           const end = new Date(assignment.end_date);
           return isBefore(end, now);
         });
@@ -141,7 +138,9 @@ const MyAssignments = ({ userId }: { userId: any }) => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">My Assignments</h1>
-      <p className="text-gray-600 mb-6">View and manage all your course assignments</p>
+      <p className="text-gray-600 mb-6">
+        View and manage all your course assignments
+      </p>
 
       <div className="flex space-x-4 mb-6 border-b border-gray-200">
         {["upcoming", "past", "all"].map((tab) => (
@@ -169,7 +168,9 @@ const MyAssignments = ({ userId }: { userId: any }) => {
           <div className="flex justify-center mb-4">
             <AlertCircle className="w-10 h-10 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No assignments found
+          </h3>
           <p className="text-gray-600">
             {activeTab === "upcoming"
               ? "You don't have any upcoming assignments."
@@ -197,24 +198,36 @@ const MyAssignments = ({ userId }: { userId: any }) => {
                     </div>
                     {getStatusBadge(assignment.start_date, assignment.end_date)}
                   </div>
-                  
+
                   <div className="mb-3">
                     <p className="text-gray-500 mb-1 text-sm">
-                      Course: <span className="text-gray-800">{assignment.course.title}</span>
+                      Course:{" "}
+                      <span className="text-gray-800">
+                        {assignment.course.title}
+                      </span>
                     </p>
                     <p className="text-gray-500 text-sm line-clamp-2">
                       {assignment.description}
                     </p>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
                     <div className="flex items-center text-gray-600">
                       <Calendar className="w-4 h-4 mr-1" />
-                      <span>Start: {format(new Date(assignment.start_date), "MMM dd, yyyy")}</span>
+                      <span>
+                        Start:{" "}
+                        {format(
+                          new Date(assignment.start_date),
+                          "MMM dd, yyyy"
+                        )}
+                      </span>
                     </div>
                     <div className="flex items-center text-gray-600">
                       <Clock className="w-4 h-4 mr-1" />
-                      <span>Due: {format(new Date(assignment.end_date), "MMM dd, yyyy")}</span>
+                      <span>
+                        Due:{" "}
+                        {format(new Date(assignment.end_date), "MMM dd, yyyy")}
+                      </span>
                     </div>
                     <div className="flex items-center text-gray-600">
                       <FileText className="w-4 h-4 mr-1" />
@@ -222,7 +235,7 @@ const MyAssignments = ({ userId }: { userId: any }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="mt-4 sm:mt-0 sm:ml-4">
                   <button className="flex items-center justify-center px-4 py-2 border border-gray-200 rounded-md bg-gray-50 hover:bg-gray-100 text-gray-800 text-sm font-medium transition-colors">
                     Submit

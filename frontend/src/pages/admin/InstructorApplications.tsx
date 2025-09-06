@@ -1,4 +1,3 @@
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -16,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { AdminLayout } from "../../layouts/AdminLayout";
-import { API } from "../../API/ApiBaseUrl";
+import axiosClient from "../../API/axios";
 
 interface Application {
   application_id: number;
@@ -77,8 +76,8 @@ export const InstructorApplications = () => {
 
   const getApplications = async () => {
     try {
-      const res = await axios.get<ApplicationsResponse>(
-        `${API}/application/get/${user?.userId}`,
+      const res = await axiosClient.get<ApplicationsResponse>(
+        `/application/get/${user?.userId}`,
         {
           params: {
             page: pagination.currentPage,
@@ -142,8 +141,8 @@ export const InstructorApplications = () => {
 
     setIsUpdating(true);
     try {
-      const res = await axios.put(
-        `${API}/application/update-status/${selectedApplication.application_id}`,
+      const res = await axiosClient.put(
+        `/application/update-status/${selectedApplication.application_id}`,
         {
           application_status: newStatus,
           userId: user?.userId,

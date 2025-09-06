@@ -14,12 +14,11 @@ import {
 } from "chart.js";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { qureyClinet } from "../../main";
+import axiosClient from "../../API/axios";
 
 ChartJS.register(
   CategoryScale,
@@ -62,8 +61,8 @@ export const AdminAnalystic = () => {
 
   const getAnalaytics = async () => {
     try {
-      const { data } = await axios.get<Response>(
-        `${API}/admin/analystics/${user?.userId}`,
+      const { data } = await axiosClient.get<Response>(
+        `/admin/analystics/${user?.userId}`,
         {
           headers: {
             "Content-Type": "application/json",

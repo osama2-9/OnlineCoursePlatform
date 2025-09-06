@@ -1,6 +1,4 @@
-import axios from "axios";
 import { Link, useParams } from "react-router-dom";
-import { API } from "../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import {
   Tag,
@@ -22,6 +20,7 @@ import { useBookmark } from "../hooks/Bookmark";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
 import { Comments } from "../components/Comments";
+import axiosClient from "../API/axios";
 
 interface Author {
   full_name: string;
@@ -82,11 +81,11 @@ interface ArticleResponseData {
 export const ArticlePage: React.FC = () => {
   const { user } = useAuth();
   const { articalId } = useParams<{ articalId: string }>();
-  let requestEndpoint = `${API}/articels/get-article/${articalId}/u/${user?.userId}`;
+  let requestEndpoint = `/articels/get-article/${articalId}/u/${user?.userId}`;
   if (!user) {
-    requestEndpoint = `${API}/articels/get-article/${articalId}/u/undefined`;
+    requestEndpoint = `/articels/get-article/${articalId}/u/undefined`;
   } else {
-    requestEndpoint = `${API}/articels/get-article/${articalId}/u/${user?.userId}`;
+    requestEndpoint = `/articels/get-article/${articalId}/u/${user?.userId}`;
   }
   const copyArticleUrl = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -94,7 +93,7 @@ export const ArticlePage: React.FC = () => {
   };
   const getArticleContent = async (): Promise<ArticleResponseData> => {
     try {
-      const res = await axios.get(`${requestEndpoint}`, {
+      const res = await axiosClient.get(`${requestEndpoint}`, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
@@ -146,8 +145,8 @@ export const ArticlePage: React.FC = () => {
 
   const handleSeen = async () => {
     try {
-      const response = await axios.post(
-        `${API}/articels/seen`,
+      const response = await axiosClient.post(
+        `/articels/seen`,
         {
           userId: user?.userId,
           articleId: articalId,

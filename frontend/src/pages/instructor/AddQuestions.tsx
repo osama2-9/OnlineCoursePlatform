@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import toast from "react-hot-toast";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
 import { useAuth } from "../../hooks/useAuth";
 import ReactMarkdown from "react-markdown";
+import axiosClient from "../../API/axios";
 
 export const AddQuestions = () => {
   const { quizId, quizname, coursename, courseId } = useParams<{
@@ -100,8 +99,8 @@ export const AddQuestions = () => {
         payloadCorrectAnswer = null;
       }
 
-      const res = await axios.post(
-        `${API}/instructor/create-question`,
+      const res = await axiosClient.post(
+        `/instructor/create-question`,
         {
           courseId: courseId,
           instructorId: user?.userId,
@@ -112,12 +111,7 @@ export const AddQuestions = () => {
           choices: payloadChoices,
           correct_answer: payloadCorrectAnswer,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+       
       );
 
       if (res.data) {
@@ -156,19 +150,14 @@ export const AddQuestions = () => {
   const handleAiSuggestions = async () => {
     try {
       setAiLoading(true);
-      const res = await axios.post(
-        `${API}/instructor/get-ai-suggestions`,
+      const res = await axiosClient.post(
+        `/instructor/get-ai-suggestions`,
         {
           questionType,
           quizname,
           course: coursename,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+        
       );
       const data = await res.data;
       if (data) {

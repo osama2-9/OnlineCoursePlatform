@@ -1,10 +1,9 @@
 import toast from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useEffect, useState } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/Loading";
+import axiosClient from "../../API/axios";
 
 interface Quizzes {
   title: string;
@@ -36,13 +35,13 @@ export const ShowQuizzes = () => {
   const [quizzes, setQuizzes] = useState<Quizzes[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [filters, setFilters] = useState({
-    is_published: "", 
+    is_published: "",
   });
 
   const getQuizzes = async (page: number = 1, limit: number = 10) => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/admin/get-quizzes/${user?.userId}`, {
+      const res = await axiosClient.get(`/admin/get-quizzes/${user?.userId}`, {
         params: {
           page,
           limit,

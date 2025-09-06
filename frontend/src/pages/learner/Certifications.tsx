@@ -1,8 +1,6 @@
 import { LearnerLayout } from "../../layouts/LearnerLayout";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import {
   FaCertificate,
   FaClock,
@@ -12,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import { qureyClinet } from "../../main";
 import { Loader2 } from "lucide-react";
+import axiosClient from "../../API/axios";
 
 interface Course {
   course_id: string;
@@ -42,18 +41,13 @@ export const Certifications = () => {
   const handleRequestCertificate = async (courseId: string, userId: string) => {
     try {
       setLoadingCertificateId(courseId);
-      const response = await axios.post(
-        `${API}/certifications/request-certificate`,
+      const response = await axiosClient.post(
+        `/certifications/request-certificate`,
         {
           user_id: userId,
           course_id: courseId,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+        
       );
       if (response) {
         toast.success(response.data.message);
@@ -86,8 +80,8 @@ export const Certifications = () => {
   const getEnrolledInCourses = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(
-        `${API}/certifications/get-course-to-certificate`,
+      const { data } = await axiosClient.get(
+        `/certifications/get-course-to-certificate`,
         {
           params: {
             userId: user?.userId,

@@ -1,7 +1,6 @@
-import axios from "axios";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
+import axiosClient from "../../API/axios";
 
 interface UpdateModalProps {
   user_id: number;
@@ -38,16 +37,11 @@ export const UpdateUser: React.FC<UpdateModalProps> = ({
   };
   const handleUpdateUser = async () => {
     try {
-      const res = await axios.put(`${API}/admin/update-user`, {
+      const res = await axiosClient.put(`/admin/update-user`, {
         user_id: user_id,
         full_name: formData.full_name,
         email: formData.email,
         role: formData.role,
-      } ,{
-        headers:{
-            "Content-Type":"application/json"
-        },
-        withCredentials:true
       });
       const data = await res.data;
       if (data.message) {
@@ -119,7 +113,6 @@ export const UpdateUser: React.FC<UpdateModalProps> = ({
                 <option value="admin">Admin</option>
                 <option value="moderator">Moderator</option>
                 <option value="support">Support</option>
-
               </select>
             </div>
 

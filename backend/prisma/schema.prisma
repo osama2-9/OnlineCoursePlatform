@@ -46,6 +46,7 @@ model Users {
   seen          Seen[]
   assignments         Assignments[]          @relation("InstructorAssignments")
   submissions         AssignmentSubmission[] @relation("StudentSubmissions")
+  refreshTokens       RefreshToken[]
   Article Article[]
   @@index([email])
   @@index([googleId])
@@ -57,6 +58,20 @@ model Users {
   SupportTicketMessage SupportTicketMessage[]
   SupportTicketAccessToken SupportTicketAccessToken[]
   CertificateRequest CertificateRequest[]
+}
+model RefreshToken {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  token       String   @unique
+  expires_at  DateTime
+  created_at  DateTime @default(now())
+  revoked     Boolean  @default(false)
+
+  user Users @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id])
+  @@index([token])
+  @@map("refresh_tokens")
 }
 
 model Courses {

@@ -2,10 +2,10 @@ import { Delete, Edit, Loader2, MessageCircle, Send, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useHandleComments } from "../hooks/useHandleComments";
 import { API } from "../API/ApiBaseUrl";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../API/axios";
 
 interface Comment {
   comment_id: number;
@@ -62,7 +62,7 @@ export const Comments = ({ articleId }: { articleId: any }) => {
 
   const getComments = async () => {
     try {
-      const res = await axios.get<FetchCommentsResponse>(
+      const res = await axiosClient.get<FetchCommentsResponse>(
         `${API}/articels/get-article-comments/${articleId}`,
         {
           headers: {
@@ -118,7 +118,7 @@ export const Comments = ({ articleId }: { articleId: any }) => {
     setShowCommentForm(false);
 
     try {
-      const res = await axios.post<CommentResponse>(
+      const res = await axiosClient.post<CommentResponse>(
         `${API}/articels/comment`,
         { comment: commentText, articleId: articleId, userId: user?.userId },
         {

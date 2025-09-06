@@ -1,12 +1,11 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { Star, StarHalf } from "lucide-react";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/Loading";
 import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../../API/axios";
 
 interface Reviews {
   review_id: number;
@@ -50,8 +49,8 @@ export const Reviews = () => {
 
   const getReviews = async (page: number = 1) => {
     try {
-      const res = await axios.get<ReviewsResponse>(
-        `${API}/admin/reviews/${user?.userId}`,
+      const res = await axiosClient.get<ReviewsResponse>(
+        `/admin/reviews/${user?.userId}`,
         {
           params: { page },
           headers: { "Content-Type": "application/json" },

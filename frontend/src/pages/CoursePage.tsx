@@ -1,15 +1,14 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { FaCheck, FaLock } from "react-icons/fa";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { Loading } from "../components/Loading";
 import toast from "react-hot-toast";
-import { API } from "../API/ApiBaseUrl";
 import { useAuth } from "../hooks/useAuth";
 import { loadStripe } from "@stripe/stripe-js";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import axiosClient from "../API/axios";
 
 const PBK = import.meta.env.VITE_PUBLISH_KEY;
 const stripePromise = loadStripe(PBK);
@@ -55,14 +54,8 @@ export const CoursePage = () => {
   const getCourseDetails = async () => {
     try {
       setIsCourseLoading(true);
-      const res = await axios.get<CourseResponse>(
-        `${API}/course/course-details/${course_id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const res = await axiosClient.get<CourseResponse>(
+        `/course/course-details/${course_id}`
       );
       return res.data;
     } catch (error: any) {
@@ -104,19 +97,10 @@ export const CoursePage = () => {
   const handlePayment = async () => {
     try {
       setIsPaymentLoading(true);
-      const res = await axios.post(
-        `${API}/payment/create-checkout-session`,
-        {
-          userId: user?.userId,
-          courseId: course?.course_id,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/payment/create-checkout-session`, {
+        userId: user?.userId,
+        courseId: course?.course_id,
+      });
 
       const data = res.data;
 

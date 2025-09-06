@@ -1,9 +1,8 @@
 import React from 'react';
-import axios from "axios";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
 
-import { API } from "../../API/ApiBaseUrl";
+import axiosClient from '../../API/axios';
 
 interface AssignmentDeleteModalProps {
   assignment_id: number;
@@ -22,15 +21,12 @@ const AssignmentDeleteModal: React.FC<AssignmentDeleteModalProps> = ({
 }) => {
   const handleConfirmDelete = async () => {
     try {
-      const res = await axios.delete(`${API}/assignments/delete-assignment/${assignment_id}`, {
+      const res = await axiosClient.delete(`/assignments/delete-assignment/${assignment_id}`, {
         params: {
           course_id,
           instructor_id
         },
-        headers: {
-          "Content-Type": "application/json"
-        },
-        withCredentials: true
+       
       });
 
       const data = await res.data;

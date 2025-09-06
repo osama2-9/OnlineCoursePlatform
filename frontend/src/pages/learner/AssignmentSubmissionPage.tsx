@@ -4,10 +4,9 @@ import { format, differenceInDays, isAfter } from "date-fns";
 import { LearnerLayout } from "../../layouts/LearnerLayout";
 import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../supbase/SupbaseClient";
+import axiosClient from "../../API/axios";
 
 const AssignmentSubmissionPage = () => {
   const { assignment } = useLocation().state;
@@ -91,19 +90,14 @@ const AssignmentSubmissionPage = () => {
         fileUrl = await handleUploadFileToSupabase(selectedFile);
       }
 
-      const res = await axios.post(
-        `${API}/assignments/submit-assignment`,
+      const res = await axiosClient.post(
+        `/assignments/submit-assignment`,
         {
           assignment_id: assignment.assignment_id,
           file_url: fileUrl,
           student_id: user?.userId,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+       
       );
 
       if (res.data) {

@@ -10,11 +10,9 @@ import {
 } from "chart.js";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../../API/axios";
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -34,12 +32,7 @@ const TopCoursesChart = () => {
 
   const getEnrollmentsData = async () => {
     try {
-      const { data } = await axios.get(`${API}/admin/top-enrolled-courses`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true,
-      });
+      const { data } = await axiosClient.get(`/admin/top-enrolled-courses`);
 
       return data;
     } catch (error: any) {
@@ -57,7 +50,7 @@ const TopCoursesChart = () => {
   });
 
   useEffect(() => {
-    setEnrollmentsData(data)
+    setEnrollmentsData(data);
   }, [data]);
 
   if (isError) {

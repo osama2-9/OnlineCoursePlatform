@@ -1,5 +1,4 @@
 import toast from "react-hot-toast";
-import axios from "axios";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import {
@@ -13,9 +12,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useLogout } from "../../hooks/useLogout";
-import { API } from "../../API/ApiBaseUrl";
 import { setUser } from "../../store/userSlice";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
+import axiosClient from "../../API/axios";
 
 export const InstractourSettings = () => {
   const { user } = useAuth();
@@ -40,18 +39,9 @@ export const InstractourSettings = () => {
   const enable2FA = async () => {
     setIsLoading2FA(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/enable2FA`,
-        {
-          userId: user?.userId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/enable2FA`, {
+        userId: user?.userId,
+      });
 
       const data = res.data;
       if (data && data.qrCodeDataURL) {
@@ -73,18 +63,9 @@ export const InstractourSettings = () => {
   const disable2FA = async () => {
     setIsLoading2FA(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/disable2FA`,
-        {
-          userId: user?.userId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/disable2FA`, {
+        userId: user?.userId,
+      });
       const data = await res.data;
       if (data) {
         setIs2FAEnabled(false);
@@ -107,20 +88,11 @@ export const InstractourSettings = () => {
 
     setIsLoadingPassword(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/change-password`,
-        {
-          userId: user?.userId,
-          oldPassword,
-          newPassword,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/change-password`, {
+        userId: user?.userId,
+        oldPassword,
+        newPassword,
+      });
 
       const data = await res.data;
       if (data && data.message) {
@@ -151,19 +123,10 @@ export const InstractourSettings = () => {
   const updateAccountStatus = async () => {
     setIsLoadingAccountStatus(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/deactive`,
-        {
-          userId: user?.userId,
-          accStatus: !isAccountActive,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/deactive`, {
+        userId: user?.userId,
+        accStatus: !isAccountActive,
+      });
 
       handleLogout();
       const data = await res.data;

@@ -1,11 +1,10 @@
-import axios from "axios";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { VideoPlayer } from "../../components/VideoPlayer";
 import { Loading } from "../../components/Loading";
+import axiosClient from "../../API/axios";
 
 interface Lessons {
   title: string;
@@ -100,12 +99,9 @@ const CoursePracticePage = () => {
 
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API}/learner/get-lessons/${enrollmentId}/course/${courseId}`,
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
+      const response = await axiosClient.get(
+        `/learner/get-lessons/${enrollmentId}/course/${courseId}`,
+      
       );
 
       if (response.data) {
@@ -129,12 +125,9 @@ const CoursePracticePage = () => {
 
     try {
       setProgressLoading(true);
-      const response = await axios.get(
-        `${API}/learner/get-completed-lessons/user/${user.userId}/course/${courseId}`,
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
+      const response = await axiosClient.get(
+        `/learner/get-completed-lessons/user/${user.userId}/course/${courseId}`,
+      
       );
 
       setProgressData(response.data);
@@ -259,8 +252,8 @@ const CoursePracticePage = () => {
       try {
         setIsUpdatingProgress(lessonId);
 
-        await axios.post(
-          `${API}/learner/mark-complete-lesson`,
+        await axiosClient.post(
+          `/learner/mark-complete-lesson`,
           {
             lessonId,
             courseId: parseInt(courseId),

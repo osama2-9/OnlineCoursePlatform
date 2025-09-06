@@ -10,12 +10,11 @@ import {
   Legend,
 } from "chart.js";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { Award, BarChart3, Activity } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { BarChartComponent } from "../../components/instrctor/BarChart";
+import axiosClient from "../../API/axios";
 
 ChartJS.register(
   CategoryScale,
@@ -32,8 +31,8 @@ export const Analystic = () => {
 
   const getCourseProgressAnalystic = async () => {
     try {
-      const res = await axios.get(
-        `${API}/instructor/get-analystic/${user?.userId}`,
+      const res = await axiosClient.get(
+        `/instructor/get-analystic/${user?.userId}`,
         {
           headers: {
             "Content-Type": "application/json",

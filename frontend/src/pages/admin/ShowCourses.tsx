@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import { Loading } from "../../components/Loading";
 import { useNavigate } from "react-router-dom";
 import { CourseActionsDropdown } from "../../components/admin/CourseActionsDropdown";
@@ -12,6 +10,7 @@ import { Course } from "../../types/Course";
 import { ConfirmeDelete } from "../../components/admin/ConfirmeDelete";
 import { FaSort, FaDownload, FaSearch, FaFilter } from "react-icons/fa";
 import { CSVLink } from "react-csv";
+import axiosClient from "../../API/axios";
 
 interface Pagination {
   totalCourses: number;
@@ -59,8 +58,8 @@ export const ShowCourses = () => {
   const fetchCourses = async (page: number, pageSize: number) => {
     try {
       setIsLoading(true);
-      const res = await axios.get<FetchCoursesResponse>(
-        `${API}/admin/courses`,
+      const res = await axiosClient.get<FetchCoursesResponse>(
+        `/admin/courses`,
         {
           params: {
             page,
@@ -71,10 +70,6 @@ export const ShowCourses = () => {
             sortField,
             sortDirection,
           },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
         }
       );
 
@@ -160,18 +155,13 @@ export const ShowCourses = () => {
 
   const handleTogglePublish = async (courseId: number) => {
     try {
-      const res = await axios.put(
-        `${API}/course/update-publish-status`,
+      const res = await axiosClient.put(
+        `/course/update-publish-status`,
         {
           course_id: courseId,
           instructor_id: user?.userId,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+        {}
       );
       const data = await res.data;
       if (data) {
@@ -198,15 +188,10 @@ export const ShowCourses = () => {
       };
 
       setIsUpdateCourse(true);
-      const res = await axios.put(
-        `${API}/course/update-course`,
+      const res = await axiosClient.put(
+        `/course/update-course`,
         courseToUpdate,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+        {}
       );
       const data = await res.data;
       if (data) {
@@ -224,14 +209,9 @@ export const ShowCourses = () => {
 
   const handleDeleteCourse = async () => {
     try {
-      const res = await axios.delete(
-        `${API}/course/delete-course/${selectedCourse?.course_id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const res = await axiosClient.delete(
+        `/course/delete-course/${selectedCourse?.course_id}`,
+        {}
       );
       const data = await res.data;
       if (data) {

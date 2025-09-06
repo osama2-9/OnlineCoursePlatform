@@ -20,9 +20,8 @@ import { CourseWithStudents, Pagination } from "../../types/StudentsProgress";
 import { useAuth } from "../../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
+import axiosClient from "../../API/axios";
 
 const StudentProgressDashboard = () => {
   const { user } = useAuth();
@@ -33,16 +32,12 @@ const StudentProgressDashboard = () => {
 
   const handleFetchStudentsProgress = async () => {
     try {
-      const response = await axios.get(
-        `${API}/instructor/get-students-progress`,
+      const response = await axiosClient.get(
+        `/instructor/get-students-progress`,
         {
           params: {
             page: currentPage,
             courseTitle: selectedCourse === "All" ? null : selectedCourse,
-          },
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
           },
         }
       );

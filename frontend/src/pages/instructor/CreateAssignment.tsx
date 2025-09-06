@@ -1,12 +1,11 @@
-import axios from "axios";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
 import { Calendar, Clock, GraduationCap, Info, Link as LinkIcon, Loader2, Upload } from "lucide-react";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Select from "react-select";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { useGetInstructorCourses } from "../../hooks/useGetInstructorCourses";
+import axiosClient from "../../API/axios";
 
 const CreateAssignment = () => {
     const { user } = useAuth();
@@ -60,7 +59,7 @@ const CreateAssignment = () => {
                 course_id: Number(formData.course_id)
             };
 
-            const res = await axios.post(`${API}/assignments/create-assignment`, submissionData, {
+            const res = await axiosClient.post(`/assignments/create-assignment`, submissionData, {
                 headers: {
                     "Content-Type": "application/json"
                 },

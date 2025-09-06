@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
+import axiosClient from "../API/axios";
 
 const ActiveAccountRequest = () => {
   const [email, setEmail] = useState("");
@@ -15,7 +14,7 @@ const ActiveAccountRequest = () => {
     setMessage({ text: "", type: "" });
 
     try {
-      await axios.post(`${API}/auth/active-account-request`, { email });
+      await axiosClient.post(`/auth/active-account-request`, { email });
       setMessage({
         text: "Active account link has been sent to your email.",
         type: "success",

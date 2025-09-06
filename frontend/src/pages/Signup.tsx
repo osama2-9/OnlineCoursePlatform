@@ -1,12 +1,11 @@
-import axios from "axios";
 import React, { useState } from "react";
-import { API } from "../API/ApiBaseUrl";
 import toast from "react-hot-toast";
 import { HomePageLayout } from "../layouts/HomePageLayout";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUser } from "../store/userSlice";
 import { FcGoogle } from "react-icons/fc";
+import axiosClient from "../API/axios";
 
 export const Signup = () => {
   const dispatch = useDispatch();
@@ -15,7 +14,7 @@ export const Signup = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [googleLoading ,setGoogleLoading] = useState<boolean>(false)
+  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
 
   const [errors, setErrors] = useState({
     email: "",
@@ -52,8 +51,8 @@ export const Signup = () => {
 
     try {
       setIsLoading(true);
-      const res = await axios.post(
-        `${API}/auth/signup`,
+      const res = await axiosClient.post(
+        `/auth/signup`,
         { full_name: fullName, email, password_hash: password },
         {
           headers: { "Content-Type": "application/json" },
@@ -75,20 +74,20 @@ export const Signup = () => {
   };
 
   const handleGoogleSignup = async () => {
-     try {
-      setGoogleLoading(true)
-      const res = await axios.get(`${API}/auth/google-auth-url` ,{
+    try {
+      setGoogleLoading(true);
+      const res = await axiosClient.get(`/auth/google-auth-url`, {
         withCredentials: true,
       });
-      const data = await res.data
-      if(data){
+      const data = await res.data;
+      if (data) {
         window.location.replace(data.url);
       }
     } catch (error) {
       console.log(error);
       toast.error("Failed to connect with Google.");
-    }finally{
-      setGoogleLoading(false)
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -108,8 +107,6 @@ export const Signup = () => {
             <h2 className="text-xl md:text-2xl font-bold text-gray-800 text-center mb-3">
               Sign up and start your learning journey
             </h2>
-
-         
 
             <div className="flex items-center my-4">
               <div className="flex-1 border-t border-gray-300"></div>
@@ -214,12 +211,14 @@ export const Signup = () => {
               <span className="mx-2 text-xs text-gray-400">OR</span>
               <div className="flex-grow border-t border-gray-200"></div>
             </div>
-   <button
+            <button
               type="button"
               onClick={handleGoogleSignup}
               disabled={googleLoading}
               className={`w-full py-2.5 text-sm bg-white text-gray-700 font-medium rounded-md border border-gray-300 transition-all flex items-center justify-center space-x-2 ${
-                googleLoading ? "cursor-not-allowed opacity-70" : "hover:bg-gray-50"
+                googleLoading
+                  ? "cursor-not-allowed opacity-70"
+                  : "hover:bg-gray-50"
               }`}
             >
               {googleLoading ? (

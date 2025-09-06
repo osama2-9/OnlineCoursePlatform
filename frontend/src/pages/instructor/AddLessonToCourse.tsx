@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import {
   FaArrowLeft,
   FaCloudUploadAlt,
   FaLock,
   FaUnlock,
 } from "react-icons/fa";
+import axiosClient from "../../API/axios";
+import axios from "axios";
 
 export const AddLessonToCourse = () => {
   const { courseId, instructorId } = useParams();
@@ -206,16 +206,7 @@ export const AddLessonToCourse = () => {
         course_id: courseId,
       };
 
-      const response = await axios.post(
-        `${API}/lesson/create-lesson`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const response = await axiosClient.post(`/lesson/create-lesson`, payload);
 
       if (response.status === 201) {
         toast.success("Lesson added successfully!");

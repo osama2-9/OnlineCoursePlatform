@@ -1,9 +1,8 @@
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
-import { API } from "../API/ApiBaseUrl";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import axiosClient from "../API/axios";
 
 export const ActiveAccount = () => {
   const location = useLocation();
@@ -20,22 +19,14 @@ export const ActiveAccount = () => {
 
     setIsLoading(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/active-acc-attempt`,
-        { token },
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/active-acc-attempt`, { token });
       const data = await res.data;
       if (data) {
         setIsActivated(true);
         toast.success(data.message);
-        // Redirect the user to the login page after activation
         setTimeout(() => {
           navigate("/login");
-        }, 2000); // Delay before redirecting to allow the user to see the success message
+        }, 2000);
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.error);

@@ -12,8 +12,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -24,6 +22,7 @@ import {
 } from "../../types/ModerationDashboardTypes";
 import ArticleContent from "../../components/moderator/ArticleContent";
 import LessonContent from "../../components/moderator/LessonContent";
+import axiosClient from "../../API/axios";
 
 export default function ContentModeratorDashboard() {
   const { user } = useAuth();
@@ -42,16 +41,12 @@ export default function ContentModeratorDashboard() {
 
   const fetchRequests = async () => {
     try {
-      const res = await axios.get<FetchContentResponse>(
-        `${API}/moderator/get-content`,
+      const res = await axiosClient.get<FetchContentResponse>(
+        `/moderator/get-content`,
         {
           params: {
             userId: user?.userId,
           },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
         }
       );
       const data = res.data;
@@ -84,7 +79,7 @@ export default function ContentModeratorDashboard() {
   const fetchContentDetails = async (contentId: number, type: string) => {
     try {
       setIsLoadingDetails(true);
-      const res = await axios.get(`${API}/moderator/get-content-details`, {
+      const res = await axiosClient.get(`/moderator/get-content-details`, {
         params: {
           contentId,
           type,
@@ -187,8 +182,8 @@ export default function ContentModeratorDashboard() {
         : selectedContent?.lesson_approvel_id;
     try {
       setIsApproveLoading(true);
-      const res = await axios.post(
-        `${API}/moderator/approve`,
+      const res = await axiosClient.post(
+        `/moderator/approve`,
         {
           Id: contentId,
           status: "approved",
@@ -196,12 +191,7 @@ export default function ContentModeratorDashboard() {
           type: selectedContent?.type,
           reason: moderatorNote,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+        {}
       );
       const data = await res.data;
       if (data) {
@@ -232,8 +222,8 @@ export default function ContentModeratorDashboard() {
         : selectedContent?.lesson_approvel_id;
     try {
       setIsRejectLoading(true);
-      const res = await axios.post(
-        `${API}/moderator/reject`,
+      const res = await axiosClient.post(
+        `/moderator/reject`,
         {
           Id: contentId,
           status: "rejected",
@@ -241,12 +231,7 @@ export default function ContentModeratorDashboard() {
           type: selectedContent?.type,
           reason: moderatorNote,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+        {}
       );
       const data = await res.data;
       if (data) {

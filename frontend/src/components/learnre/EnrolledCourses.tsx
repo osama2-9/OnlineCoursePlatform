@@ -1,12 +1,11 @@
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import { Link } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa";
 import { Loading } from "../Loading";
 import { useQuery } from "@tanstack/react-query";
 import { qureyClinet } from "../../main";
 import { useEffect } from "react";
+import axiosClient from "../../API/axios";
 
 interface EnrolledCourses {
   enrollment_id: number;
@@ -28,14 +27,8 @@ interface EnrolledCourses {
 export const EnrolledCourses = ({ userId }: any) => {
   const getEnrolledInCourses = async () => {
     try {
-      const { data } = await axios.get(
-        `${API}/learner/get-enrolled-courses/${userId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+      const { data } = await axiosClient.get(
+        `/learner/get-enrolled-courses/${userId}`
       );
       return data;
     } catch (error: any) {
@@ -46,7 +39,7 @@ export const EnrolledCourses = ({ userId }: any) => {
   const { data: enrolledCourses, isLoading } = useQuery({
     queryKey: ["userenrollmentdata", userId],
     queryFn: getEnrolledInCourses,
-    staleTime: 15 * 60 * 1000, 
+    staleTime: 15 * 60 * 1000,
     enabled: !!userId,
     retry: 2,
   });

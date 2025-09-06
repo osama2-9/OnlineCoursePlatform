@@ -2,12 +2,11 @@ import { useState } from "react";
 import { useGetLearnerQuizzes } from "../../hooks/useGetLearnerQuizzes";
 import { Loading } from "../Loading";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
 import { ClipLoader } from "react-spinners";
 import { FaClock, FaClipboardList } from "react-icons/fa";
+import axiosClient from "../../API/axios";
 export const Quizzes = () => {
   const { quizzesLoading, quizzs } = useGetLearnerQuizzes();
   const navigate = useNavigate();
@@ -43,21 +42,12 @@ export const Quizzes = () => {
     setIsStartingQuiz(true);
 
     try {
-      const res = await axios.post(
-        `${API}/learner/start-quiz`,
-        {
-          enrollmentId: enrollmentId,
-          courseId: selectedCourseId,
-          quizId: selectedQuizId,
-          userId: user?.userId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/learner/start-quiz`, {
+        enrollmentId: enrollmentId,
+        courseId: selectedCourseId,
+        quizId: selectedQuizId,
+        userId: user?.userId,
+      });
 
       const data = await res.data;
       if (data && data.attempt) {

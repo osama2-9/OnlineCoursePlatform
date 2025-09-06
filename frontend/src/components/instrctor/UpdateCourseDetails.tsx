@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { CourseDetails } from "../../hooks/useGetInstructorCourses";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
+import axiosClient from "../../API/axios";
 
 interface UpdateCourseDetailsProps {
   course: CourseDetails;
@@ -46,8 +45,8 @@ export const UpdateCourseDetails = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await axios.put(
-        `${API}/instructor/update-course`,
+      const res = await axiosClient.put(
+        `/instructor/update-course`,
         {
           instructorId: user?.userId,
           courseId: course?.course_id,
@@ -55,12 +54,7 @@ export const UpdateCourseDetails = ({
           description: description,
           learning_outcomes: learningOutcomes,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+       
       );
       const data = await res.data;
       if (data) {

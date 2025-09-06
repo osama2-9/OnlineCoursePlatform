@@ -1,8 +1,7 @@
-import axios from "axios";
 import { XCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { API } from "../API/ApiBaseUrl";
+import axiosClient from "../API/axios";
 
 export const CancelPayment = () => {
   const loaction = useLocation();
@@ -16,14 +15,8 @@ export const CancelPayment = () => {
       const handleCancelPayment = async () => {
         setLoading(true);
         try {
-          const res = await axios.get(
-            `${API}/payment/payment-cancel/${sessionId}`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              withCredentials: true,
-            }
+          const res = await axiosClient.get(
+            `/payment/payment-cancel/${sessionId}`
           );
           const data = await res.data;
           if (data) {

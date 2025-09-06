@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useLocation } from "react-router-dom";
-import { API } from "../API/ApiBaseUrl";
 import { FaSpinner, FaCheckCircle } from "react-icons/fa";
+import axiosClient from "../API/axios";
 
 export const PaymentSuccess = () => {
   const [loading, setLoading] = useState(true);
@@ -16,8 +15,8 @@ export const PaymentSuccess = () => {
     if (sessionId) {
       const confirmPayment = async () => {
         try {
-          const { data } = await axios.get(
-            `${API}/payment/payment-success/${sessionId}`,
+          const { data } = await axiosClient.get(
+            `/payment/payment-success/${sessionId}`,
             {
               headers: {
                 "Content-Type": "application/json",

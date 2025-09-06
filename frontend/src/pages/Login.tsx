@@ -1,11 +1,10 @@
-import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { API } from "../API/ApiBaseUrl";
 import { HomePageLayout } from "../layouts/HomePageLayout";
 import { setUser } from "../store/userSlice";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
+import axiosClient from "../API/axios";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -36,13 +35,10 @@ export const Login = () => {
     try {
       setIsLoading(true);
       setError("");
-      const res = await axios.post(
-        `${API}/auth/login`,
+      const res = await axiosClient.post(
+        `/auth/login`,
         { email, password },
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
+        
       );
       const data = res.data;
       if (data) {
@@ -72,13 +68,10 @@ export const Login = () => {
     try {
       setIsLoading(true);
       setError("");
-      const res = await axios.post(
-        `${API}/auth/verify-2fa`,
+      const res = await axiosClient.post(
+        `/auth/verify-2fa`,
         { email, token: twoFACode },
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
+        
       );
       const data = res.data;
       if (data) {
@@ -96,7 +89,7 @@ export const Login = () => {
   const handleGoogleLogin = async () => {
     try {
       setGoogleLoading(true);
-      const res = await axios.get(`${API}/auth/google-auth-url`, {
+      const res = await axiosClient.get(`/auth/google-auth-url`, {
         withCredentials: true,
       });
       const data = await res.data;

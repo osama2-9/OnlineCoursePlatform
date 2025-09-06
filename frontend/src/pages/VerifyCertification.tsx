@@ -11,10 +11,9 @@ import {
   Award,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { CertificationVerifyData } from "../types/Certifications";
 import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../API/axios";
 
 interface CertificationVerifyResponse {
   certification: CertificationVerifyData | null;
@@ -28,8 +27,8 @@ export default function CertificateVerification() {
 
   const handleVerify = async () => {
     try {
-      const response = await axios.get<CertificationVerifyResponse>(
-        `${API}/auth/certification-verify`,
+      const response = await axiosClient.get<CertificationVerifyResponse>(
+        `/auth/certification-verify`,
         {
           params: {
             code: verificationCode.trim(),

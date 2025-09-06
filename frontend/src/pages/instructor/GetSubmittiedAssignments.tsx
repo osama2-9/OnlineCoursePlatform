@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { formatDate } from "../../utils/assignmentUtils";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
 import { Loader2 } from "lucide-react";
 import { FaFile, FaGithub } from "react-icons/fa";
+import axiosClient from "../../API/axios";
 
 interface Submission {
   submission_id: number;
@@ -46,16 +45,13 @@ const GradeAssignments = () => {
 
   const fetchSubmissions = async () => {
     try {
-      const res = await axios.get(`${API}/assignments/get-submissions`, {
+      const res = await axiosClient.get(`/assignments/get-submissions`, {
         params: {
           course_id: courseId,
           instructor_id: user?.userId,
           assignment_id: assignmentId,
         },
-        headers: {
-          contentType: "application/json",
-        },
-        withCredentials: true,
+      
       });
 
       const data = await res.data;
@@ -96,8 +92,8 @@ const GradeAssignments = () => {
 
     try {
       setIsSubmitting(true);
-      await axios.post(
-        `${API}/assignments/submit-review`,
+      await axiosClient.post(
+        `/assignments/submit-review`,
         {
           submission_id: submissionId,
           grade: grade,
@@ -105,12 +101,7 @@ const GradeAssignments = () => {
           instructor_id: user?.userId,
           assignment_id: assignmentId,
         },
-        {
-          headers: {
-            contentType: "application/json",
-          },
-          withCredentials: true,
-        }
+       
       );
 
       toast.success("Grade submitted successfully");

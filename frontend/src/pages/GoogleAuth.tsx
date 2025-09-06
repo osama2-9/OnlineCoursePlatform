@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { useDispatch } from "react-redux";
 import { setUser } from "../store/userSlice";
 import { HomePageLayout } from "../layouts/HomePageLayout";
+import axiosClient from "../API/axios";
 
 interface GoogleCallBackResponse {
   success: boolean;
@@ -25,7 +24,7 @@ export const GoogleAuth = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axios.get<GoogleCallBackResponse>(`${API}/auth/google/callback`, {
+        const response = await axiosClient.get<GoogleCallBackResponse>(`/auth/google/callback`, {
           withCredentials: true
         });
         

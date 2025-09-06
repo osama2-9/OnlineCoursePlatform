@@ -7,8 +7,6 @@ import {
   Mail,
   Loader2,
 } from "lucide-react";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import Header from "../../components/support/Header";
 import SupportDashboardSidebar from "../../components/support/SupportDashboardSidebar";
@@ -17,6 +15,7 @@ import { SupportTicket } from "../../types/SupportTicket";
 import useSocket from "../../socketIo/useSocket";
 import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
+import axiosClient from "../../API/axios";
 
 const SupportDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -123,12 +122,12 @@ const SupportDashboard: React.FC = () => {
 
   const handleGetTickets = async () => {
     try {
-      const res = await axios.get(`${API}/support/get-support-tickets`, {
+      const res = await axiosClient.get(`/support/get-support-tickets`, {
         params: {
           page: 1,
           limit: 5,
         },
-        withCredentials: true,
+        
       });
       return res.data;
     } catch (error) {
@@ -171,15 +170,15 @@ const SupportDashboard: React.FC = () => {
 
       setReplyMessage("");
 
-      await axios.post(
-        `${API}/support/send-message`,
+      await axiosClient.post(
+        `/support/send-message`,
         {
           ticket_id: selectedTicket.ticket_id,
           message: messageToSend,
           user_id: user.userId,
         },
         {
-          withCredentials: true,
+          
         }
       );
     } catch (error) {
@@ -212,8 +211,8 @@ const SupportDashboard: React.FC = () => {
   const handleChangeTicketStatus = async () => {
     try {
       setIsCloseing(true);
-      const res = await axios.put(
-        `${API}/support/change-ticket-status`,
+      const res = await axiosClient.put(
+        `/support/change-ticket-status`,
         {
           userId: user?.userId,
           status: "closed",
@@ -225,7 +224,7 @@ const SupportDashboard: React.FC = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          withCredentials: true,
+          
         }
       );
       const data = await res.data;

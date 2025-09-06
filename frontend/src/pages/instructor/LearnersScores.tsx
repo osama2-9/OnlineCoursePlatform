@@ -9,10 +9,9 @@ import {
   Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
+import axiosClient from "../../API/axios";
 
 interface User {
   user_id: string;
@@ -63,17 +62,13 @@ const LearnersScores = () => {
 
   const handleFetchScores = async () => {
     try {
-      const response = await axios.get<APIResponse>(
-        `${API}/instructor/students-marks`,
+      const response = await axiosClient.get<APIResponse>(
+        `/instructor/students-marks`,
         {
           params: {
             type: selectedType,
             page: currentPage,
             limit: limit,
-          },
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
           },
         }
       );
@@ -87,14 +82,9 @@ const LearnersScores = () => {
 
   const handleFetchCoursesStats = async () => {
     try {
-      const response = await axios.get<APIResponseCoursesStats>(
-        `${API}/instructor/courses-stats`,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+      const response = await axiosClient.get<APIResponseCoursesStats>(
+        `/instructor/courses-stats`,
+        {}
       );
       const data = response.data;
       if (data && Array.isArray(data.courses)) {

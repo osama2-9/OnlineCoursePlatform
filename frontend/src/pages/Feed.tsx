@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Search, Loader2, X, Plus, ArrowUp, Bookmark } from "lucide-react";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -10,6 +8,7 @@ import toast from "react-hot-toast";
 import ArticleFilters from "../components/ArticleFilters";
 import ArticleCard from "../components/ArticleCard";
 import { qureyClinet } from "../main";
+import axiosClient from "../API/axios";
 
 interface ContentBlock {
   block_id: number;
@@ -96,7 +95,7 @@ export const Feed = () => {
 
   const fetchArticles = async () => {
     try {
-      const res = await axios.get(`${API}/articels/get-articles`, {
+      const res = await axiosClient.get(`/articels/get-articles`, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -124,13 +123,13 @@ export const Feed = () => {
     refetchOnWindowFocus: false,
   });
 
-  useEffect(()=>{
+  useEffect(() => {
     qureyClinet.prefetchQuery({
       queryKey: ["articles", page, selectedCategory, sortBy, searchTerm],
       queryFn: fetchArticles,
       staleTime: 24 * 1000 * 60,
       retry: 2,
-    })
+    });
   }, [user?.userId]);
 
   const handlePageChange = (newPage: number) => {

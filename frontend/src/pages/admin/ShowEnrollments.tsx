@@ -1,12 +1,11 @@
-import axios from "axios";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import { useEffect, useState, useMemo } from "react";
 import { AdminLayout } from "../../layouts/AdminLayout";
 import { Loading } from "../../components/Loading";
 import { UpdateEnrollment } from "../../components/admin/UpdateEnrollment";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
+import axiosClient from "../../API/axios";
 
 interface Enrollment {
   enrollment_id: number;
@@ -68,24 +67,17 @@ export const ShowEnrollments = () => {
   const fetchEnrollments = async ({
     page,
     limit,
-  
   }: {
     page: number;
     limit: number;
-  
   }): Promise<EnrollmentResponse> => {
-    const { data } = await axios.get<EnrollmentResponse>(
-      `${API}/enrollment/get-enrollments`,
+    const { data } = await axiosClient.get<EnrollmentResponse>(
+      `/enrollment/get-enrollments`,
       {
-        headers: {
-          "Content-Type": "application/json",
-        },
         params: {
           page,
           limit,
-        
         },
-        withCredentials: true,
       }
     );
     return data;
@@ -109,9 +101,8 @@ export const ShowEnrollments = () => {
       fetchEnrollments({
         page: pagination.currentPage,
         limit: pagination.limit,
-       
       }),
-    staleTime: 5 * 60 * 1000, 
+    staleTime: 5 * 60 * 1000,
     refetchInterval: 10 * 60 * 1000,
     retry: 2,
     enabled: !!user?.userId,
@@ -181,8 +172,6 @@ export const ShowEnrollments = () => {
   ) => {
     if (!selectedEnrollment) return;
 
-
-
     updateEnrollmentOptimistically(
       selectedEnrollment.enrollment_id,
       status,
@@ -190,8 +179,8 @@ export const ShowEnrollments = () => {
     );
 
     try {
-      const response = await axios.put(
-        `${API}/enrollment/update-enrollment`,
+      const response = await axiosClient.put(
+        `/enrollment/update-enrollment`,
         {
           enrollmentId: selectedEnrollment.enrollment_id,
           status: status,
@@ -222,7 +211,7 @@ export const ShowEnrollments = () => {
       toast.error(
         error?.response?.data?.error || "Failed to update enrollment"
       );
-    } 
+    }
   };
 
   const handlePageChange = (page: number) => {

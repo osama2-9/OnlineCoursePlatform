@@ -3,9 +3,8 @@ import { Loader } from "lucide-react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { FaCloudUploadAlt } from "react-icons/fa";
+import axiosClient from "../API/axios";
 
 interface MentorFormData {
   full_name: string;
@@ -98,7 +97,7 @@ const BecomeMentor = () => {
       formData.append("file", file);
       formData.append("upload_preset", `${cloudinaryUploadrePreset}`);
 
-      const response = await axios.post(
+      const response = await axiosClient.post(
         `https://api.cloudinary.com/v1_1/${cloudinaryCloude}/upload`,
         formData,
         {
@@ -196,19 +195,10 @@ const BecomeMentor = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post(
-        `${API}/application/send-application`,
-        {
-          ...formData,
-          profile_picture: profileImageUrl,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const response = await axiosClient.post(`/application/send-application`, {
+        ...formData,
+        profile_picture: profileImageUrl,
+      });
 
       if (response.data?.message) {
         toast.success(response.data.message);

@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
+import axiosClient from "../API/axios";
 
 interface Course {
   course_id: number;
@@ -42,8 +41,8 @@ export const useGetCourses = (
       priceFilter,
     ],
     queryFn: async () => {
-      const res = await axios.get<CoursesResponse>(
-        `${API}/course/get-courses`,
+      const res = await axiosClient.get<CoursesResponse>(
+        `/course/get-courses`,
         {
           params: {
             page: currentPage,
@@ -51,10 +50,6 @@ export const useGetCourses = (
             category: categoryFilter,
             priceRange: priceFilter,
           },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
         }
       );
       return res.data;

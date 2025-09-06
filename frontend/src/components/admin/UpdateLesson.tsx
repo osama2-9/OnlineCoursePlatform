@@ -1,8 +1,7 @@
-import axios from "axios";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
+import axiosClient from "../../API/axios";
 
 interface Lesson {
   lesson_id: number;
@@ -66,17 +65,12 @@ export const UpdateLesson = ({
     };
 
     try {
-      const res = await axios.put(
-        `${API}/lesson/update-lesson`,
+      const res = await axiosClient.put(
+        `/lesson/update-lesson`,
         {
           lessonToUpdate,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
         }
+       
       );
       const data = await res.data;
       if (data) {

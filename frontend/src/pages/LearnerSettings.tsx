@@ -1,6 +1,4 @@
 import toast from "react-hot-toast";
-import axios from "axios";
-import { API } from "../API/ApiBaseUrl";
 import { useAuth } from "../hooks/useAuth";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -16,6 +14,7 @@ import {
 } from "lucide-react";
 import { useLogout } from "../hooks/useLogout";
 import { LearnerLayout } from "../layouts/LearnerLayout";
+import axiosClient from "../API/axios";
 
 export const LearnerSettings = () => {
   const { user } = useAuth();
@@ -40,18 +39,9 @@ export const LearnerSettings = () => {
   const enable2FA = async () => {
     setIsLoading2FA(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/enable2FA`,
-        {
-          userId: user?.userId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/enable2FA`, {
+        userId: user?.userId,
+      });
 
       const data = res.data;
       if (data && data.qrCodeDataURL) {
@@ -73,18 +63,9 @@ export const LearnerSettings = () => {
   const disable2FA = async () => {
     setIsLoading2FA(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/disable2FA`,
-        {
-          userId: user?.userId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/disable2FA`, {
+        userId: user?.userId,
+      });
       const data = await res.data;
       if (data) {
         setIs2FAEnabled(false);
@@ -107,20 +88,11 @@ export const LearnerSettings = () => {
 
     setIsLoadingPassword(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/change-password`,
-        {
-          userId: user?.userId,
-          oldPassword,
-          newPassword,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/change-password`, {
+        userId: user?.userId,
+        oldPassword,
+        newPassword,
+      });
 
       const data = await res.data;
       if (data && data.message) {
@@ -151,19 +123,10 @@ export const LearnerSettings = () => {
   const updateAccountStatus = async () => {
     setIsLoadingAccountStatus(true);
     try {
-      const res = await axios.post(
-        `${API}/auth/deactive`,
-        {
-          userId: user?.userId,
-          accStatus: !isAccountActive,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosClient.post(`/auth/deactive`, {
+        userId: user?.userId,
+        accStatus: !isAccountActive,
+      });
 
       handleLogout();
       const data = await res.data;

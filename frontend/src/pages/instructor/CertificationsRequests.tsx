@@ -11,11 +11,10 @@ import {
 } from "lucide-react";
 import { Certification } from "../../types/Certifications";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
+import axiosClient from "../../API/axios";
 
 export const CertificationsRequests = () => {
   const { user } = useAuth();
@@ -25,16 +24,12 @@ export const CertificationsRequests = () => {
 
   const handleFetchCertificationsRequests = async () => {
     try {
-      const response = await axios.get(
-        `${API}/certifications/get-certifications-requests`,
+      const response = await axiosClient.get(
+        `/certifications/get-certifications-requests`,
         {
           params: {
             instructorId: user?.userId,
           },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
         }
       );
 
@@ -46,7 +41,6 @@ export const CertificationsRequests = () => {
     }
   };
 
-  
   const handleApproveSelected = async () => {
     if (!selectedRequest) return;
 
@@ -56,20 +50,15 @@ export const CertificationsRequests = () => {
     if (!selectedCert) return;
 
     try {
-      const response = await axios.post(
-        `${API}/certifications/approve-certification-request`,
+      const response = await axiosClient.post(
+        `/certifications/approve-certification-request`,
         {
           userId: selectedCert.user_id,
           courseId: selectedCert.course_id,
           certificationId: selectedCert.id,
           instructorId: user?.userId,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+        {}
       );
 
       const data = await response.data;
@@ -89,22 +78,15 @@ export const CertificationsRequests = () => {
 
   const handleGenerateApprovedCertifications = async (cert: Certification) => {
     try {
-      const response = await axios.post(
-        `${API}/certifications/generate-approved-certifications`,
-        
+      const response = await axiosClient.post(
+        `/certifications/generate-approved-certifications`,
+
         {
           userId: cert.user_id,
           courseId: cert.course_id,
           certificationId: cert.id,
-        
         },
-        {
-         
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+        {}
       );
 
       const data = await response.data;
@@ -112,16 +94,15 @@ export const CertificationsRequests = () => {
     } catch (error) {
       console.error("Error generating approved certifications:", error);
     }
-  }
+  };
 
-  
   const { data, isLoading } = useQuery({
     queryKey: ["certificationsRequests"],
     queryFn: handleFetchCertificationsRequests,
     retry: 2,
     refetchOnWindowFocus: false,
   });
-  
+
   useEffect(() => {
     if (data) {
       setCertifications(data);
@@ -138,7 +119,6 @@ export const CertificationsRequests = () => {
     );
   }
 
-  
   const handleSelectRequest = (id: number) => {
     setSelectedRequest(selectedRequest === id ? null : id);
   };
@@ -149,7 +129,6 @@ export const CertificationsRequests = () => {
   };
 
   const filteredCertifications = getFilteredCertifications();
-
 
   const getStatusIcon = (status: any) => {
     switch (status) {
@@ -247,39 +226,43 @@ export const CertificationsRequests = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setFilter("all")}
-                className={`px-4 py-2 rounded-lg ${filter === "all"
+                className={`px-4 py-2 rounded-lg ${
+                  filter === "all"
                     ? "bg-blue-600 text-white"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                }`}
               >
                 All ({certifications.length})
               </button>
               <button
                 onClick={() => setFilter("pending")}
-                className={`px-4 py-2 rounded-lg ${filter === "pending"
+                className={`px-4 py-2 rounded-lg ${
+                  filter === "pending"
                     ? "bg-yellow-600 text-white"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                }`}
               >
                 Pending (
                 {certifications.filter((c) => c.status === "pending").length})
               </button>
               <button
                 onClick={() => setFilter("approved")}
-                className={`px-4 py-2 rounded-lg ${filter === "approved"
+                className={`px-4 py-2 rounded-lg ${
+                  filter === "approved"
                     ? "bg-green-600 text-white"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                }`}
               >
                 Approved (
                 {certifications.filter((c) => c.status === "approved").length})
               </button>
               <button
                 onClick={() => setFilter("rejected")}
-                className={`px-4 py-2 rounded-lg ${filter === "rejected"
+                className={`px-4 py-2 rounded-lg ${
+                  filter === "rejected"
                     ? "bg-red-600 text-white"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                }`}
               >
                 Rejected (
                 {certifications.filter((c) => c.status === "rejected").length})
@@ -300,7 +283,6 @@ export const CertificationsRequests = () => {
           </div>
         </div>
 
-       
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -391,10 +373,13 @@ export const CertificationsRequests = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex gap-2">
-                      
-
                         {cert.status === "approved" && (
-                          <button onClick={() => handleGenerateApprovedCertifications(cert)}  className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+                          <button
+                            onClick={() =>
+                              handleGenerateApprovedCertifications(cert)
+                            }
+                            className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                          >
                             <Award className="w-4 h-4" />
                             Generate & Send
                           </button>

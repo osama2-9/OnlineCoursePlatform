@@ -1,12 +1,11 @@
 import toast from "react-hot-toast";
 import { LearnerLayout } from "../../layouts/LearnerLayout";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { API } from "../../API/ApiBaseUrl";
 import { useAuth } from "../../hooks/useAuth";
 import { Link } from "react-router-dom";
 import { Loading } from "../../components/Loading";
 import { FaBook } from "react-icons/fa";
+import axiosClient from "../../API/axios";
 
 interface CourseProgress {
   course_id: number;
@@ -30,8 +29,8 @@ const Progress = () => {
   const getEnrolledCoursesProgress = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(
-        `${API}/learner/course-progress/${user?.userId}`,
+      const res = await axiosClient.get(
+        `/learner/course-progress/${user?.userId}`,
         {
           headers: {
             "Content-Type": "application/json",
