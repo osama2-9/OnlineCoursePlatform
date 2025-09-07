@@ -100,6 +100,7 @@ export const createCourse = async (req, res) => {
     });
   }
 };
+
 export const getCourses = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -233,6 +234,7 @@ export const getCourses = async (req, res) => {
       });
 
     const totalPages = Math.ceil(totalCourses / pageSize);
+    const hasNext = page < totalPages
 
     return res.status(200).json({
       courses: coursesWithAvgRating,
@@ -241,6 +243,7 @@ export const getCourses = async (req, res) => {
         totalPages,
         currentPage: page,
         pageSize,
+        hasNext
       },
     });
   } catch (error) {

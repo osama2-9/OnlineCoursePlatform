@@ -406,7 +406,7 @@ model Enrollments {
   course Courses @relation(fields: [course_id], references: [course_id])
 
   @@index([user_id])
-  
+  @@unique([user_id,course_id])
   @@index([course_id])
   @@map("enrollments")
 }

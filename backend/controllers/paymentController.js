@@ -121,36 +121,42 @@ export const handlePaymentSuccess = async (req, res) => {
         const userIdInt = parseInt(userId);
         const courseIdInt = parseInt(courseId);
 
-        await prisma.payments.update({
-          where: {
-            stripe_payment_intent_id: sessionId,
-          },
-          data: {
-            stripe_payment_intent_id: session.payment_intent,
-            payment_status: "succeeded",
-            user_id: userIdInt,
-            course_id: courseIdInt,
-            amount: session.amount_total / 100,
-          },
-        });
+        const result = await prisma.$transaction(async (tx) => {
+          await tx.payments.update({
+            where: {
+              stripe_payment_intent_id: sessionId,
+            },
+            data: {
+              stripe_payment_intent_id: session.payment_intent,
+              payment_status: "succeeded",
+              user_id: userIdInt,
+              course_id: courseIdInt,
+              amount: session.amount_total / 100,
+            },
+          });
 
-        const enrollment = await prisma.enrollments.create({
-          data: {
-            user_id: userIdInt,
-            course_id: courseIdInt,
-            access_granted: true,
-            status: "active",
-          },
-        });
+          const enrollment = await tx.enrollments.upsert({
+            where: {
+              user_id: userId,
+              course_id: courseId,
+            },
 
-        const accessToken = genreateAccessCourseToken(
-          userIdInt,
-          enrollment.enrollment_id,
-          courseIdInt
-        );
+            update: { status: "active", access_granted: true },
+            create: {
+              user_id: userIdInt,
+              course_id: courseIdInt,
+              access_granted: true,
+              status: "active",
+            },
+          });
 
-        if (enrollment) {
-          await prisma.enrollments.update({
+          const accessToken = genreateAccessCourseToken(
+            userIdInt,
+            enrollment.enrollment_id,
+            courseIdInt
+          );
+
+          await tx.enrollments.update({
             where: {
               enrollment_id: enrollment.enrollment_id,
             },
@@ -158,11 +164,9 @@ export const handlePaymentSuccess = async (req, res) => {
               access_token: accessToken,
             },
           });
-        }
+        });
 
-        return res
-          .status(200)
-          .json({ message: "Payment confirmed", accessToken });
+        return res.status(200).json({ message: "Payment confirmed" });
       } else {
         return res
           .status(400)
