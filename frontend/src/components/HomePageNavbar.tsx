@@ -75,12 +75,12 @@ export const HomePageNavbar = () => {
   }, []);
 
   return (
-    <nav className="bg-white text-orange-500 py-4 px-8 shadow-sm fixed w-full top-0 z-50">
+    <nav className="bg-white text-orange-500 py-4 px-8 shadow-sm  w-full top-0 z-50">
       <div className="flex items-center justify-between">
         <Link to={"/"}>
           <div className="flex items-center space-x-4">
-            <img src="/uplearn.png" alt="Logo" className="h-10" />
-            <span className="text-2xl font-semibold">UpLearn</span>
+            <img src="/uplearn.png" alt="Logo" className="h-20" />
+          
           </div>
         </Link>
 

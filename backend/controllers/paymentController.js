@@ -121,7 +121,7 @@ export const handlePaymentSuccess = async (req, res) => {
         const userIdInt = parseInt(userId);
         const courseIdInt = parseInt(courseId);
 
-        const result = await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx) => {
           await tx.payments.update({
             where: {
               stripe_payment_intent_id: sessionId,
@@ -135,17 +135,12 @@ export const handlePaymentSuccess = async (req, res) => {
             },
           });
 
-          const enrollment = await tx.enrollments.upsert({
-            where: {
-              user_id: userId,
-              course_id: courseId,
-            },
-
-            update: { status: "active", access_granted: true },
-            create: {
-              user_id: userIdInt,
+          const enrollment = await tx.enrollments.create({
+            data: {
               course_id: courseIdInt,
+              user_id: userIdInt,
               access_granted: true,
+              enrollment_date: new Date(),
               status: "active",
             },
           });
