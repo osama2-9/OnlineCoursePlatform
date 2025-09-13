@@ -33,6 +33,10 @@ model Users {
   googleRefreshToken         String?
   googleProfile              Json?    
   authProvider               String?  
+
+  appleId                    String?   @unique
+  appleEmail                 String?
+  appleProfile               Json?
   
   courses       Courses[]
   enrollments   Enrollments[]
@@ -48,7 +52,7 @@ model Users {
   submissions         AssignmentSubmission[] @relation("StudentSubmissions")
   refreshTokens       RefreshToken[]
   Article Article[]
-  @@index([email])
+  @@index([email] )
   @@index([googleId])
   @@index([role])
   @@map("users")

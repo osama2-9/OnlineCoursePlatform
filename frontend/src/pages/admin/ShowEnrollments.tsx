@@ -9,9 +9,8 @@ import axiosClient from "../../API/axios";
 
 interface Enrollment {
   enrollment_id: number;
-  user_id: number;
-  course_id: number;
   enrollment_date: Date;
+  is_eligible_for_certificate: boolean;
   user: {
     full_name: string;
   };
@@ -44,7 +43,6 @@ export const ShowEnrollments = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // State management
   const [pagination, setPagination] = useState<PaginationInfo>({
     currentPage: 1,
     totalPages: 1,
@@ -235,7 +233,6 @@ export const ShowEnrollments = () => {
     setFilters((prev) => ({ ...prev, status }));
   };
 
-  // Export function
   const exportToCSV = () => {
     if (!enrollments.length) {
       toast.error("No data to export");
@@ -274,7 +271,6 @@ export const ShowEnrollments = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Render pagination component
   const renderPagination = () => {
     const { currentPage, totalPages } = pagination;
     const pages = [];
@@ -367,7 +363,6 @@ export const ShowEnrollments = () => {
     );
   };
 
-  // Error handling
   if (isError) {
     return (
       <AdminLayout>
@@ -485,6 +480,9 @@ export const ShowEnrollments = () => {
                         Access
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Eligible to Certificate
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Enrolled
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -495,10 +493,17 @@ export const ShowEnrollments = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {enrollments.length > 0 ? (
                       enrollments.map((enrollment) => (
-                        <tr
-                          key={enrollment.enrollment_id}
-                          className="hover:bg-gray-50 transition-colors"
-                        >
+                      <tr
+  key={enrollment.enrollment_id}
+  className={`
+    ${enrollment.is_eligible_for_certificate && enrollment.status !== "completed" 
+      ? "bg-yellow-50" 
+      : ""} 
+    hover:bg-gray-50 transition-colors
+  `}
+>
+
+                        
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             #{enrollment.enrollment_id}
                           </td>
@@ -522,6 +527,7 @@ export const ShowEnrollments = () => {
                                 enrollment.status.slice(1)}
                             </span>
                           </td>
+
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -532,6 +538,11 @@ export const ShowEnrollments = () => {
                             >
                               {enrollment.access_granted ? "Granted" : "Denied"}
                             </span>
+                          </td>
+                          <td className="px-6 text-center font-semibold text-sm py-4 whitespace-nowrap">
+                            {enrollment.is_eligible_for_certificate
+                              ? "Yes"
+                              : "No"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {new Date(

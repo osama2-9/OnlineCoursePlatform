@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import axiosClient from "../API/axios";
 
 export interface EnrollmentsData {
+  is_eligible_for_certificate:boolean;
   enrollment_id: number;
   enrollment_date: Date;
   status: string;

@@ -1,56 +1,5 @@
 import { prisma } from "../prisma/prismaClint.js";
 
-const createEntrollment = async (req, res) => {
-  try {
-    const { user_id, course_id } = req.body;
-
-    if (!user_id) {
-      return res.status(400).json({
-        error: "User not found",
-      });
-    }
-    if (!course_id) {
-      return res.status(400).json({
-        error: "Course not found",
-      });
-    }
-
-    const courseType = await prisma.courses.findUnique({
-      where: {
-        course_id: course_id,
-      },
-    });
-    if (!courseType) {
-      return res.status(400).json({
-        error: "Course not found",
-      });
-    }
-
-    if (courseType.course_type === "free") {
-      const newEnroll = await prisma.enrollments.create({
-        data: {
-          course_id: course_id,
-          user_id: user_id,
-        },
-      });
-      if (!newEnroll) {
-        return res.status(400).json({
-          error: "error while try to enroll",
-        });
-      } else {
-        return res.status(201).json({
-          message: "enrollment success",
-        });
-      }
-    }
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      error: "Internal server error",
-    });
-  }
-};
-
 export const enrollAfterPay = async (userId, courseId) => {
   try {
     const { user_id, course_id } = req.body;
@@ -89,7 +38,12 @@ export const getEnrollments = async (req, res) => {
       orderBy: {
         enrollment_id: "desc",
       },
-      include: {
+      select: {
+        is_eligible_for_certificate: true,
+        status: true,
+        access_granted: true,
+        enrollment_date: true,
+        enrollment_id: true,
         user: {
           select: {
             full_name: true,
@@ -167,5 +121,32 @@ export const updateEnrollment = async (req, res) => {
     return res.status(500).json({
       error: "Internal server error",
     });
+  }
+};
+export const setAsEligibleToCertificate = async (req, res) => {
+  try {
+    const { enrollmentId } = req.body;
+    if (!enrollmentId) {
+      return res.status(400).json({ error: "Enrollment Id is required" });
+    }
+
+    const updatedEnrollment = await prisma.enrollments.update({
+      where: { enrollment_id: enrollmentId },
+      data: { is_eligible_for_certificate: true },
+    });
+
+    if (updatedEnrollment) {
+      return res.status(200).json({
+        message: "Enrollment marked as eligible for certificate",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "Enrollment not found" });
+    }
+
+    return res.status(500).json({ error: "Internal server error" });
   }
 };

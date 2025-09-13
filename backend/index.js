@@ -40,23 +40,18 @@ app.use(
         ],
         "style-src": [
           "'self'",
-          "'unsafe-inline'", 
+          "'unsafe-inline'",
           "https://fonts.googleapis.com",
         ],
         "font-src": ["'self'", "https://fonts.gstatic.com"],
-        "img-src": [
-          "'self'",
-          "data:",
-          "blob:",
-          "https://res.cloudinary.com/*", 
-        ],
+        "img-src": ["'self'", "data:", "blob:", "https://res.cloudinary.com/*"],
         "connect-src": [
           "'self'",
           "https://api.stripe.com",
           "http://localhost:5173",
           "http://localhost:3000",
           "https://uplearn-website.vercel.app",
-          "https://res.cloudinary.com", 
+          "https://res.cloudinary.com",
         ],
         "frame-src": ["'self'", "https://js.stripe.com"],
         "object-src": ["'none'"],
@@ -65,7 +60,6 @@ app.use(
     },
   })
 );
-
 
 const server = http.createServer(app);
 const io = new Server(server, {

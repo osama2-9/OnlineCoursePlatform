@@ -184,6 +184,7 @@ export const getEnrollmentData = async (req, res) => {
         enrollment_id: true,
         enrollment_date: true,
         status: true,
+        is_eligible_for_certificate:true,
         user: {
           select: {
             full_name: true,

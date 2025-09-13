@@ -28,6 +28,8 @@ export const ShowEnrolledLearners = () => {
   const [text, setText] = useState("");
   const [isSendEmailLoading, setIsSendEmailLoading] = useState<boolean>(false);
 
+  const [certificatingId, setCertificatingId] = useState<number | null>(null);
+
   const handleSendEmailClick = (enrollment: EnrollmentsData) => {
     setSelectedEnrollment(enrollment);
     setIsModalOpen(true);
@@ -70,6 +72,24 @@ export const ShowEnrolledLearners = () => {
       toast.error(error?.response?.data?.error || "Failed to send email");
     } finally {
       setIsSendEmailLoading(false);
+    }
+  };
+
+  const handleCertificateUser = async (enrollmentId: number) => {
+    setCertificatingId(enrollmentId);
+
+    try {
+      const response = await axiosClient.post("/enrollment/certificate-user", {
+        enrollmentId: enrollmentId,
+      });
+      if (response.data && response.data.message) {
+        toast.success(response.data.message);
+      }
+    } catch (error: any) {
+      console.log(error);
+      toast.error(error.response.data.error);
+    } finally {
+      setCertificatingId(null);
     }
   };
 
@@ -223,13 +243,42 @@ export const ShowEnrolledLearners = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button
-                              onClick={() => handleSendEmailClick(enrollment)}
-                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                            >
-                              <Mail className="w-4 h-4" />
-                              Send Email
-                            </button>
+                            <div className="flex space-x-4">
+                              <button
+                                onClick={() => handleSendEmailClick(enrollment)}
+                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                              >
+                                <Mail className="w-4 h-4" />
+                                Send Email
+                              </button>
+                              <button
+                                disabled={
+                                  enrollment.is_eligible_for_certificate
+                                }
+                                onClick={() =>
+                                  handleCertificateUser(
+                                    enrollment.enrollment_id
+                                  )
+                                }
+                                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium 
+  ${
+    enrollment.is_eligible_for_certificate
+      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+      : "text-blue-600 bg-blue-50 hover:bg-blue-100"
+  } 
+  rounded-lg transition-colors`}
+                              >
+                                {certificatingId == enrollment.enrollment_id ? (
+                                  <Loader2
+                                    size={20}
+                                    color="#2563eb"
+                                    className="animate-spin"
+                                  />
+                                ) : (
+                                  "Certificate"
+                                )}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -285,7 +334,6 @@ export const ShowEnrolledLearners = () => {
             </>
           )}
 
-          {/* Enhanced Modal */}
           {isModalOpen && selectedEnrollment && (
             <div className="fixed inset-0 flex z-50 items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
               <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
