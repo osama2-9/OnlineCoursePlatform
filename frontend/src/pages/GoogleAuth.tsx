@@ -29,7 +29,7 @@ export const GoogleAuth = () => {
         });
         
         if (response.data.success && response.data.user) {
-          dispatch(setUser(response.data.user));
+          dispatch(setUser({ ...response.data.user, profile_image: "" }));
           navigate("/");
         } else {
           navigate("/login");
