@@ -77,10 +77,10 @@ import { Certifications } from "./pages/learner/Certifications";
 import { CertificationsRequests } from "./pages/instructor/CertificationsRequests";
 import CertificateVerification from "./pages/VerifyCertification";
 import StudentsProgress from "./pages/instructor/StudentsProgress";
-import  LearnersScores  from "./pages/instructor/LearnersScores";
+import LearnersScores from "./pages/instructor/LearnersScores";
 function App() {
-  const { checkAuth } = useAuth();
-  checkAuth();
+  const {} = useAuth();
+
   return (
     <>
       <Routes>

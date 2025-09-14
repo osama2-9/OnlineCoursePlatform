@@ -47,7 +47,9 @@ export const AccountSetting = () => {
       if (data && data.qrCodeDataURL) {
         setQrCodeDataURL(data.qrCodeDataURL);
         setIs2FAEnabled(true);
-        dispatch(setUser({ ...user, towFAStatus: true }));
+        if (user && user.userId !== undefined) {
+          dispatch(setUser({ ...user, towFAStatus: true }));
+        }
         toast.success(
           "2FA has been enabled successfully. Please scan the QR code."
         );
@@ -69,7 +71,9 @@ export const AccountSetting = () => {
       const data = await res.data;
       if (data) {
         setIs2FAEnabled(false);
-        dispatch(setUser({ ...user, towFAStatus: false }));
+        if (user && user.userId !== undefined) {
+          dispatch(setUser({ ...user, towFAStatus: false }));
+        }
         toast.success(data.message);
       }
     } catch (error: any) {
@@ -116,7 +120,6 @@ export const AccountSetting = () => {
       return;
     }
 
-    // Handle activation directly
     await updateAccountStatus();
   };
 
@@ -132,7 +135,15 @@ export const AccountSetting = () => {
       const data = await res.data;
       if (data && data.message) {
         setIsAccountActive(!isAccountActive);
-        dispatch(setUser({ ...user, isActive: !isAccountActive }));
+        if (user && user.userId !== undefined) {
+          dispatch(
+            setUser({
+              ...user,
+              isActive: !isAccountActive,
+              userId: user.userId,
+            })
+          );
+        }
         toast.success(
           `Account successfully ${
             !isAccountActive ? "activated" : "deactivated"

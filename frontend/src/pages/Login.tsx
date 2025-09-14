@@ -35,11 +35,7 @@ export const Login = () => {
     try {
       setIsLoading(true);
       setError("");
-      const res = await axiosClient.post(
-        `/auth/login`,
-        { email, password },
-        
-      );
+      const res = await axiosClient.post(`/auth/login`, { email, password });
       const data = res.data;
       if (data) {
         if (data.twoFARequired) {
@@ -68,11 +64,10 @@ export const Login = () => {
     try {
       setIsLoading(true);
       setError("");
-      const res = await axiosClient.post(
-        `/auth/verify-2fa`,
-        { email, token: twoFACode },
-        
-      );
+      const res = await axiosClient.post(`/auth/verify-2fa`, {
+        email,
+        token: twoFACode,
+      });
       const data = res.data;
       if (data) {
         dispatch(setUser(data));

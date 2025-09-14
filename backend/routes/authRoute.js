@@ -8,6 +8,7 @@ import {
   isAuthenticated,
   login,
   logout,
+  me,
   resetPasswordRequest,
   setNewPassword,
   signup,
@@ -26,6 +27,7 @@ const authRoute = express.Router();
 authRoute.get("/check-auth", isAuthenticated);
 authRoute.post("/signup", authLimit, signup);
 authRoute.post("/login", authLimit, login);
+authRoute.get("/me", protectedRoute, me);
 authRoute.post("/logout", logout);
 authRoute.post("/active-email-request", protectedRoute, activeEmailRequest);
 authRoute.post("/verify-email", protectedRoute, verifyEmail);

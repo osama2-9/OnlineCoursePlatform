@@ -132,6 +132,45 @@ export const login = async (req, res) => {
   }
 };
 
+export const me = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    if (!userId) {
+      return res.status(400).json({
+        error: "User id required",
+      });
+    }
+    const user = await prisma.users.findUnique({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        user_id: true,
+        full_name: true,
+        email: true,
+        role: true,
+        is_active: true,
+        is_2fa_enabled: true,
+      },
+    });
+
+    if (user) {
+      return res.status(200).json({
+        email: user.email,
+        full_name: user.full_name,
+        isActive: user.is_active,
+        role: user.role,
+        towFAStatus: user.is_2fa_enabled,
+        userId: user.user_id,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal server error ",
+    });
+  }
+};
 export const logout = async (req, res) => {
   try {
     res.clearCookie("auth", {

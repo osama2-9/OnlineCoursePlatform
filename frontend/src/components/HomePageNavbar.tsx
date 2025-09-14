@@ -79,8 +79,7 @@ export const HomePageNavbar = () => {
       <div className="flex items-center justify-between">
         <Link to={"/"}>
           <div className="flex items-center space-x-4">
-            <img src="/uplearn.png" alt="Logo" className="h-20" />
-          
+          <p className="text-2xl font-semibold">Uplearn</p>
           </div>
         </Link>
 

@@ -1,39 +1,35 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface User {
-    userId: number,
-    full_name: string,
-    email: string
-    role: string
-    towFAStatus: boolean
-    isActive: boolean
-    profile_image:string
-
+    userId: number;
+    full_name: string;
+    email: string;
+    role: string;
+    towFAStatus: boolean;
+    isActive: boolean;
+    profile_image: string;
 }
 
 interface UserState {
-    user: User | null
+    user: User | null;
 }
-const initialState: UserState = {
-    user: JSON.parse(localStorage.getItem('user') || "null")
 
-}
+const initialState: UserState = {
+    user: null,
+};
 
 const userSlice = createSlice({
     name: "user",
     initialState,
     reducers: {
-        setUser: (state, action) => {
-            state.user = action.payload
-            localStorage.setItem('user', JSON.stringify(action.payload))
+        setUser: (state, action: PayloadAction<User>) => {
+            state.user = action.payload;
         },
         clearUser: (state) => {
-            state.user = null
-            localStorage.removeItem("user")
-        }
-    }
-})
+            state.user = null;
+        },
+    },
+});
 
-export const { clearUser, setUser } = userSlice.actions
-
-export default userSlice.reducer
+export const { clearUser, setUser } = userSlice.actions;
+export default userSlice.reducer;
