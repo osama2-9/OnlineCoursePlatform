@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { generateTokenAndSetCookies } from "../utils/generateToken.js";
 import { prisma } from "../prisma/prismaClint.js";
 import { sendVerificationEmail } from "../emails/sendVerifictionEmail.js";
@@ -52,7 +53,7 @@ export const signup = async (req, res) => {
     });
 
     if (newUser) {
-      generateTokenAndSetCookies(newUser?.user_id, newUser?.role, res);
+      await generateTokenAndSetCookies(newUser?.user_id, newUser?.role, res);
 
       return res.status(201).json({
         userId: newUser.user_id,
@@ -108,7 +109,7 @@ export const login = async (req, res) => {
         twoFARequired: true,
       });
     } else {
-      generateTokenAndSetCookies(user?.user_id, user?.role, res);
+      await generateTokenAndSetCookies(user?.user_id, user?.role, res);
 
       await prisma.users.update({
         where: { email },
@@ -173,14 +174,105 @@ export const me = async (req, res) => {
 };
 export const logout = async (req, res) => {
   try {
-    res.clearCookie("auth", {
+    const refreshToken = req.cookies.refreshToken;
+    const userId = req.user?.userId;
+
+    if (refreshToken && userId) {
+      await prisma.refreshToken.updateMany({
+        where: {
+          token: refreshToken,
+          user_id: userId,
+        },
+        data: {
+          revoked: true,
+        },
+      });
+    }
+
+    res.clearCookie("auth");
+    res.clearCookie("refreshToken");
+
+    return res.status(200).json({
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.clearCookie("auth");
+    res.clearCookie("refreshToken");
+
+    return res.status(200).json({
+      message: "Logged out successfully",
+    });
+  }
+};
+
+export const refreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({
+        error: "Refresh token not provided",
+      });
+    }
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    } catch (error) {
+      return res.status(403).json({
+        error: "Invalid or expired refresh token",
+      });
+    }
+    const storedToken = await prisma.refreshToken.findFirst({
+      where: {
+        token: refreshToken,
+        user_id: decoded.userId,
+        revoked: false,
+        expires_at: { gt: new Date() },
+      },
+      include: {
+        user: {
+          select: {
+            user_id: true,
+            role: true,
+            is_active: true,
+          },
+        },
+      },
+    });
+
+    if (!storedToken) {
+      return res.status(403).json({
+        error: "Invalid refresh token",
+      });
+    }
+
+    if (!storedToken.user.is_active) {
+      await prisma.refreshToken.update({
+        where: { id: storedToken.id },
+        data: { revoked: true },
+      });
+
+      return res.status(401).json({
+        error: "Account has been deactivated",
+      });
+    }
+
+    const newAccessToken = jwt.sign(
+      { userId: decoded.userId, role: decoded.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    res.cookie("auth", newAccessToken, {
+      maxAge: 15 * 60 * 1000,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "none",
+      secure: true,
     });
 
     return res.status(200).json({
       success: true,
+      accessToken: newAccessToken,
     });
   } catch (error) {
     console.log(error);

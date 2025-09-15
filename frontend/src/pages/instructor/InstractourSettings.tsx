@@ -120,7 +120,6 @@ export const InstractourSettings = () => {
       return;
     }
 
-    // Handle activation directly
     await updateAccountStatus();
   };
 

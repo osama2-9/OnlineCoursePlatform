@@ -19,16 +19,25 @@ export const useAuth = () => {
   const checkAuth = useCallback(async () => {
     if (isCheckingAuth.current) return;
     isCheckingAuth.current = true;
+
     try {
-      await axiosClient.get("/auth/check-auth");
-      if (!user) {
+      const authCheck = await axiosClient.get("/auth/check-auth");
+
+      if (authCheck.status === 200 && !user) {
         const response = await axiosClient.get("/auth/me");
         dispatch(setUser(response.data));
       }
     } catch (error: any) {
-      console.log(error);
+      console.log("Auth check error:", error);
+
       if (error?.response?.status === 401) {
-        handleLogoutRef.current();
+        try {
+          await axiosClient.post("/auth/refresh");
+          const response = await axiosClient.get("/auth/me");
+          dispatch(setUser(response.data));
+        } catch (refreshError) {
+          handleLogoutRef.current();
+        }
       } else {
         dispatch(clearUser());
       }
@@ -36,6 +45,16 @@ export const useAuth = () => {
       isCheckingAuth.current = false;
     }
   }, [dispatch, user]);
+
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      dispatch(clearUser());
+      handleLogoutRef.current();
+    };
+
+    window.addEventListener("auth:logout", handleAuthLogout);
+    return () => window.removeEventListener("auth:logout", handleAuthLogout);
+  }, [dispatch]);
 
   useEffect(() => {
     checkAuth();
@@ -51,11 +70,11 @@ export const useAuth = () => {
     isCheckingAuth.current = true;
 
     try {
-      await axiosClient.get(`/auth/check-auth`, { withCredentials: true });
-      const res = await axiosClient.get("/auth/me", { withCredentials: true });
+      await axiosClient.get(`/auth/check-auth`);
+      const res = await axiosClient.get("/auth/me");
       dispatch(setUser(res.data));
     } catch (error: any) {
-      console.log(error);
+      console.log("Refresh user data error:", error);
       if (error?.response?.status === 401) {
         dispatch(clearUser());
         handleLogoutRef.current();

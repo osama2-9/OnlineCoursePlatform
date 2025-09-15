@@ -1,5 +1,5 @@
 import express from "express";
-import protectedRoute from "../middlewares/protectedRoute.js";
+import {protectedRoute} from "../middlewares/protectedRoute.js";
 import {
   createCheckoutSession,
   getPayments,
