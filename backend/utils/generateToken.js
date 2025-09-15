@@ -2,10 +2,9 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { prisma } from "../prisma/prismaClint.js";
 dotenv.config();
-
 export const generateTokenAndSetCookies = async (userId, role, res) => {
   try {
-    const token = jwt.sign({ userId, role }, process.env.JWT_SECRET, {
+    const accessToken = jwt.sign({ userId, role }, process.env.JWT_SECRET, {
       expiresIn: "15m",
     });
 
@@ -20,11 +19,12 @@ export const generateTokenAndSetCookies = async (userId, role, res) => {
     await prisma.refreshToken.create({
       data: {
         user_id: userId,
-        token: token,
+        token: refreshToken,
         expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
         created_at: new Date(),
       },
     });
+
     await prisma.refreshToken.deleteMany({
       where: {
         user_id: userId,
@@ -32,9 +32,9 @@ export const generateTokenAndSetCookies = async (userId, role, res) => {
       },
     });
 
-    res.cookie("auth", token, {
+    res.cookie("auth", accessToken, {
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 72,
+      maxAge: 15 * 60 * 1000,
       secure: true,
       sameSite: "None",
     });

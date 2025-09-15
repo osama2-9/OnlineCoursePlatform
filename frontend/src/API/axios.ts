@@ -10,59 +10,38 @@ const axiosClient = axios.create({
 });
 
 let isRefreshing = false;
-let failedQueue: any = [];
-
-const processQueue = (error: any, token = null) => {
-    failedQueue.forEach((prom: any) => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve(token);
-        }
-    });
-
-    failedQueue = [];
-};
+let refreshPromise: any = null;
 
 axiosClient.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            if (isRefreshing) {
-                return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject });
-                }).then(() => {
-                    return axiosClient(originalRequest);
-                }).catch(err => {
-                    return Promise.reject(err);
-                });
-            }
-
+        if (error.response?.status === 401 && originalRequest.url !== '/auth/refresh' && !originalRequest._retry) {
             originalRequest._retry = true;
-            isRefreshing = true;
 
-            try {
-                const response = await axios.post(`${API}/auth/refresh`, {}, {
-                    withCredentials: true,
+            if (!isRefreshing) {
+                isRefreshing = true;
+                refreshPromise = new Promise(async (resolve, reject) => {
+                    try {
+                        const response = await axios.post(`${API}/auth/refresh`, {}, {
+                            withCredentials: true,
+                        });
+                        const newAccessToken = response.data.accessToken;
+                        isRefreshing = false;
+                        resolve(newAccessToken);
+                    } catch (refreshError) {
+                        isRefreshing = false;
+                        refreshPromise = null;
+                        if (typeof window !== 'undefined') {
+                            window.dispatchEvent(new CustomEvent('auth:logout'));
+                        }
+                        reject(refreshError);
+                    }
                 });
-
-                if (response.status === 200) {
-                    processQueue(null, response.data.accessToken);
-                    return axiosClient(originalRequest);
-                }
-            } catch (refreshError) {
-                processQueue(refreshError, null);
-
-                if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new CustomEvent('auth:logout'));
-                }
-
-                return Promise.reject(refreshError);
-            } finally {
-                isRefreshing = false;
             }
+
+            return refreshPromise.then(() => axiosClient(originalRequest));
         }
 
         return Promise.reject(error);

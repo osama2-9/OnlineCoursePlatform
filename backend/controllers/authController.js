@@ -326,7 +326,7 @@ export const verify2FA = async (req, res) => {
     if (user) {
       const isSuccess = await verify2FACode(email, token);
       if (isSuccess) {
-        generateTokenAndSetCookies(user?.user_id, user?.role, res);
+        await generateTokenAndSetCookies(user?.user_id, user?.role, res);
 
         await prisma.users.update({
           where: { email },

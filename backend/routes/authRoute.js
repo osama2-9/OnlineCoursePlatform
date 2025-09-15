@@ -19,7 +19,7 @@ import {
   verifyCertification,
   verifyEmail,
 } from "../controllers/authController.js";
-import {protectedRoute} from "../middlewares/protectedRoute.js";
+import { protectedRoute } from "../middlewares/protectedRoute.js";
 import { generateAuthUrl, handleGoogleCallback } from "../googleAuth/google.js";
 import { authLimit } from "../utils/rateLimiter.js";
 
@@ -30,7 +30,7 @@ authRoute.post("/signup", authLimit, signup);
 authRoute.post("/login", authLimit, login);
 authRoute.post("/refresh", refreshToken);
 authRoute.get("/me", protectedRoute, me);
-authRoute.post("/logout", logout);
+authRoute.post("/logout" ,protectedRoute,logout);
 authRoute.post("/active-email-request", protectedRoute, activeEmailRequest);
 authRoute.post("/verify-email", protectedRoute, verifyEmail);
 authRoute.post("/reset-password-request", authLimit, resetPasswordRequest);

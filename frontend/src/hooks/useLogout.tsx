@@ -12,7 +12,6 @@ export const useLogout = () => {
       console.error("Logout error:", error);
     } finally {
       dispatch(clearUser());
-     
     }
   };
 
