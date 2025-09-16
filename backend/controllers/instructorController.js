@@ -165,7 +165,7 @@ export const getEnrollmentData = async (req, res) => {
     if (cachedEnrollmentData && cachedPagination) {
       return res.status(200).json({
         enrollments: cachedEnrollmentData,
-        pagination: paginationCacheKey,
+        pagination: cachedPagination,
       });
     }
 
@@ -873,8 +873,7 @@ export const getQuizzes = async (req, res) => {
     const pageSize = parseInt(req.query.pageSize) || 8;
     const skip = (page - 1) * pageSize;
 
-
-    const cacheKey =`instructorDashboardQuizzess:${instructorId}:${page}:${pageSize}`
+    const cacheKey = `instructorDashboardQuizzess:${instructorId}:${page}:${pageSize}`;
 
     if (!instructorId) {
       return res.status(400).json({
@@ -934,7 +933,6 @@ export const getQuizzes = async (req, res) => {
     });
 
     const totalPages = Math.ceil(totalQuizzes / pageSize);
-
 
     return res.status(200).json({
       quizzes,
