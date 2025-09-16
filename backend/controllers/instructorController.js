@@ -3,12 +3,7 @@ import { genreateQuestionAttempt } from "../openAI/openAi.js";
 import { prisma } from "../prisma/prismaClint.js";
 import { newQuizNotification } from "../services/notifications.js";
 import { v2 as cloudinary } from "cloudinary";
-import {
-  getCache,
-  setCache,
-  deleteCache,
-  updateQuestionInCache,
-} from "../services/redis/cache.js";
+import { getCache, setCache } from "../services/redis/cache.js";
 const isHavePermession = async (course_id, instructor_id) => {
   try {
     const courseId = parseInt(course_id);
@@ -48,6 +43,18 @@ export const getInstructorCourses = async (req, res) => {
 
     if (!instructorId) {
       return res.status(400).json({ error: "Missing instructorId" });
+    }
+    const cacheKey = `instructorDashboard:courses:${instructorId}:${page}:${limit}`;
+    const paginationCacheKey = `instructorDashboard:pagination:${instructorId}:${page}:${limit}`;
+
+    const cachedCoursesData = await getCache(cacheKey);
+    const cachedPaginationData = await getCache(paginationCacheKey);
+    if (cachedCoursesData && cachedPaginationData) {
+      return res.status(200).json({
+        courses: cachedCoursesData,
+        pagination: cachedPaginationData,
+        cached: true,
+      });
     }
 
     const parsedInstructorId = parseInt(instructorId);
@@ -123,14 +130,20 @@ export const getInstructorCourses = async (req, res) => {
       };
     });
 
+    const paginationData = {
+      totalCourses,
+      totalPages,
+      currentPage: parsedPage,
+      limit: parsedLimit,
+    };
+
+    const cacheExpiration = 60 * 50;
+    await setCache(cacheKey, coursesWithDetails, cacheExpiration);
+    await setCache(paginationCacheKey, paginationData, cacheExpiration);
+
     return res.status(200).json({
       courses: coursesWithDetails,
-      pagination: {
-        totalCourses,
-        totalPages,
-        currentPage: parsedPage,
-        limit: parsedLimit,
-      },
+      pagination: paginationData,
     });
   } catch (error) {
     console.error("Error fetching instructor courses:", error);
@@ -142,6 +155,19 @@ export const getEnrollmentData = async (req, res) => {
   try {
     const { instructorId } = req.params;
     const { page = 1, limit = 10 } = req.query;
+
+    const cacheKey = `InstructorDashboardEnrollmentData${instructorId}:${page}:${limit}`;
+    const paginationCacheKey = `InstructorDashboardEnrollmentData:pagination:${instructorId}:${page}:${limit}`;
+
+    const cachedEnrollmentData = await getCache(cacheKey);
+    const cachedPagination = await getCache(paginationCacheKey);
+
+    if (cachedEnrollmentData && cachedPagination) {
+      return res.status(200).json({
+        enrollments: cachedEnrollmentData,
+        pagination: paginationCacheKey,
+      });
+    }
 
     if (!instructorId) {
       return res.status(400).json({ error: "Missing instructor id" });
@@ -184,7 +210,7 @@ export const getEnrollmentData = async (req, res) => {
         enrollment_id: true,
         enrollment_date: true,
         status: true,
-        is_eligible_for_certificate:true,
+        is_eligible_for_certificate: true,
         user: {
           select: {
             full_name: true,
@@ -205,14 +231,20 @@ export const getEnrollmentData = async (req, res) => {
       take: parsedLimit,
     });
 
+    const paginationData = {
+      totalEnrollments,
+      totalPages,
+      currentPage: parsedPage,
+      limit: parsedLimit,
+    };
+
+    const cacheExpiration = 50 * 60;
+    await setCache(cacheKey, enrollments, cacheExpiration);
+    await setCache(paginationCacheKey, paginationData, cacheExpiration);
+
     return res.status(200).json({
-      enrollments,
-      pagination: {
-        totalEnrollments,
-        totalPages,
-        currentPage: parsedPage,
-        limit: parsedLimit,
-      },
+      enrollments: enrollments,
+      pagination: paginationData,
     });
   } catch (error) {
     console.error("Error fetching enrollment data:", error);
@@ -841,6 +873,9 @@ export const getQuizzes = async (req, res) => {
     const pageSize = parseInt(req.query.pageSize) || 8;
     const skip = (page - 1) * pageSize;
 
+
+    const cacheKey =`instructorDashboardQuizzess:${instructorId}:${page}:${pageSize}`
+
     if (!instructorId) {
       return res.status(400).json({
         error: "Missing required params: instructorId",
@@ -899,6 +934,7 @@ export const getQuizzes = async (req, res) => {
     });
 
     const totalPages = Math.ceil(totalQuizzes / pageSize);
+
 
     return res.status(200).json({
       quizzes,
