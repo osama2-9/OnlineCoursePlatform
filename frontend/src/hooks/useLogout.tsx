@@ -11,6 +11,7 @@ export const useLogout = () => {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
+      window.dispatchEvent(new Event("auth:logout"));
       dispatch(clearUser());
     }
   };
