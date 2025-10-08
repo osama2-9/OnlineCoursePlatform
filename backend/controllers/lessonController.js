@@ -67,18 +67,16 @@ export const createLesson = async (req, res) => {
         attachment: attachment,
         is_free: is_free,
         lesson_order: parseInt(lesson_order),
-        is_lesson_approved: false
+        is_lesson_approved: false,
       },
     });
-
 
     if (newLesson) {
       const newLessonApproveRequest = await prisma.lessonsApprovel.create({
         data: {
           lesson_id: newLesson.lesson_id,
           status: "pending",
-
-        }
+        },
       });
 
       if (newLessonApproveRequest) {
@@ -86,7 +84,6 @@ export const createLesson = async (req, res) => {
           message: "New lesson added to your course please wait to be approved",
         });
       }
-
     } else {
       return res.status(400).json({
         error: "Error while trying to add lesson",
@@ -108,7 +105,7 @@ export const createLesson = async (req, res) => {
 };
 export const updateLesson = async (req, res) => {
   try {
-
+   
     const {
       instructor_id,
       course_id,
@@ -120,69 +117,56 @@ export const updateLesson = async (req, res) => {
       attachment,
       is_free,
     } = req.body.lessonToUpdate;
-
     await isHavePermession(course_id, instructor_id);
-    const findLesson = await prisma.lessons.findUnique({
-      where: {
-        lesson_id: parseInt(lesson_id),
-        course_id: parseInt(course_id),
-      },
-      include: {
-        lessonsApprovel: true
+
+    const existingLesson = await prisma.lessons.findUnique({
+      where: { lesson_id },
+      include: { lessonsApprovel: true },
+    });
+
+    if (!existingLesson) {
+      return res.status(404).json({ error: "Lesson not found" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.lessons.update({
+        where: { lesson_id },
+        data: {
+          title,
+          description,
+          content,
+          video_url,
+          attachment,
+          is_free,
+          is_lesson_approved: false,
+          updated_at: new Date(),
+        },
+      });
+
+      if (existingLesson.lessonsApprovel.length > 0) {
+        await tx.lessonsApprovel.update({
+          where: {
+            lessoon_approvel_id:
+              existingLesson.lessonsApprovel[0].lessoon_approvel_id,
+          },
+          data: { status: "pending", apporval_date: null, reason: null },
+        });
+      } else {
+        await tx.lessonsApprovel.create({
+          data: { lesson_id, status: "pending" },
+        });
       }
     });
-    if (!findLesson) {
-      return res.status(400).json({
-        error: "No lesson found to update",
-      });
-    }
 
-    const updateLesson = await prisma.lessons.update({
-      where: { lesson_id: parseInt(lesson_id), course_id: parseInt(course_id) },
-      data: {
-        course_id: parseInt(course_id),
-        title: title,
-        description: description,
-        content: content,
-        video_url: video_url,
-        attachment: attachment,
-        is_free: is_free,
-        is_lesson_approved: false,
-        lessonsApprovel: {
-
-          update: {
-            where: {
-              lesson_id: parseInt(lesson_id),
-              lessoon_approvel_id: findLesson.lessonsApprovel.filter((lApproveLesson) => lApproveLesson.lesson_id === parseInt(lesson_id))[0].lessoon_approvel_id
-            },
-            data: {
-
-              status: "pending",
-            }
-          }
-        }
-      },
+    return res.status(200).json({
+      message: "Lesson updated successfully. Waiting for approval.",
     });
-
-    if (updateLesson) {
-      return res.status(200).json({
-        message: "Lesson updated please wait to be approved",
-      });
-    } else {
-      return res.status(400).json({
-        error: "Error while update the lesson",
-      });
-    }
   } catch (error) {
-    if (error.message === "You don't have permission to handle this course") {
-      return res.status(401).json({
-        error: error.message,
-      });
+    console.error("Update Lesson Error:", error);
+    if (error.message.includes("permission")) {
+      return res.status(403).json({ error: "Unauthorized access" });
     }
-    console.log(error);
-    return res.status(500).json({
-      error: "Internal server error",
-    });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 export const deleteLesson = async (req, res) => {
@@ -313,8 +297,9 @@ export const changeLessonAccess = async (req, res) => {
     });
 
     return res.status(200).json({
-      message: `Lesson access status updated successfully. Now it is ${updatedLesson.is_free ? "free" : "paid"
-        }.`,
+      message: `Lesson access status updated successfully. Now it is ${
+        updatedLesson.is_free ? "free" : "paid"
+      }.`,
     });
   } catch (error) {
     if (error.message === "You don't have permission to handle this course") {

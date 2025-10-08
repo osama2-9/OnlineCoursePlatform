@@ -428,7 +428,6 @@ export const getCoursesProgress = async (req, res) => {
       });
     }
 
-    // Single query to get all enrolled courses with their lesson counts and progress
     const enrolledCoursesWithProgress = await prisma.enrollments.findMany({
       where: {
         user_id: userIdInt,
@@ -460,7 +459,6 @@ export const getCoursesProgress = async (req, res) => {
       });
     }
 
-    // Get all user progress for all enrolled courses in one query
     const allUserProgress = await prisma.userProgress.findMany({
       where: {
         user_id: userIdInt,
@@ -489,12 +487,10 @@ export const getCoursesProgress = async (req, res) => {
         enrollment.course.lessons.map((l) => l.lesson_id)
       );
 
-      // Filter progress for this specific course and only for lessons that exist
       const courseProgressEntries = allUserProgress.filter(
         (p) => p.course_id === courseId && courseLessonIds.has(p.lesson_id)
       );
 
-      // Count unique completed lessons
       const completedLessonsSet = new Set();
       courseProgressEntries.forEach((progress) => {
         if (progress.is_completed) {
@@ -504,7 +500,6 @@ export const getCoursesProgress = async (req, res) => {
 
       const completedLessons = completedLessonsSet.size;
 
-      // Calculate progress with bounds checking
       let progressPercentage = 0;
       if (totalLessons > 0) {
         const validCompletedLessons = Math.min(completedLessons, totalLessons);
@@ -514,7 +509,6 @@ export const getCoursesProgress = async (req, res) => {
         progressPercentage = Math.max(0, Math.min(100, progressPercentage));
       }
 
-      // Get last accessed lesson
       const lastAccessedProgress =
         courseProgressEntries.length > 0 ? courseProgressEntries[0] : null;
 
@@ -708,6 +702,7 @@ export const startQuizAttempt = async (req, res) => {
         error: "Failed to start the quiz attempt. Please try again later.",
       });
     }
+    
 
     return res.status(201).json({
       success: true,

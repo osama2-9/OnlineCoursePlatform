@@ -865,30 +865,21 @@ export const deleteQuiz = async (req, res) => {
     console.log(error);
   }
 };
-
 export const getQuizzes = async (req, res) => {
   try {
     const { instructorId } = req.params;
     const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 8;
+    const pageSize = Math.min(parseInt(req.query.pageSize) || 8, 30);
     const skip = (page - 1) * pageSize;
 
-    const cacheKey = `instructorDashboardQuizzess:${instructorId}:${page}:${pageSize}`;
-
-    if (!instructorId) {
-      return res.status(400).json({
-        error: "Missing required params: instructorId",
-      });
+    const instructorIdNum = Number(instructorId);
+    if (isNaN(instructorIdNum)) {
+      return res.status(400).json({ error: "Invalid instructorId" });
     }
 
     const courses = await prisma.courses.findMany({
-      where: {
-        instructor_id: parseInt(instructorId),
-      },
-      select: {
-        course_id: true,
-        title: true,
-      },
+      where: { instructor_id: instructorIdNum },
+      select: { course_id: true, title: true },
     });
 
     if (courses.length === 0) {
@@ -900,37 +891,30 @@ export const getQuizzes = async (req, res) => {
       });
     }
 
-    const courseIds = courses.map((course) => course.course_id);
+    const courseIds = courses.map((c) => c.course_id);
 
-    const quizzes = await prisma.quizzes.findMany({
-      where: {
-        course_id: { in: courseIds },
-      },
-      select: {
-        quiz_id: true,
-        title: true,
-        description: true,
-        duration: true,
-        max_attempts: true,
-        created_at: true,
-        is_published: true,
-
-        course: {
-          select: {
-            title: true,
-            course_id: true,
+    const [quizzes, totalQuizzes] = await prisma.$transaction([
+      prisma.quizzes.findMany({
+        where: { course_id: { in: courseIds } },
+        select: {
+          quiz_id: true,
+          title: true,
+          description: true,
+          duration: true,
+          max_attempts: true,
+          created_at: true,
+          is_published: true,
+          course: {
+            select: { title: true, course_id: true },
           },
         },
-      },
-      skip: skip,
-      take: pageSize,
-    });
-
-    const totalQuizzes = await prisma.quizzes.count({
-      where: {
-        course_id: { in: courseIds },
-      },
-    });
+        skip,
+        take: pageSize,
+      }),
+      prisma.quizzes.count({
+        where: { course_id: { in: courseIds } },
+      }),
+    ]);
 
     const totalPages = Math.ceil(totalQuizzes / pageSize);
 
@@ -942,11 +926,10 @@ export const getQuizzes = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching quizzes:", error);
-    return res.status(500).json({
-      error: "Internal server error",
-    });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 export const reviewQuiz = async (req, res) => {
   try {

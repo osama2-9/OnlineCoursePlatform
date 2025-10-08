@@ -1,16 +1,13 @@
 import { LearnerLayout } from "../../layouts/LearnerLayout";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import {
-  FaCertificate,
-  FaClock,
-  FaCheckCircle,
-} from "react-icons/fa";
+import { FaCertificate, FaClock, FaCheckCircle } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import { qureyClinet } from "../../main";
 import { Loader2 } from "lucide-react";
 import axiosClient from "../../API/axios";
+import { Link } from "react-router-dom";
 
 interface Course {
   course_id: string;
@@ -46,13 +43,11 @@ export const Certifications = () => {
         {
           user_id: userId,
           course_id: courseId,
-        },
-        
+        }
       );
       if (response) {
         toast.success(response.data.message);
 
-      
         setCourses((prevCourses) =>
           prevCourses.map((course) =>
             course.course_id === courseId
@@ -357,9 +352,12 @@ export const Certifications = () => {
                               </p>
                             )}
                             {course.certificateStatus === "approved" && (
-                              <button className="bg-green-600 text-white px-4 py-1 rounded-lg hover:bg-green-700 transition-colors">
+                              <Link
+                                to={course.certificateUrl || "#"}
+                                className="bg-green-600 text-white px-4 py-1 rounded-lg hover:bg-green-700 transition-colors"
+                              >
                                 Download Certificate
-                              </button>
+                              </Link>
                             )}
                             {course.certificateStatus === "rejected" && (
                               <button
