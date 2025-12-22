@@ -94,11 +94,7 @@ const UsersChatPage = () => {
       if (res.data) {
         setSupportTicket(res.data.ticket);
 
-        if (
-          res.data.SupportTicketMessage &&
-          Array.isArray(res.data.SupportTicketMessage)
-        ) {
-        }
+
       }
     } catch (error: any) {
       console.error("Error loading ticket data:", error);
@@ -175,7 +171,8 @@ const UsersChatPage = () => {
         user_id: user?.userId,
         message: message,
       });
-      if (response) {
+      if (response.data.success) {
+        console.log(response.status);
       }
     } catch (error: any) {
       console.error("Failed to send message:", error);
@@ -308,18 +305,16 @@ const UsersChatPage = () => {
               {supportTicket?.messages?.map((msg) => (
                 <div
                   key={msg.message_id}
-                  className={`flex ${
-                    msg.user_id == user?.userId
+                  className={`flex ${msg.user_id == user?.userId
                       ? "justify-end"
                       : "justify-start"
-                  }`}
+                    }`}
                 >
                   <div
-                    className={`max-w-[80%] md:max-w-[70%] rounded-lg p-3 ${
-                      msg.user_id == user?.userId
+                    className={`max-w-[80%] md:max-w-[70%] rounded-lg p-3 ${msg.user_id == user?.userId
                         ? "bg-blue-600 text-white rounded-br-none"
                         : "bg-gray-100 text-gray-800 rounded-bl-none"
-                    }`}
+                      }`}
                   >
                     <div className="text-sm mb-1 flex items-center">
                       {msg.user_id == user?.userId

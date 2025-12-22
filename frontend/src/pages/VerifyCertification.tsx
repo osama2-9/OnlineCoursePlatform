@@ -48,8 +48,7 @@ export default function CertificateVerification() {
       console.log(error);
       toast.error("An error occurred while verifying the certificate.");
       throw error;
-    } finally {
-    }
+    } 
   };
 
   const { data, isLoading, refetch } = useQuery({
@@ -78,6 +77,8 @@ export default function CertificateVerification() {
     try {
       await refetch();
     } catch (error) {
+      console.log(error);
+      
       setVerificationResult(null);
     }
   };

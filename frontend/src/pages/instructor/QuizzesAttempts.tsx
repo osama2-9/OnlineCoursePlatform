@@ -87,7 +87,7 @@ const QuizzesAttempts = () => {
     try {
       setLoading(true);
       const res = await axiosClient.get<QuizzesResponse>(
-        `/instructor/get-quizzes-attempts/${user?.userId}`,
+        `/instructor/get-quizzes-attempts`,
         {
           params: { page, limit },
         }
@@ -177,11 +177,11 @@ const QuizzesAttempts = () => {
   const avgScore =
     totalAttempts > 0
       ? (
-          filteredAttempts.reduce(
-            (sum, quiz) => sum + quiz.Attempt[0].score,
-            0
-          ) / totalAttempts
-        ).toFixed(1)
+        filteredAttempts.reduce(
+          (sum, quiz) => sum + quiz.Attempt[0].score,
+          0
+        ) / totalAttempts
+      ).toFixed(1)
       : "0";
 
   if (isLoading) {

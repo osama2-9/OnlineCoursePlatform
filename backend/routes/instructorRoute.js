@@ -29,31 +29,25 @@ import { checkRole } from "../middlewares/checkRole.js";
 const instructorRoute = express.Router();
 
 instructorRoute.get(
-  "/instructor-courses/:instructorId",
+  "/instructor-courses",
   checkRole("instructor"),
   getInstructorCourses
 );
 
 instructorRoute.get(
-  "/get-course-lessons/:instructorId/course/:courseId",
+  "/get-course-lessons/course/:courseId",
   checkRole("instructor"),
   getLessonsByCourseId
 );
 
 instructorRoute.get(
-  "/instructor-courses/:instructorId",
-  checkRole("instructor"),
-  getInstructorCourses
-);
-
-instructorRoute.get(
-  "/instructor-courses-enrollments/:instructorId",
+  "/instructor-courses-enrollments",
   checkRole("instructor"),
   getEnrollmentData
 );
 instructorRoute.put("/update-course", checkRole("instructor"), updateMyCourse);
 instructorRoute.get(
-  "/get-analystic/:instructorId",
+  "/get-analystic",
   checkRole("instructor"),
   getAnalysticsForCharts
 );
@@ -69,13 +63,13 @@ instructorRoute.post(
   createQuestion
 );
 instructorRoute.get(
-  "/get-quizzes/:instructorId",
+  "/get-quizzes",
   checkRole("instructor"),
   getQuizzes
 );
 
 instructorRoute.get(
-  "/review-quiz/:quizId/course/:courseId/instructor/:instructorId",
+  "/review-quiz/:quizId/course/:courseId",
   checkRole("instructor"),
   reviewQuiz
 );
@@ -111,13 +105,13 @@ instructorRoute.put(
 );
 
 instructorRoute.get(
-  "/get-quizzes-attempts/:instructorId",
+  "/get-quizzes-attempts",
   checkRole("instructor"),
   getUsersAttempts
 );
 
 instructorRoute.get(
-  "/get-user-answers/:attemptId/quiz/:quizId/course/:courseId/ins/:instructorId",
+  "/get-user-answers/:attemptId/quiz/:quizId/course/:courseId/",
   checkRole("instructor"),
   getUserAnswers
 );

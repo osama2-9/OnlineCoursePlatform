@@ -56,6 +56,10 @@ export const MyCourses = () => {
     retry: 2,
   });
 
+  useEffect(() => {
+    setEnrolledCourses(data);
+  }, [user?.userId, data]);
+
   if (isError) {
     return (
       <div className="flex items-center justify-center text-red-500">
@@ -63,10 +67,6 @@ export const MyCourses = () => {
       </div>
     );
   }
-
-  useEffect(() => {
-    setEnrolledCourses(data);
-  }, [user?.userId, data]);
   return (
     <LearnerLayout>
       {loading ? (

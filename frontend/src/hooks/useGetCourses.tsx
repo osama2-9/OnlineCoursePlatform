@@ -121,7 +121,7 @@ export const useGetCourses = () => {
 
     setIsLoadingMore(false);
   }, [
-    pagination.hasNext,
+    pagination?.hasNext,
     isLoadingMore,
     page,
     device,
@@ -131,14 +131,15 @@ export const useGetCourses = () => {
     pageSize,
   ]);
 
-  return {
-    courses,
-    isCoursesLoading,
-    fetchMoreCourses,
-    isLoadingMore,
-    pagination,
-    device,
-    isMobile,
-    hasMore: pagination.hasNext,
-  };
+ return {
+  courses: courses || [],
+  isCoursesLoading,
+  fetchMoreCourses,
+  isLoadingMore,
+  pagination: pagination || { totalCourses: 0, totalPages: 1, currentPage: 1, pageSize, hasNext: false },
+  device,
+  isMobile,
+  hasMore: pagination?.hasNext ?? false,
+};
+
 };

@@ -55,9 +55,6 @@ export default function MyContentRequests() {
   const fetchContentRequests = async () => {
     try {
       const res = await axiosClient.get(`/instructor/get-my-content-requests`, {
-        params: {
-          instructorId: user?.userId,
-        },
         headers: {
           "Content-Type": "application/json",
         },

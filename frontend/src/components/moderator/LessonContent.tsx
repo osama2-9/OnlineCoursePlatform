@@ -29,8 +29,8 @@ const LessonContent = ({
         return dateValue;
       }
       return dateValue.toLocaleDateString();
-    } catch (error) {
-      return "Invalid date";
+    } catch (error:any) {
+console.log(error);
     }
   };
 

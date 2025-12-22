@@ -41,7 +41,7 @@ export const useGetInstructorCourses = () => {
   const getInstructorCourses = async () => {
     try {
       const res = await axiosClient.get<InstructorCoursesResponse>(
-        `/instructor/instructor-courses/${user?.userId}`
+        `/instructor/instructor-courses`
       );
       return res.data;
     } catch (error: any) {

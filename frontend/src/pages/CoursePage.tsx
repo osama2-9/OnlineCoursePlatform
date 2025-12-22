@@ -100,10 +100,13 @@ export const CoursePage = () => {
       const res = await axiosClient.post(`/payment/create-checkout-session`, {
         userId: user?.userId,
         courseId: course?.course_id,
+      }, {
+        headers: {
+          "idempotency-key": `${user?.userId}-${course?.course_id}`
+        }
       });
 
       const data = res.data;
-
       if (data && data.sessionId) {
         const stripe = await stripePromise;
         const result = await stripe?.redirectToCheckout({
@@ -119,6 +122,8 @@ export const CoursePage = () => {
       console.log(error);
       if (error.response.data.error == "Unauthorized: No token provided") {
         toast.error("Please login before enroll ");
+      } else {
+        toast.error(error.response.data.error)
       }
     } finally {
       setIsPaymentLoading(false);
@@ -209,11 +214,10 @@ export const CoursePage = () => {
                               </span>
                             </div>
                             <span
-                              className={`${
-                                lecture.is_free
-                                  ? "text-green-500"
-                                  : "text-orange-500"
-                              }`}
+                              className={`${lecture.is_free
+                                ? "text-green-500"
+                                : "text-orange-500"
+                                }`}
                             >
                               {lecture.is_free ? (
                                 "Preview"

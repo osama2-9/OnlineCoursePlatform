@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
-import { useAuth } from "../../hooks/useAuth";
 import ReactMarkdown from "react-markdown";
 import axiosClient from "../../API/axios";
 
@@ -18,7 +17,6 @@ export const AddQuestions = () => {
   const [questionType, setQuestionType] = useState<
     "mcq" | "truefalse" | "text"
   >("mcq");
-  const { user } = useAuth();
   const [mark, setMark] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [choices, setChoices] = useState<string[]>(["", ""]);
@@ -103,7 +101,6 @@ export const AddQuestions = () => {
         `/instructor/create-question`,
         {
           courseId: courseId,
-          instructorId: user?.userId,
           quizId: quizId,
           question_text: question,
           question_type: questionType,

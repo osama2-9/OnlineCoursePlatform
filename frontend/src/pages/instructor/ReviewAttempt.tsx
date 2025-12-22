@@ -1,6 +1,5 @@
 import toast from "react-hot-toast";
 import { useLocation, useParams } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
 import { useEffect, useState } from "react";
 import { ClipLoader } from "react-spinners";
 import { InstructorLayout } from "../../layouts/InstructorLayout";
@@ -62,7 +61,6 @@ interface AttemptResponse {
 export const ReviewAttempt = () => {
   const { attemptId } = useParams();
   const { state } = useLocation();
-  const { user } = useAuth();
   const [quiz, setQuiz] = useState<QuizAnswers>();
   const [loading, setLoading] = useState(false);
   const [scores, setScores] = useState<{ [key: number]: boolean }>({});
@@ -80,7 +78,7 @@ export const ReviewAttempt = () => {
     try {
       setLoading(true);
       const res = await axiosClient.get<AttemptResponse>(
-        `/instructor/get-user-answers/${attemptId}/quiz/${state.quizId}/course/${state.courseId}/ins/${user?.userId}`,
+        `/instructor/get-user-answers/${attemptId}/quiz/${state.quizId}/course/${state.courseId}`,
         {
           params: {
             page,

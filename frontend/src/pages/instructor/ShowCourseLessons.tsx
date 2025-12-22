@@ -33,7 +33,7 @@ export const ShowCourseLessons = () => {
     try {
       setIsLoading(true);
       const res = await axiosClient.get<Response>(
-        `/instructor/get-course-lessons/${user?.userId}/course/${courseId}`
+        `/instructor/get-course-lessons/course/${courseId}`
       );
       const data = res.data;
       return data;
@@ -99,13 +99,14 @@ export const ShowCourseLessons = () => {
         withCredentials: true,
         params: {
           lessonId: selectedLesson?.lesson_id,
-          instructorId: user?.userId,
           courseId: courseId,
         },
       });
       toast.success("Lesson deleted successfully!");
       getLessons();
     } catch (error: any) {
+      console.log(error);
+
       toast.error("Failed to delete lesson.");
     } finally {
       setShowDeleteModal(false);
@@ -126,6 +127,8 @@ export const ShowCourseLessons = () => {
       await axiosClient.put(`/lesson/update-order`, { lessons: updatedOrder });
       toast.success("Lesson order updated successfully!");
     } catch (error: any) {
+      console.log(error);
+
       toast.error("Failed to update lesson order.");
       getLessons();
     }
@@ -207,22 +210,20 @@ export const ShowCourseLessons = () => {
                         <button
                           onClick={() => moveLessonUp(index)}
                           disabled={index === 0}
-                          className={`px-3 py-1 rounded text-sm font-medium ${
-                            index === 0
-                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                              : "bg-blue-100 text-blue-600 hover:bg-blue-200"
-                          }`}
+                          className={`px-3 py-1 rounded text-sm font-medium ${index === 0
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                            }`}
                         >
                           Move Up
                         </button>
                         <button
                           onClick={() => moveLessonDown(index)}
                           disabled={index === lessons.length - 1}
-                          className={`px-3 py-1 rounded text-sm font-medium ${
-                            index === lessons.length - 1
-                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                              : "bg-blue-100 text-blue-600 hover:bg-blue-200"
-                          }`}
+                          className={`px-3 py-1 rounded text-sm font-medium ${index === lessons.length - 1
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                            }`}
                         >
                           Move Down
                         </button>
@@ -266,11 +267,10 @@ export const ShowCourseLessons = () => {
                       </p>
                       <div className="flex items-center justify-between">
                         <span
-                          className={`px-4 py-1.5 text-sm font-medium rounded-full ${
-                            lesson.is_free
-                              ? "bg-green-100 text-green-700"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
+                          className={`px-4 py-1.5 text-sm font-medium rounded-full ${lesson.is_free
+                            ? "bg-green-100 text-green-700"
+                            : "bg-blue-100 text-blue-700"
+                            }`}
                         >
                           {lesson.is_free ? "Free Preview" : "Premium"}
                         </span>

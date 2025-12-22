@@ -3,7 +3,6 @@ import { InstructorLayout } from "../../layouts/InstructorLayout";
 import Select from "react-select";
 import { useGetInstructorCourses } from "../../hooks/useGetInstructorCourses";
 import toast from "react-hot-toast";
-import { useAuth } from "../../hooks/useAuth";
 import axiosClient from "../../API/axios";
 
 interface CourseOptions {
@@ -23,7 +22,6 @@ export const CreateQuiz = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { courses } = useGetInstructorCourses();
-  const { user } = useAuth();
 
   const courseOptions: CourseOptions[] =
     courses?.map((course) => ({
@@ -40,7 +38,6 @@ export const CreateQuiz = () => {
     }
     try {
       const res = await axiosClient.post(`/instructor/create-quiz`, {
-        instructorId: user?.userId,
         courseId: selectedCourse?.value,
         title: title,
         description: description,

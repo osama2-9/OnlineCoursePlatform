@@ -8,70 +8,68 @@ datasource db {
 }
 
 model Users {
-  user_id                    Int       @id @default(autoincrement())
-  full_name                  String
-  password_hash              String?   
-  email                      String    @unique
-  role                       Role      @default(learner)
-  created_at                 DateTime  @default(now())
-  updated_at                 DateTime  @updatedAt
-  lastLogin                  DateTime?
-  is_active                  Boolean   @default(true)
-  resetPasswordToken         String?   @unique
+  user_id                     Int                        @id @default(autoincrement())
+  email                       String                     @unique @db.VarChar(200)
+  role                        Role                       @default(learner)
+  created_at                  DateTime                   @default(now())
+  updated_at                  DateTime                   @updatedAt
+  full_name                   String                     @db.VarChar(200)
+  password_hash               String?                    @db.VarChar(200)
+  lastLogin                   DateTime?
+  activeEmailToken            String?                    @unique
+  activeEmailTokenExpiresAt   DateTime?
+  is_active                   Boolean                    @default(true)
+  resetPasswordToken          String?                    @unique
+  isEmailVerified             Boolean                    @default(false)
   resetPasswordTokenExpiresAt DateTime?
-  activeEmailToken           String?   @unique
-  activeEmailTokenExpiresAt  DateTime?
-  isEmailVerified            Boolean   @default(false)
-  activeAccountToken         String?
+  activeAccountToken          String?
   activeAccountTokenExpiresAt DateTime?
-  is_2fa_enabled             Boolean   @default(false)  
-  two_fa_secret              String?  
-  backup_codes               String[]  
-  
-  googleId                   String?   @unique
-  googleAccessToken          String?
-  googleRefreshToken         String?
-  googleProfile              Json?    
-  authProvider               String?  
+  backup_codes                String[]
+  is_2fa_enabled              Boolean                    @default(false)
+  two_fa_secret               String?
+  authProvider                String?
+  googleAccessToken           String?
+  googleId                    String?                    @unique
+  googleProfile               Json?
+  googleRefreshToken          String?
+  appleEmail                  String?
+  appleId                     String?                    @unique
+  appleProfile                Json?
+  Article                     Article[]
+  AssignmentSubmission        AssignmentSubmission[]
+  Assignments                 Assignments[]
+  bookmarks                   Bookmark[]
+  CertificateRequest          CertificateRequest[]
+  comments                    Comment[]
+  courses                     Courses[]
+  enrollments                 Enrollments[]
+  likes                       Like[]
+  payments                    Payments[]
+  attempts                    Attempt[]
+  refreshTokens               RefreshToken[]
+  reviews                     Reviews[]
+  seen                        Seen[]
+  SupportTicketAccessToken    SupportTicketAccessToken[]
+  SupportTicketMessage        SupportTicketMessage[]
+  SupportTicket               SupportTicket[]
+  userProgress                UserProgress[]
+  assignments                 Assignments[]              @relation("InstructorAssignments")
+  submissions                 AssignmentSubmission[]     @relation("StudentSubmissions")
 
-  appleId                    String?   @unique
-  appleEmail                 String?
-  appleProfile               Json?
-  
-  courses       Courses[]
-  enrollments   Enrollments[]
-  payments      Payments[]
-  reviews       Reviews[]
-  comments      Comment[]
-  attempts      Attempt[]
-  userProgress  UserProgress[]
-  likes         Like[]
-  bookmarks     Bookmark[]
-  seen          Seen[]
-  assignments         Assignments[]          @relation("InstructorAssignments")
-  submissions         AssignmentSubmission[] @relation("StudentSubmissions")
-  refreshTokens       RefreshToken[]
-  Article Article[]
-  @@index([email] )
+  @@index([email])
   @@index([googleId])
   @@index([role])
   @@map("users")
-  AssignmentSubmission AssignmentSubmission[]
-  Assignments Assignments[]
-  SupportTicket SupportTicket[]
-  SupportTicketMessage SupportTicketMessage[]
-  SupportTicketAccessToken SupportTicketAccessToken[]
-  CertificateRequest CertificateRequest[]
 }
-model RefreshToken {
-  id          Int      @id @default(autoincrement())
-  user_id     Int
-  token       String   @unique
-  expires_at  DateTime
-  created_at  DateTime @default(now())
-  revoked     Boolean  @default(false)
 
-  user Users @relation(fields: [user_id], references: [user_id])
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String   @unique
+  expires_at DateTime
+  created_at DateTime @default(now())
+  revoked    Boolean  @default(false)
+  user       Users    @relation(fields: [user_id], references: [user_id])
 
   @@index([user_id])
   @@index([token])
@@ -79,118 +77,522 @@ model RefreshToken {
 }
 
 model Courses {
-  course_id         Int            @id @default(autoincrement())
-  instructor_id     Int
-  title             String
-  description       String?
-  course_img        String
-  category          String?
-  price             Float          @default(0.00)
-  required_marks Int?
-  is_published      Boolean        @default(false)
-  course_type       CourseType?
-  created_at        DateTime       @default(now())
-  updated_at        DateTime       @updatedAt
-  learning_outcomes String[]
-  start_date        DateTime       @default(now())
-  end_date          DateTime       @default(now())
-  instructor        Users          @relation(fields: [instructor_id], references: [user_id] , onDelete: Restrict)
-  lessons           Lessons[]
-  enrollments       Enrollments[]
-  reviews           Reviews[]
-  quizzes           Quizzes[]
-  payments          Payments[]
-  userProgress      UserProgress[]
-  likes             Like[]
-  bookmarks         Bookmark[]
-  assignments       Assignments[]
+  course_id          Int                  @id @default(autoincrement())
+  instructor_id      Int
+  title              String               @db.VarChar(200)
+  description        String?
+  price              Float                @default(0.00)
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  course_img         String               @db.VarChar(200)
+  category           String?              @db.VarChar(200)
+  course_type        CourseType?
+  is_published       Boolean              @default(false)
+  learning_outcomes  String[]
+  end_date           DateTime             @default(now())
+  start_date         DateTime             @default(now())
+  required_marks     Int?
+  assignments        Assignments[]
+  bookmarks          Bookmark[]
+  CertificateRequest CertificateRequest[]
+  instructor         Users                @relation(fields: [instructor_id], references: [user_id])
+  enrollments        Enrollments[]
+  lessons            Lessons[]
+  likes              Like[]
+  Notifications      Notifications[]
+  payments           Payments[]
+  quizzes            Quizzes[]
+  reviews            Reviews[]
+  userProgress       UserProgress[]
+
   @@index([instructor_id])
   @@index([course_id])
   @@index([title])
   @@map("courses")
-  Notifications Notifications[]
-  CertificateRequest CertificateRequest[]
 }
 
 model InstructorsApplications {
-  application_id        Int                @id @default(autoincrement())
-  application_status    ApplicationStatus  @default(pending)
-  submitted_at          DateTime           @default(now())
+  application_id        Int               @id @default(autoincrement())
+  application_status    ApplicationStatus @default(pending)
+  submitted_at          DateTime          @default(now())
   reviewed_at           DateTime?
   notes                 String?
-  
-  full_name            String
-  email                String
-  phone_number         String?
-  bio                  String?
-  profile_picture_url  String?
-  
-  expertise_area       String[]           
-  certifications       String[]           
-  years_of_experience  Int                
-  
-  education_background String             
-  institution          String             
-  degree               String             
-  
-  previous_courses     String[]           
-  teaching_style       String?            
-  language_skills      String[]           
-  
-  preferred_schedule   String?            
-  preferred_course_type CourseType?       
-  
+  full_name             String            @db.VarChar(200)
+  email                 String            @db.VarChar(200)
+  phone_number          String?
+  bio                   String?           @db.VarChar(200)
+  profile_picture_url   String?           @db.VarChar(200)
+  expertise_area        String[]
+  certifications        String[]
+  years_of_experience   Int
+  education_background  String
+  institution           String
+  degree                String
+  previous_courses      String[]
+  teaching_style        String?
+  language_skills       String[]
+  preferred_schedule    String?
+  preferred_course_type CourseType?
+
   @@map("instructor_applications")
 }
 
 model Article {
-  article_id       Int             @id @default(autoincrement())
-  author_id        Int
-  title            String
-  slug             String          @unique
-  content          Json            
-  search_text      String          @db.Text 
-  excerpt          String?         @db.VarChar(300)
-  status           ContentStatus   @default(draft)
-  content_type     ArticleType     @default(tutorial)
-  published_at     DateTime?
-  category         String?
-  tags             String[]
-  featured_image   String?
-  word_count       Int?
-  seo_title        String?
-  seo_description  String?
-  seo_keywords     String[]
-  created_at       DateTime        @default(now())
-  updated_at       DateTime        @updatedAt
-  deleted_at       DateTime?
-  is_article_approved Boolean @default(false)
-
-  author           Users           @relation(fields: [author_id], references: [user_id] ,onDelete: Cascade)
-  comments         Comment[]
-  categories       Category[]
-  content_blocks   ContentBlock[]
-  likes            Like[]
-  bookmarks        Bookmark[]
-  seen             Seen[]
-  seen_count       Int             @default(0)
+  article_id          Int               @id @default(autoincrement())
+  author_id           Int
+  title               String
+  slug                String            @unique
+  content             Json
+  search_text         String
+  excerpt             String?           @db.VarChar(200)
+  status              ContentStatus     @default(draft)
+  content_type        ArticleType       @default(tutorial)
+  published_at        DateTime?
+  category            String?
+  tags                String[]
+  featured_image      String?
+  word_count          Int?
+  seo_title           String?           @db.VarChar(200)
+  seo_description     String?
+  seo_keywords        String[]
+  created_at          DateTime          @default(now())
+  updated_at          DateTime          @updatedAt
+  deleted_at          DateTime?
+  seen_count          Int               @default(0)
+  is_article_approved Boolean           @default(false)
+  author              Users             @relation(fields: [author_id], references: [user_id], onDelete: Cascade)
+  article_approvel    ArticleApporvel[]
+  bookmarks           Bookmark[]
+  comments            Comment[]
+  content_blocks      ContentBlock[]
+  likes               Like[]
+  seen                Seen[]
+  categories          Category[]        @relation("ArticleToCategory")
 
   @@index([slug], type: Hash)
   @@index([published_at])
   @@map("articles")
-  article_approvel ArticleApporvel[]
 }
 
 model Category {
-  category_id   Int            @id @default(autoincrement())
-  name          String
-  slug          String         @unique
-  description   String?
-  articles      Article[]
+  category_id Int       @id @default(autoincrement())
+  name        String    @db.VarChar(200)
+  slug        String    @unique @db.VarChar(200)
+  description String?   @db.VarChar(200)
+  articles    Article[] @relation("ArticleToCategory")
 
   @@index([name])
-  
   @@map("categories")
+}
+
+model Comment {
+  comment_id Int           @id @default(autoincrement())
+  content    String
+  author_id  Int
+  article_id Int
+  parent_id  Int?
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+  status     CommentStatus @default(published)
+  article    Article       @relation(fields: [article_id], references: [article_id])
+  author     Users         @relation(fields: [author_id], references: [user_id], onDelete: Cascade)
+
+  @@index([article_id])
+  @@index([parent_id])
+  @@index([created_at])
+  @@map("comments")
+}
+
+model ContentBlock {
+  block_id       Int       @id @default(autoincrement())
+  article_id     Int
+  order          Int
+  block_type     BlockType
+  content        String?
+  code_language  String?
+  code_content   String?
+  image_url      String?
+  image_caption  String?
+  video_url      String?
+  video_duration Int?
+  quiz_id        Int?
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  article        Article   @relation(fields: [article_id], references: [article_id])
+
+  @@index([article_id])
+  @@map("content_blocks")
+}
+
+model Lessons {
+  lesson_id          Int               @id @default(autoincrement())
+  course_id          Int
+  title              String            @db.VarChar(200)
+  content            String
+  video_url          String            @db.VarChar(200)
+  created_at         DateTime          @default(now())
+  updated_at         DateTime          @updatedAt
+  description        String
+  attachment         String?           @db.VarChar(200)
+  is_free            Boolean           @default(false)
+  lesson_order       Int
+  is_lesson_approved Boolean           @default(false)
+  course             Courses           @relation(fields: [course_id], references: [course_id])
+  lessonsApprovel    LessonsApprovel[]
+  userProgress       UserProgress[]
+
+  @@index([course_id])
+  @@map("lessons")
+}
+
+model LessonsApprovel {
+  lessoon_approvel_id Int            @id @default(autoincrement())
+  lesson_id           Int
+  apporval_date       DateTime?
+  approved_by         Int?
+  reason              String?        @db.VarChar(200)
+  status              ApprovelStatus @default(pending)
+  lesson              Lessons        @relation(fields: [lesson_id], references: [lesson_id], onDelete: Cascade)
+
+  @@index([lesson_id])
+  @@map("lessons_approvel")
+}
+
+model ArticleApporvel {
+  article_approvel_id Int            @id @default(autoincrement())
+  article_id          Int
+  apporval_date       DateTime?
+  approved_by         Int?
+  reason              String?        @db.VarChar(200)
+  status              ApprovelStatus @default(pending)
+  article             Article        @relation(fields: [article_id], references: [article_id], onDelete: Cascade)
+
+  @@index([article_id])
+  @@map("articles_approvel")
+}
+
+model UserProgress {
+  progress_id   Int      @id @default(autoincrement())
+  user_id       Int
+  course_id     Int
+  lesson_id     Int?
+  progress      Float    @default(0.0)
+  is_completed  Boolean  @default(false)
+  last_accessed DateTime @default(now())
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  course        Courses  @relation(fields: [course_id], references: [course_id])
+  lesson        Lessons? @relation(fields: [lesson_id], references: [lesson_id])
+  user          Users    @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id])
+  @@index([course_id])
+  @@index([lesson_id])
+  @@map("user_progress")
+}
+
+model Payments {
+  payment_id               Int           @id @default(autoincrement())
+  user_id                  Int
+  amount                   Float
+  stripe_payment_intent_id String?       @unique @db.VarChar(200)
+  payment_status           PaymentStatus @default(pending)
+  payment_method           PaymentMethod @default(card)
+  created_at               DateTime      @default(now())
+  updated_at               DateTime      @updatedAt
+  course_id                Int?
+  sessionId                String        @default("") @db.VarChar(200)
+  is_canceled              Boolean       @default(false)
+  cancellation_reason      String        @default("")
+  course                   Courses?      @relation(fields: [course_id], references: [course_id])
+  user                     Users         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([course_id])
+  @@map("payments")
+}
+
+model Enrollments {
+  enrollment_id               Int              @id @default(autoincrement())
+  user_id                     Int
+  course_id                   Int
+  enrollment_date             DateTime         @default(now())
+  status                      EnrollmentStatus @default(active)
+  access_granted              Boolean          @default(false)
+  access_token                String?
+  is_eligible_for_certificate Boolean          @default(false)
+  total_score                 Int?             @default(0)
+  course                      Courses          @relation(fields: [course_id], references: [course_id])
+  user                        Users            @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([user_id, course_id])
+  @@index([user_id])
+  @@index([course_id])
+  @@map("enrollments")
+}
+
+model Reviews {
+  review_id   Int      @id @default(autoincrement())
+  user_id     Int
+  course_id   Int
+  rating      Int
+  review_text String?
+  created_at  DateTime @default(now())
+  course      Courses  @relation(fields: [course_id], references: [course_id])
+  user        Users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([course_id])
+  @@map("reviews")
+}
+
+model Quizzes {
+  quiz_id       Int        @id @default(autoincrement())
+  course_id     Int
+  title         String     @db.VarChar(200)
+  description   String?
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  duration      Int        @default(60)
+  max_attempts  Int        @default(1)
+  is_published  Boolean    @default(false)
+  total_marks   Int        @default(10)
+  publish_marks Boolean    @default(false)
+  questions     Question[]
+  Attempt       Attempt[]
+  course        Courses    @relation(fields: [course_id], references: [course_id])
+
+  @@index([course_id])
+  @@map("quizzes")
+}
+
+model Question {
+  question_id   Int          @id @default(autoincrement())
+  quiz_id       Int
+  question_text String
+  created_at    DateTime     @default(now())
+  updated_at    DateTime     @updatedAt
+  question_type QuestionType
+  marks         Int          @default(1)
+  Answer        Answer[]
+  choices       Choice[]
+  quiz          Quizzes      @relation(fields: [quiz_id], references: [quiz_id])
+
+  @@index([quiz_id])
+  @@map("questions")
+}
+
+model Choice {
+  choice_id   Int      @id @default(autoincrement())
+  question_id Int
+  choice_text String
+  is_correct  Boolean  @default(false)
+  Answer      Answer[]
+  question    Question @relation(fields: [question_id], references: [question_id])
+
+  @@index([question_id])
+  @@map("choices")
+}
+
+model Attempt {
+  attempt_id Int       @id @default(autoincrement())
+  user_id    Int
+  quiz_id    Int
+  start_time DateTime  @default(now())
+  end_time   DateTime?
+  score      Float     @default(0)
+  answers    Answer[]
+  quiz       Quizzes   @relation(fields: [quiz_id], references: [quiz_id])
+  user       Users     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([quiz_id])
+  @@map("quiz_attempts")
+}
+
+model Answer {
+  answer_id        Int      @id @default(autoincrement())
+  question_id      Int
+  answer_text      String?
+  answer_id_choice Int?
+  attempt_id       Int
+  choice           Choice?  @relation(fields: [answer_id_choice], references: [choice_id])
+  attempt          Attempt  @relation(fields: [attempt_id], references: [attempt_id])
+  question         Question @relation(fields: [question_id], references: [question_id])
+
+  @@index([attempt_id])
+  @@index([question_id])
+  @@index([answer_id_choice])
+  @@map("answers")
+}
+
+model Like {
+  like_id    Int      @id @default(autoincrement())
+  user_id    Int
+  article_id Int?
+  course_id  Int?
+  created_at DateTime @default(now())
+  article    Article? @relation(fields: [article_id], references: [article_id])
+  course     Courses? @relation(fields: [course_id], references: [course_id])
+  user       Users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([user_id, article_id])
+  @@unique([user_id, course_id])
+  @@index([user_id])
+  @@index([article_id])
+  @@index([course_id])
+  @@map("likes")
+}
+
+model Bookmark {
+  bookmark_id Int      @id @default(autoincrement())
+  user_id     Int
+  article_id  Int?
+  course_id   Int?
+  created_at  DateTime @default(now())
+  article     Article? @relation(fields: [article_id], references: [article_id])
+  course      Courses? @relation(fields: [course_id], references: [course_id])
+  user        Users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([user_id, article_id])
+  @@unique([user_id, course_id])
+  @@index([user_id])
+  @@index([article_id])
+  @@index([course_id])
+  @@map("bookmarks")
+}
+
+model Seen {
+  seen_id    Int      @id @default(autoincrement())
+  user_id    Int
+  article_id Int
+  seen_at    DateTime @default(now())
+  article    Article  @relation(fields: [article_id], references: [article_id])
+  user       Users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([user_id, article_id])
+  @@index([user_id])
+  @@index([article_id])
+  @@map("seen")
+}
+
+model Assignments {
+  assignment_id Int                    @id @default(autoincrement())
+  course_id     Int
+  instructor_id Int
+  title         String                 @db.VarChar(200)
+  description   String                 @db.Text
+  start_date    DateTime
+  end_date      DateTime
+  created_at    DateTime               @default(now())
+  updated_at    DateTime               @updatedAt
+  points        Int
+  publish_marks Boolean                @default(false)
+  submissions   AssignmentSubmission[]
+  course        Courses                @relation(fields: [course_id], references: [course_id])
+  instructor    Users                  @relation(fields: [instructor_id], references: [user_id], onDelete: Cascade)
+  Users         Users[]                @relation("InstructorAssignments")
+
+  @@index([course_id])
+  @@index([instructor_id])
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  submission_id Int         @id @default(autoincrement())
+  assignment_id Int
+  student_id    Int
+  file_url      String      @db.VarChar(200)
+  submitted_at  DateTime    @default(now())
+  grade         Float?
+  feedback      String?     @db.VarChar(200)
+  assignment    Assignments @relation(fields: [assignment_id], references: [assignment_id])
+  student       Users       @relation(fields: [student_id], references: [user_id], onDelete: Cascade)
+  Users         Users[]     @relation("StudentSubmissions")
+
+  @@index([assignment_id])
+  @@index([student_id])
+  @@map("assignment_submissions")
+}
+
+model SupportTicketAccessToken {
+  id         Int           @id @default(autoincrement())
+  token      String        @unique @db.Text
+  ticket_id  Int
+  user_id    Int
+  expires_at DateTime
+  is_used    Boolean       @default(false)
+  created_at DateTime      @default(now())
+  ticket     SupportTicket @relation(fields: [ticket_id], references: [ticket_id])
+  user       Users         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([ticket_id])
+  @@index([user_id])
+  @@map("support_ticket_access_tokens")
+}
+
+model SupportTicket {
+  ticket_id            Int                        @id @default(autoincrement())
+  user_id              Int
+  assign_to            Int?
+  title                String                     @db.VarChar(200)
+  description          String                     @db.Text
+  status               SupportStatus              @default(open)
+  created_at           DateTime                   @default(now())
+  updated_at           DateTime                   @updatedAt
+  accessTokens         SupportTicketAccessToken[]
+  SupportTicketMessage SupportTicketMessage[]
+  user                 Users                      @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([assign_to])
+  @@map("support_tickets")
+}
+
+model SupportTicketMessage {
+  message_id Int           @id @default(autoincrement())
+  ticket_id  Int
+  user_id    Int
+  is_read    Boolean       @default(false)
+  message    String
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+  ticket     SupportTicket @relation(fields: [ticket_id], references: [ticket_id])
+  user       Users         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([ticket_id])
+  @@index([user_id])
+  @@map("support_ticket_messages")
+}
+
+model Notifications {
+  notification_id Int              @id @default(autoincrement())
+  message         String           @default("") @db.VarChar(200)
+  type            NotificationType
+  course_with_id  Int
+  created_at      DateTime         @default(now())
+  is_read         Boolean          @default(false)
+  course          Courses          @relation(fields: [course_with_id], references: [course_id])
+
+  @@map("notifications")
+}
+
+model CertificateRequest {
+  id                Int               @id @default(autoincrement())
+  user_id           Int
+  course_id         Int
+  verification_code String            @db.VarChar(200)
+  status            CertificateStatus @default(pending)
+  requested_at      DateTime          @default(now())
+  issued_at         DateTime?
+  certificate_url   String?           @db.VarChar(200)
+  course            Courses           @relation(fields: [course_id], references: [course_id])
+  user              Users             @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([user_id, course_id])
+  @@index([user_id])
+  @@index([course_id])
+  @@map("certificate_requests")
 }
 
 enum ContentStatus {
@@ -200,54 +602,10 @@ enum ContentStatus {
   deleted
 }
 
-
-model Comment {
-  comment_id     Int            @id @default(autoincrement())
-  content        String
-  author_id      Int
-  article_id     Int
-  parent_id      Int?
-  created_at     DateTime       @default(now())
-  updated_at     DateTime       @updatedAt
-  status         CommentStatus  @default(published)
-
-  author        Users          @relation(fields: [author_id], references: [user_id]  ,onDelete: Cascade)
-  article       Article        @relation(fields: [article_id], references: [article_id])
-
-  @@index([article_id])
-  @@index([parent_id])
-  @@index([created_at])
-  
-  @@map("comments")
-}
-
 enum CommentStatus {
   published
   hidden
   deleted
-}
-
-model ContentBlock {
-  block_id      Int            @id @default(autoincrement())
-  article_id    Int
-  order         Int
-  block_type    BlockType
-  content       String?
-  code_language String?
-  code_content  String?
-  image_url     String?
-  image_caption String?
-  video_url     String?
-  video_duration Int?
-  quiz_id       Int?
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
-
-  article       Article        @relation(fields: [article_id], references: [article_id])
-
-  @@index([article_id])
- 
-  @@map("content_blocks")
 }
 
 enum BlockType {
@@ -283,105 +641,16 @@ enum CourseType {
 
 enum Role {
   learner
-  admin
   instructor
+  admin
   support
   moderator
 }
 
-model Lessons {
-  lesson_id    Int      @id @default(autoincrement())
-  course_id    Int
-  title        String
-  content      String
-  description  String
-  video_url    String
-  attachment   String?
-  is_lesson_approved Boolean @default(false)
-  is_free      Boolean  @default(false)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
-  lesson_order Int
- @@index([course_id])
-  course       Courses        @relation(fields: [course_id], references: [course_id])
-  userProgress UserProgress[]
-  lessonsApprovel LessonsApprovel[]
-  
-
-  @@map("lessons")
-}
-
-enum ApprovelStatus{
+enum ApprovelStatus {
   pending
   approved
   rejected
-}
-
-model LessonsApprovel{
-  lessoon_approvel_id Int @id @default(autoincrement())
-  lesson_id Int
-  approved_by Int?
-  apporval_date DateTime? 
-  status ApprovelStatus @default(pending)
-  reason String?
-  lesson Lessons @relation(fields: [lesson_id], references: [lesson_id] ,onDelete: Cascade)
-  @@index([lesson_id])
-  @@map("lessons_approvel")
-
-}
-
-model ArticleApporvel{
-  article_approvel_id Int @id @default(autoincrement())
-  article_id Int
-  approved_by Int?
-  apporval_date DateTime? 
-  reason String?
-  status ApprovelStatus @default(pending)
-  article Article @relation(fields: [article_id], references: [article_id] ,onDelete: Cascade)
-  @@index([article_id])
-  @@map("articles_approvel")
-
-}
-
-model UserProgress {
-  progress_id   Int      @id @default(autoincrement())
-  user_id       Int
-  course_id     Int
-  lesson_id     Int?
-  progress      Float    @default(0.0)
-  is_completed  Boolean  @default(false)
-  last_accessed DateTime @default(now())
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
-  user   Users    @relation(fields: [user_id], references: [user_id])
-  course Courses  @relation(fields: [course_id], references: [course_id])
-  lesson Lessons? @relation(fields: [lesson_id], references: [lesson_id])
-
-  @@index([user_id])
-  @@index([course_id])
-  @@index([lesson_id])
-  @@map("user_progress")
-}
-
-model Payments {
-  payment_id               Int           @id @default(autoincrement())
-  user_id                  Int
-  amount                   Float
-  sessionId                String        @default("")
-  stripe_payment_intent_id String?       @unique
-  payment_status           PaymentStatus @default(pending)
-  payment_method           PaymentMethod @default(card)
-  created_at               DateTime      @default(now())
-  updated_at               DateTime      @updatedAt
-  course_id                Int?
-
-  user   Users    @relation(fields: [user_id], references: [user_id] ,onDelete: Cascade)
-  course Courses? @relation(fields: [course_id], references: [course_id])
-
-  @@index([user_id])
-  @@index([course_id])
-  @@map("payments")
 }
 
 enum PaymentStatus {
@@ -395,263 +664,16 @@ enum PaymentMethod {
   bank_transfer
 }
 
-model Enrollments {
-  enrollment_id   Int              @id @default(autoincrement())
-  user_id         Int
-  course_id       Int
-  enrollment_date DateTime         @default(now())
-  status          EnrollmentStatus @default(active)
-  access_granted  Boolean          @default(false)
-  access_token    String?
-  total_score Int? @default(0)
-  is_eligible_for_certificate Boolean @default(false)
-
-  user   Users   @relation(fields: [user_id], references: [user_id] ,onDelete: Cascade)
-  course Courses @relation(fields: [course_id], references: [course_id])
-
-  @@index([user_id])
-  @@unique([user_id,course_id])
-  @@index([course_id])
-  @@map("enrollments")
-}
-
 enum EnrollmentStatus {
   active
   completed
   dropped
 }
-model Reviews {
-  review_id   Int      @id @default(autoincrement())
-  user_id     Int
-  course_id   Int
-  rating      Int
-  review_text String?
-  created_at  DateTime @default(now())
-
-  user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
-  course Courses @relation(fields: [course_id], references: [course_id])
-
-  @@index([user_id])
-  @@index([course_id])
-  @@map("reviews")
-}
-
-model Quizzes {
-  quiz_id      Int            @id @default(autoincrement())
-  course_id    Int
-  title        String
-  description  String?
-  duration     Int            @default(60) 
-  max_attempts Int            @default(1) 
-  is_published Boolean        @default(false)
-  created_at   DateTime       @default(now())
-  updated_at   DateTime       @updatedAt
-  total_marks Int            @default(10)
-  publish_marks Boolean      @default(false)
-  course       Courses        @relation(fields: [course_id], references: [course_id])
-  questions    Question[]     
-  Attempt      Attempt[]
-
-  @@index([course_id])
-  @@map("quizzes")
-}
-
-model Question {
-  question_id   Int            @id @default(autoincrement())
-  quiz_id       Int
-  question_text String
-  question_type QuestionType
-  marks         Int            @default(1)
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
-
-  quiz          Quizzes        @relation(fields: [quiz_id], references: [quiz_id])
-  choices       Choice[]       
-  Answer        Answer[]
-
-  @@index([quiz_id])
-  @@map("questions")
-}
 
 enum QuestionType {
-  mcq        
-  truefalse  
-  text       
-}
-
-model Choice {
-  choice_id    Int      @id @default(autoincrement())
-  question_id  Int
-  choice_text  String
-  is_correct   Boolean  @default(false)
-
-  question     Question @relation(fields: [question_id], references: [question_id])
-  Answer       Answer[]
-
-  @@index([question_id])
-  @@map("choices")
-}
-
-model Attempt {
-  attempt_id   Int           @id @default(autoincrement())
-  user_id      Int
-  quiz_id      Int
-  start_time   DateTime      @default(now())
-  end_time     DateTime?
-  score        Float         @default(0)
-  user         Users         @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
-  quiz         Quizzes       @relation(fields: [quiz_id], references: [quiz_id])
-  answers      Answer[]      
-
-  @@index([user_id])
-  @@index([quiz_id])
-  @@map("quiz_attempts")
-}
-
-model Answer {
-  answer_id    Int      @id @default(autoincrement())
-  attempt_id   Int
-  question_id  Int
-  answer_text  String?
-  answer_id_choice Int?
-
-  attempt      Attempt @relation(fields: [attempt_id], references: [attempt_id])
-  question     Question    @relation(fields: [question_id], references: [question_id])
-  choice       Choice?     @relation(fields: [answer_id_choice], references: [choice_id])
-
-  @@index([attempt_id])
-  @@index([question_id])
-  @@index([answer_id_choice])
-  @@map("answers")
-}
-
-model Like {
-  like_id    Int      @id @default(autoincrement())
-  user_id    Int
-  article_id Int?
-  course_id  Int?
-  created_at DateTime @default(now())
-
-  user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
-  article Article? @relation(fields: [article_id], references: [article_id])
-  course  Courses? @relation(fields: [course_id], references: [course_id])
-
-  @@unique([user_id, article_id]) 
-  @@unique([user_id, course_id])  
-  @@index([user_id])
-  @@index([article_id])
-  @@index([course_id])
-  @@map("likes")
-}
-
-model Bookmark {
-  bookmark_id Int      @id @default(autoincrement())
-  user_id     Int
-  article_id  Int?
-  course_id   Int?
-  created_at  DateTime @default(now())
-
-  user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
-  article Article? @relation(fields: [article_id], references: [article_id])
-  course  Courses? @relation(fields: [course_id], references: [course_id])
-
-  @@unique([user_id, article_id]) 
-  @@unique([user_id, course_id])  
-  @@index([user_id])
-  @@index([article_id])
-  @@index([course_id])
-  @@map("bookmarks")
-}
-
-model Seen {
-  seen_id    Int      @id @default(autoincrement())
-  user_id    Int
-  article_id Int
-  seen_at    DateTime @default(now())
-
-  user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
-  article Article @relation(fields: [article_id], references: [article_id])
-
-  @@unique([user_id, article_id]) 
-  @@index([user_id])
-  @@index([article_id])
-  @@map("seen")
-}
-
-model Assignments {
-  assignment_id    Int       @id @default(autoincrement())
-  course_id       Int
-  instructor_id   Int
-  title           String
-  description     String
-  start_date      DateTime
-  points          Int
-  end_date        DateTime
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-  publish_marks   Boolean   @default(false)
-
-  course          Courses   @relation(fields: [course_id], references: [course_id])
-  instructor      Users     @relation(fields: [instructor_id], references: [user_id],onDelete: Cascade)
-  submissions     AssignmentSubmission[]
-
-  @@index([course_id])
-  @@index([instructor_id])
-  @@map("assignments")
-  Users Users[] @relation("InstructorAssignments")
-}
-
-model AssignmentSubmission {
-  submission_id   Int       @id @default(autoincrement())
-  assignment_id   Int
-  student_id      Int
-  file_url        String
-  submitted_at    DateTime  @default(now())
-  grade          Float?
-  feedback       String?
-
-  assignment      Assignments @relation(fields: [assignment_id], references: [assignment_id])
-  student         Users       @relation(fields: [student_id], references: [user_id],onDelete: Cascade)
-
-  @@index([assignment_id])
-  @@index([student_id])
-  @@map("assignment_submissions")
-  Users Users[] @relation("StudentSubmissions")
-}
-model SupportTicketAccessToken {
-  id          Int      @id @default(autoincrement())
-  token       String   @unique
-  ticket_id   Int
-  user_id     Int
-  expires_at  DateTime
-  is_used     Boolean  @default(false)
-  created_at  DateTime @default(now())
-
-  ticket      SupportTicket @relation(fields: [ticket_id], references: [ticket_id])
-  user        Users @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
-
-  @@index([ticket_id])
-  @@index([user_id])
-  @@map("support_ticket_access_tokens")
-}
-
-model SupportTicket {
-  ticket_id     Int      @id @default(autoincrement())
-  user_id       Int
-  assign_to     Int? 
-  title         String
-  description   String
-  status        SupportStatus @default(open)
-  created_at    DateTime   @default(now())
-  updated_at    DateTime   @updatedAt
-
-  user Users @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
-  accessTokens SupportTicketAccessToken[]
-
-  @@index([user_id])
-  @@index([assign_to])
-  @@map("support_tickets")
-  SupportTicketMessage SupportTicketMessage[]
+  mcq
+  truefalse
+  text
 }
 
 enum SupportStatus {
@@ -660,55 +682,11 @@ enum SupportStatus {
   in_progress
 }
 
-model SupportTicketMessage {
-  message_id    Int      @id @default(autoincrement())
-  ticket_id     Int
-  user_id       Int
-  is_read       Boolean  @default(false)
-  message       String
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  ticket SupportTicket @relation(fields: [ticket_id], references: [ticket_id])
-  user Users @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
-
-  @@index([ticket_id])
-  @@index([user_id])
-  @@map("support_ticket_messages")
-}
-model Notifications {
-  notification_id Int @id @default(autoincrement())
-  message String @default("")
-  type NotificationType 
-  is_read Boolean @default(false)
-  course_with_id Int 
-  created_at DateTime @default(now())
-  course Courses @relation(fields: [course_with_id], references: [course_id])
-  @@map("notifications")
-}
-
 enum NotificationType {
   ASSIGNMENT_NEW
   ASSIGNMENT_DEADLINE
   QUIZ_NEW
   QUIZ_ENDING
-}
-model CertificateRequest {
-  id          Int      @id @default(autoincrement())
-  user_id     Int
-  course_id   Int
-  verification_code String
-  status      CertificateStatus @default(pending)
-  requested_at DateTime @default(now())
-  issued_at   DateTime?
-  certificate_url String?
-
-  user   Users   @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
-  course Courses @relation(fields: [course_id], references: [course_id])
-
-  @@unique([user_id, course_id])
-  @@index([user_id])
-  @@index([course_id])
-  @@map("certificate_requests")
 }
 
 enum CertificateStatus {

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import axiosClient from "../API/axios";
 
 export interface EnrollmentsData {
-  is_eligible_for_certificate:boolean;
+  is_eligible_for_certificate: boolean;
   enrollment_id: number;
   enrollment_date: Date;
   status: string;
@@ -46,7 +46,7 @@ export const useGetInstructorEnrollments = (currentPage?: number) => {
     try {
       setEnrollmentsLoading(true);
       const res = await axiosClient.get<InstructorEnrollmentsReponse>(
-        `/instructor/instructor-courses-enrollments/${user?.userId}`,
+        `/instructor/instructor-courses-enrollments`,
         {
           params: {
             page: currentPage,

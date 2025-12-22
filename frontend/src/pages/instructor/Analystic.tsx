@@ -32,7 +32,7 @@ export const Analystic = () => {
   const getCourseProgressAnalystic = async () => {
     try {
       const res = await axiosClient.get(
-        `/instructor/get-analystic/${user?.userId}`,
+        `/instructor/get-analystic`,
         {
           headers: {
             "Content-Type": "application/json",

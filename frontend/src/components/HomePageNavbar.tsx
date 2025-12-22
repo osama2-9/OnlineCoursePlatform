@@ -61,11 +61,7 @@ export const HomePageNavbar = () => {
         setShowProfileMenu(false);
       }
 
-      if (
-        searchContainerRef.current &&
-        !searchContainerRef.current.contains(event.target as Node)
-      ) {
-      }
+      
     };
 
     document.addEventListener("mousedown", handleClickOutside);

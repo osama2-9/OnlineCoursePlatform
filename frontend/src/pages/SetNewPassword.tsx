@@ -50,7 +50,8 @@ const SetNewPassword = () => {
       setTimeout(() => {
         navigate("/login");
       }, 2000);
-    } catch (err) {
+    } catch (err:any) {
+      console.log(err);
       setError("Failed to reset password. Please try again.");
     }
   };

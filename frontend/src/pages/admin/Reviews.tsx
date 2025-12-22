@@ -97,23 +97,26 @@ export const Reviews = () => {
       filtered = filtered.filter((review) => {
         const reviewDate = new Date(review.created_at);
         switch (dateFilter) {
-          case "week":
+          case "week": {
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             return reviewDate >= weekAgo;
-          case "month":
+          }
+          case "month": {
             const monthAgo = new Date(
               now.getFullYear(),
               now.getMonth() - 1,
               now.getDate()
             );
             return reviewDate >= monthAgo;
-          case "year":
+          }
+          case "year": {
             const yearAgo = new Date(
               now.getFullYear() - 1,
               now.getMonth(),
               now.getDate()
             );
             return reviewDate >= yearAgo;
+          }
           default:
             return true;
         }

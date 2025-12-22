@@ -40,7 +40,7 @@ export const useGetInstructorQuizzes = () => {
     setQuizzesLoading(true);
     try {
       const res = await axiosClient.get<QuizzesResponse>(
-        `/instructor/get-quizzes/${user.userId}`,
+        `/instructor/get-quizzes`,
         {
           params: { page: currentPage, pageSize: quizzesPerPage },
         }

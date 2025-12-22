@@ -195,6 +195,8 @@ export const ShowUsers = () => {
         refetch();
       } catch (error) {
         toast.error("Failed to delete user");
+        console.log(error);
+        
       } finally {
         setShowDeleteModal(false);
         setSelectedUser(null);
@@ -221,6 +223,8 @@ export const ShowUsers = () => {
       );
       refetch();
     } catch (error) {
+      console.log(error);
+      
       toast.error("Failed to toggle user status");
     }
   };

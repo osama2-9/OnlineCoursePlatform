@@ -2,177 +2,85 @@ import { stripe } from "../index.js";
 import { prisma } from "../prisma/prismaClint.js";
 import dotenv from "dotenv";
 import { genreateAccessCourseToken } from "../utils/generateAccessToken.js";
+import { setCache} from "../services/redis/cache.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 dotenv.config();
 
 export const createCheckoutSession = async (req, res) => {
   try {
     const { userId, courseId } = req.body;
-    if (!userId || !courseId) {
-      return res.status(400).json({
-        error: "Error while trying to make payment. Try again later.",
-      });
-    }
-
+    if (!userId || !courseId)
+      return errorResponse(res, "Error while trying to make payment. Try again later.", 400);
+    let cacheKey = res.locals.idempotencyKey;
     const courseID = parseInt(courseId);
     const userAlreadyEnrolled = await prisma.enrollments.findFirst({
-      where: {
-        user_id: parseInt(userId),
-        course_id: courseID,
-      },
+      where: { user_id: parseInt(userId), course_id: courseID },
     });
     if (!userAlreadyEnrolled) {
       const course = await prisma.courses.findUnique({
-        where: {
-          course_id: parseInt(courseID),
-        },
-        select: {
-          start_date: true,
-        },
+        where: { course_id: parseInt(courseID) }, select: { start_date: true },
       });
-
-      if (course.start_date < new Date()) {
-        return res.status(400).json({
-          error: "Course already started",
-        });
-      }
+      if (course.start_date < new Date())
+        return errorResponse(res, "Course already started", 400);
     }
-
-    if (userAlreadyEnrolled) {
-      return res.status(400).json({
-        error: "You are already enrolled in this course",
-      });
-    }
+    if (userAlreadyEnrolled)
+      return errorResponse(res, "You are already enrolled in this course", 400);
     const course = await prisma.courses.findUnique({
-      where: {
-        course_id: courseID,
-      },
-      select: {
-        title: true,
-        course_img: true,
-        price: true,
-      },
+      where: { course_id: courseID }, select: { title: true, course_img: true, price: true },
     });
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: course?.title,
-              images: [course.course_img],
-            },
-            unit_amount: course.price * 100,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price_data: {
+        currency: "usd",
+        product_data: { name: course?.title, images: [course.course_img] },
+        unit_amount: course.price * 100,
+      }, quantity: 1 }],
       success_url: `${process.env.BASE_URL}/payment/success?sessionId={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.BASE_URL}/payment/cancel?sessionId={CHECKOUT_SESSION_ID}`,
       mode: "payment",
-      metadata: {
-        courseId,
-        userId,
-      },
+      metadata: { courseId, userId },
     });
-
     await prisma.payments.create({
       data: {
         amount: course.price,
         sessionId: session.id,
         stripe_payment_intent_id: session.id,
         payment_status: "pending",
-        user: {
-          connect: { user_id: parseInt(userId) },
-        },
-        course: {
-          connect: { course_id: parseInt(courseId) },
-        },
-      },
-    });
-
-    return res.json({
-      sessionId: session.id,
-    });
+        user: { connect: { user_id: parseInt(userId) } },
+        course: { connect: { course_id: parseInt(courseId) } },
+      } });
+    await setCache(cacheKey, { userId, courseId }, 60);
+    return successResponse(res, { sessionId: session.id });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({
-      error: "Internal server error",
-    });
+    return errorResponse(res, error.message);
   }
 };
 
 export const handlePaymentSuccess = async (req, res) => {
   try {
     const { sessionId } = req.params;
-
-    const payment = await prisma.payments.findFirst({
-      where: {
-        stripe_payment_intent_id: sessionId,
-      },
-    });
-
+    const payment = await prisma.payments.findFirst({ where: { stripe_payment_intent_id: sessionId } });
     if (payment) {
       const session = await stripe.checkout.sessions.retrieve(sessionId);
-
       if (session.payment_status === "paid") {
         const { userId, courseId } = session.metadata;
         const userIdInt = parseInt(userId);
         const courseIdInt = parseInt(courseId);
-
         await prisma.$transaction(async (tx) => {
-          await tx.payments.update({
-            where: {
-              stripe_payment_intent_id: sessionId,
-            },
-            data: {
-              stripe_payment_intent_id: session.payment_intent,
-              payment_status: "succeeded",
-              user_id: userIdInt,
-              course_id: courseIdInt,
-              amount: session.amount_total / 100,
-            },
-          });
-
-          const enrollment = await tx.enrollments.create({
-            data: {
-              course_id: courseIdInt,
-              user_id: userIdInt,
-              access_granted: true,
-              enrollment_date: new Date(),
-              status: "active",
-            },
-          });
-
-          const accessToken = genreateAccessCourseToken(
-            userIdInt,
-            enrollment.enrollment_id,
-            courseIdInt
-          );
-
-          await tx.enrollments.update({
-            where: {
-              enrollment_id: enrollment.enrollment_id,
-            },
-            data: {
-              access_token: accessToken,
-            },
-          });
+          await tx.payments.update({ where: { stripe_payment_intent_id: sessionId }, data: { stripe_payment_intent_id: session.payment_intent, payment_status: "succeeded", user_id: userIdInt, course_id: courseIdInt, amount: session.amount_total / 100 } });
+          const enrollment = await tx.enrollments.create({ data: { course_id: courseIdInt, user_id: userIdInt, access_granted: true, enrollment_date: new Date(), status: "active" } });
+          const accessToken = genreateAccessCourseToken(userIdInt, enrollment.enrollment_id, courseIdInt);
+          await tx.enrollments.update({ where: { enrollment_id: enrollment.enrollment_id }, data: { access_token: accessToken } });
         });
-
-        return res.status(200).json({ message: "Payment confirmed" });
-      } else {
-        return res
-          .status(400)
-          .json({ error: "Payment not completed successfully." });
+        return successResponse(res, { message: "Payment confirmed" });
       }
-    } else {
-      return res.status(400).json({ error: "Payment session not found." });
+      return errorResponse(res, "Payment not completed successfully.", 400);
     }
+    return errorResponse(res, "Payment session not found.", 400);
   } catch (error) {
     console.error("Error in handling payment success:", error);
-    return res.status(500).json({ error: "Internal server error." });
+    return errorResponse(res, error.message);
   }
 };
 
@@ -181,31 +89,17 @@ export const getPayments = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-
     const totalPayments = await prisma.payments.count();
     const payments = await prisma.payments.findMany({
-      skip: skip,
+      skip,
       take: limit,
-      orderBy: {
-        created_at: "desc",
-      },
+      orderBy: { created_at: "desc" },
       include: {
-        user: {
-          select: {
-            full_name: true,
-            is_active: true,
-          },
-        },
-        course: {
-          select: {
-            title: true,
-            category: true,
-          },
-        },
+        user: { select: { full_name: true, is_active: true } },
+        course: { select: { title: true, category: true } },
       },
     });
-
-    res.status(200).json({
+    return successResponse(res, {
       totalPayments,
       totalPages: Math.ceil(totalPayments / limit),
       currentPage: page,
@@ -213,45 +107,22 @@ export const getPayments = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({
-      error: "Internal server error",
-    });
+    return errorResponse(res, error.message);
   }
 };
 
 export const handlePaymentCancel = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    if (!sessionId) {
-      return res.status(400).json({
-        error: "No payment found",
-      });
-    }
+    if (!sessionId) return errorResponse(res, "No payment found", 400);
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    if (!session) {
-      return res.status(400).json({
-        error: "No session found",
-      });
-    }
-
+    if (!session) return errorResponse(res, "No session found", 400);
     if (session.payment_status === "unpaid") {
-      await prisma.payments.update({
-        where: {
-          stripe_payment_intent_id: sessionId,
-        },
-        data: {
-          payment_status: "failed",
-        },
-      });
+      await prisma.payments.update({ where: { stripe_payment_intent_id: sessionId }, data: { payment_status: "failed" } });
     }
-
-    return res.status(200).json({
-      success: true,
-    });
+    return successResponse(res, { cancelled: true, sessionId });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({
-      error: "Internal server error",
-    });
+    return errorResponse(res, error.message);
   }
 };

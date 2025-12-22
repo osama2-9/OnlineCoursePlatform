@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CourseDetails } from "../../hooks/useGetInstructorCourses";
 import toast from "react-hot-toast";
-import { useAuth } from "../../hooks/useAuth";
 import axiosClient from "../../API/axios";
 
 interface UpdateCourseDetailsProps {
@@ -12,7 +11,6 @@ export const UpdateCourseDetails = ({
   course,
   onClose,
 }: UpdateCourseDetailsProps) => {
-  const { user } = useAuth();
   const [title, setTitle] = useState(course?.title || "");
   const [description, setDescription] = useState(course?.description || "");
   const [learningOutcomes, setLearningOutcomes] = useState(
@@ -48,7 +46,6 @@ export const UpdateCourseDetails = ({
       const res = await axiosClient.put(
         `/instructor/update-course`,
         {
-          instructorId: user?.userId,
           courseId: course?.course_id,
           title: title,
           description: description,

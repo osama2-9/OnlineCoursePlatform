@@ -1,7 +1,7 @@
 import { redis } from "./redis.js";
 export const setCache = async (key, value, ttlSeconds = 86400) => {
   try {
-    await redis.set(key, JSON.stringify(value), "EX", ttlSeconds);
+    await redis.set(key, JSON.stringify(value), {"EX":ttlSeconds});
   } catch (error) {
     console.error("Redis setCache error:", error);
   }
@@ -31,7 +31,6 @@ export const updateQuestionInCache = async (quizId, pageNumber, questionId) => {
 
     let cachedQuestions = (await getCache(cacheKey)) || [];
 
-    console.log(cachedQuestions)
     cachedQuestions = cachedQuestions.filter(
       (question) => question.question_id !== questionId
     );

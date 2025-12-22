@@ -64,7 +64,9 @@ export const ShowPayments = () => {
     try {
       await navigator.clipboard.writeText(text);
       toast.success("Payment ID copied to clipboard!");
-    } catch (error) {
+    } catch (error:any) {
+      console.log(error);
+      
       const textArea = document.createElement("textarea");
       textArea.value = text;
       document.body.appendChild(textArea);

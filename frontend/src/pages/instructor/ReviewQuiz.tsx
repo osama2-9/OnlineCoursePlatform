@@ -26,8 +26,8 @@ export const ReviewQuiz = () => {
   const getQuizDetails = async () => {
     try {
       const res = await axiosClient.get(
-        `/instructor/review-quiz/${quizId}/course/${courseId}/instructor/${user?.userId}`,
-       
+        `/instructor/review-quiz/${quizId}/course/${courseId}`,
+
       );
       const data = await res.data;
       return data;
@@ -71,7 +71,7 @@ export const ReviewQuiz = () => {
     courseId: number,
     question: any
   ) => {
-    let transformedQuestion = { ...question };
+    const transformedQuestion = { ...question };
 
     if (["mcq", "truefalse"].includes(question.question_type) && question.choices) {
       transformedQuestion.choices = {
@@ -92,7 +92,7 @@ export const ReviewQuiz = () => {
     try {
       const res = await axiosClient.delete(
         `/instructor/delete-question/${selectedQuestionId}/instrctor/${user?.userId}/quiz/${quizId}/course/${courseId}`,
-       
+
       );
 
       const data = await res.data;
@@ -105,7 +105,6 @@ export const ReviewQuiz = () => {
     } catch (error: any) {
       console.log(error);
       toast.error(error?.response?.data?.error || "Failed to delete question");
-    } finally {
     }
   };
 
@@ -174,8 +173,8 @@ export const ReviewQuiz = () => {
                   </h2>
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${quizDetails?.quiz.is_published
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
                       }`}
                   >
                     {quizDetails?.quiz.is_published ? "Published" : "Draft"}
@@ -223,10 +222,10 @@ export const ReviewQuiz = () => {
                             <div className="flex items-center gap-2 mt-1">
                               <span
                                 className={`px-2 py-1 rounded-md text-xs font-medium ${question.question_type === "mcq"
-                                    ? "bg-blue-100 text-blue-700"
-                                    : question.question_type === "truefalse"
-                                      ? "bg-purple-100 text-purple-700"
-                                      : "bg-green-100 text-green-700"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : question.question_type === "truefalse"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "bg-green-100 text-green-700"
                                   }`}
                               >
                                 {question.question_type.toUpperCase()}
@@ -290,14 +289,14 @@ export const ReviewQuiz = () => {
                             <div
                               key={choice.choice_id}
                               className={`p-3 rounded-lg flex items-center gap-3 ${choice.is_correct
-                                  ? "bg-green-50 border border-green-200"
-                                  : "bg-white border border-gray-200"
+                                ? "bg-green-50 border border-green-200"
+                                : "bg-white border border-gray-200"
                                 }`}
                             >
                               <div
                                 className={`w-4 h-4 rounded-full ${choice.is_correct
-                                    ? "bg-green-500"
-                                    : "bg-gray-200"
+                                  ? "bg-green-500"
+                                  : "bg-gray-200"
                                   }`}
                               />
                               <span
@@ -358,7 +357,7 @@ export const ReviewQuiz = () => {
             />
           )}
         </div>
-  
+
       </div>
     </InstructorLayout>
   );

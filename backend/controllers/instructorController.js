@@ -38,7 +38,7 @@ const isHavePermession = async (course_id, instructor_id) => {
 };
 export const getInstructorCourses = async (req, res) => {
   try {
-    const { instructorId } = req.params;
+    const instructorId = req.user.userId;
     const { page = 1, limit = 10 } = req.query;
 
     if (!instructorId) {
@@ -153,7 +153,7 @@ export const getInstructorCourses = async (req, res) => {
 
 export const getEnrollmentData = async (req, res) => {
   try {
-    const { instructorId } = req.params;
+    const instructorId = req.user.userId
     const { page = 1, limit = 10 } = req.query;
 
     const cacheKey = `InstructorDashboardEnrollmentData${instructorId}:${page}:${limit}`;
@@ -254,7 +254,8 @@ export const getEnrollmentData = async (req, res) => {
 
 export const updateMyCourse = async (req, res) => {
   try {
-    const { instructorId, courseId, title, description, learning_outcomes } =
+    const instructorId = req.user.userId
+    const { courseId, title, description, learning_outcomes } =
       req.body;
     if (
       !instructorId ||
@@ -303,7 +304,7 @@ export const updateMyCourse = async (req, res) => {
 };
 export const getAnalysticsForCharts = async (req, res) => {
   try {
-    const { instructorId } = req.params;
+    const instructorId = req.user.userId
 
     if (!instructorId) {
       return res.status(400).json({
@@ -636,8 +637,9 @@ export const getStudentProgress = async (req, res) => {
 };
 export const createQuiz = async (req, res) => {
   try {
+    const instructorId = req.user.userId
     const {
-      instructorId,
+
       courseId,
       title,
       description,
@@ -714,9 +716,9 @@ export const createQuiz = async (req, res) => {
 };
 export const createQuestion = async (req, res) => {
   try {
+    const instructorId = req.user.userId
     const {
       courseId,
-      instructorId,
       quizId,
       question_text,
       question_type,
@@ -867,7 +869,7 @@ export const deleteQuiz = async (req, res) => {
 };
 export const getQuizzes = async (req, res) => {
   try {
-    const { instructorId } = req.params;
+    const instructorId = req.user.userId;
     const page = parseInt(req.query.page) || 1;
     const pageSize = Math.min(parseInt(req.query.pageSize) || 8, 30);
     const skip = (page - 1) * pageSize;
@@ -913,6 +915,7 @@ export const getQuizzes = async (req, res) => {
       }),
       prisma.quizzes.count({
         where: { course_id: { in: courseIds } },
+
       }),
     ]);
 
@@ -930,23 +933,22 @@ export const getQuizzes = async (req, res) => {
   }
 };
 
-
 export const reviewQuiz = async (req, res) => {
   try {
-    const { instructorId, courseId, quizId } = req.params;
+    const instructorId = req.user.userId;
+    const { courseId, quizId } = req.params;
 
     if (!instructorId || !courseId || !quizId) {
-      return res.status(400).json({
-        error: "Missing required params",
-      });
+      return res.status(400).json({ error: "Missing required params" });
     }
 
-    await isHavePermession(parseInt(courseId), parseInt(instructorId));
+    const courseIdNum = parseInt(courseId);
+    const quizIdNum = parseInt(quizId);
 
-    const quizDetails = await prisma.quizzes.findUnique({
-      where: {
-        quiz_id: parseInt(quizId),
-      },
+    await isHavePermession(courseIdNum, instructorId);
+
+    const quiz = await prisma.quizzes.findUnique({
+      where: { quiz_id: quizIdNum },
       select: {
         quiz_id: true,
         title: true,
@@ -955,63 +957,52 @@ export const reviewQuiz = async (req, res) => {
         max_attempts: true,
         duration: true,
         course_id: true,
+        questions: {
+          select: {
+            question_id: true,
+            question_text: true,
+            question_type: true,
+            marks: true,
+            choices: {
+              select: {
+                choice_id: true,
+                choice_text: true,
+                is_correct: true,
+              },
+            },
+          },
+          orderBy: { question_id: "asc" },
+        },
       },
     });
 
-    if (!quizDetails) {
-      return res.status(404).json({
-        error: "Quiz not found",
-      });
-    }
-
-    const questions = await prisma.question.findMany({
-      where: {
-        quiz_id: parseInt(quizId),
-      },
-      include: {
-        choices: true,
-      },
-      orderBy: {
-        question_id: "asc",
-      },
-    });
-
-    if (!questions || questions.length === 0) {
-      return res.status(404).json({
-        error: "No questions found for this quiz",
-      });
-    }
-
-    const formattedQuestions = questions.map((question) => {
-      return {
-        question_id: question.question_id,
-        quiz_id: question.quiz_id,
-        question_text: question.question_text,
-        question_type: question.question_type,
-        marks: question.marks,
-        choices: question.choices.map((choice) => ({
-          choice_id: choice.choice_id,
-          choice_text: choice.choice_text,
-          is_correct: choice.is_correct,
-        })),
-      };
-    });
+    if (!quiz) return res.status(404).json({ error: "Quiz not found" });
+    if (!quiz.questions || quiz.questions.length === 0)
+      return res.status(404).json({ error: "No questions found for this quiz" });
 
     return res.status(200).json({
-      quiz: quizDetails,
-      questions: formattedQuestions,
+      quiz: {
+        quiz_id: quiz.quiz_id,
+        title: quiz.title,
+        description: quiz.description,
+        is_published: quiz.is_published,
+        max_attempts: quiz.max_attempts,
+        duration: quiz.duration,
+        course_id: quiz.course_id,
+      },
+      questions: quiz.questions,
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      error: "Internal server error",
-    });
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
+
 export const deleteQuestion = async (req, res) => {
   try {
-    const { questionId, instructorId, quizId, courseId } = req.params;
+    const instructorId = req.user.userId
+    const { questionId, quizId, courseId } = req.params;
 
     if (!questionId || !instructorId || !quizId || !courseId) {
       return res.status(400).json({
@@ -1064,9 +1055,10 @@ export const deleteQuestion = async (req, res) => {
 
 export const updateQuestion = async (req, res) => {
   try {
+    const instructorId = req.user.userId
     const {
       questionId,
-      instructorId,
+
       courseId,
       question_type,
       question_text,
@@ -1194,9 +1186,8 @@ export const toggleQuizPublish = async (req, res) => {
     });
 
     return res.status(200).json({
-      message: `Quiz ${
-        is_published ? "published" : "unpublished"
-      } successfully!`,
+      message: `Quiz ${is_published ? "published" : "unpublished"
+        } successfully!`,
       quiz: updatedQuiz,
     });
   } catch (error) {
@@ -1208,7 +1199,7 @@ export const toggleQuizPublish = async (req, res) => {
 };
 export const getUsersAttempts = async (req, res) => {
   try {
-    const { instructorId } = req.params;
+    const instructorId = req.user.userId;
     const { page = 1, limit = 10 } = req.query;
 
     if (!instructorId) {
@@ -1294,7 +1285,8 @@ export const getUsersAttempts = async (req, res) => {
 export const getUserAnswers = async (req, res) => {
   try {
     const { page = 1, skip, take } = req.query;
-    const { instructorId, quizId, attemptId, courseId } = req.params;
+    const instructorId = req.user.userId
+    const { quizId, attemptId, courseId } = req.params;
 
     if (!instructorId || !quizId || !attemptId || !courseId) {
       return res.status(400).json({
@@ -1450,7 +1442,9 @@ export const updateAttemptScore = async (req, res) => {
 
 export const getLessonsByCourseId = async (req, res) => {
   try {
-    const { instructorId, courseId } = req.params;
+    const instructorId = req.user.userId
+
+    const { courseId } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
     if (!instructorId || !courseId) {
@@ -1622,7 +1616,7 @@ export const sendEmail = async (req, res) => {
 
 export const getMyContentRequests = async (req, res) => {
   try {
-    const { instructorId } = req.query;
+    const instructorId = req.user.userId;
     if (!instructorId) {
       return res.status(400).json({
         error: "Instructor Id Required",
@@ -1740,7 +1734,8 @@ export const getMyContentRequests = async (req, res) => {
 
 export const deleteLesson = async (req, res) => {
   try {
-    const { lessonId, instructorId, courseId } = req.query;
+    const instructorId = req.user.userId
+    const { lessonId, courseId } = req.query;
     await isHavePermession(parseInt(courseId), parseInt(instructorId));
     const deleteLesson = await prisma.lessons.delete({
       where: {

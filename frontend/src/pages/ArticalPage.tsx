@@ -240,8 +240,8 @@ export const ArticlePage: React.FC = () => {
 
   const views = article.views || Math.floor(Math.random() * 1000) + 100;
 
-  let handleLikeRequest = allowLike ? handleClickLike : handleClickUnlike;
-  let handleBookmarkRequest = isBookmarked ? removeBookmark : addBookmark;
+  const  handleLikeRequest = allowLike ? handleClickLike : handleClickUnlike;
+  const handleBookmarkRequest = isBookmarked ? removeBookmark : addBookmark;
 
   return (
     <div className="bg-gray-50 min-h-screen">

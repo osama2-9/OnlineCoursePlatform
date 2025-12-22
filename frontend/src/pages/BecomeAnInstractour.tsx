@@ -119,6 +119,8 @@ const BecomeMentor = () => {
 
       throw new Error("Failed to upload image");
     } catch (error) {
+      console.log(error);
+      
       toast.error("Failed to upload image. Please try again.");
       return null;
     }

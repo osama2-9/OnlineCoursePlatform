@@ -105,7 +105,7 @@ export const LearnerDashboard = () => {
                             {new Date(notification.created_at).toLocaleDateString()}
                           </span>
                         </div>
-                        {new Date(notification.created_at) == new Date() && (
+                        {new Date(notification.created_at).getTime() === new Date().setHours(0, 0, 0, 0) && (
                           <span className="text-xs font-medium text-blue-600">
                             New
                           </span>
